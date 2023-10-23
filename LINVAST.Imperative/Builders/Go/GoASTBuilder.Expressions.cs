@@ -127,7 +127,7 @@ namespace LINVAST.Imperative.Builders.Go
         public override ASTNode VisitArguments(GoParser.ArgumentsContext context)
         {
             if (context.ELLIPSIS() is not null) {
-                throw new NotImplementedException("Variadic functions are not supported");
+                throw new NotImplementedException("Variadic arguments in expressions are not supported");
             }
 
             if (context.nonNamedType() is not null) {

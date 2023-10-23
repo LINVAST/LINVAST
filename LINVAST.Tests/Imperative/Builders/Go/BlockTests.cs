@@ -38,12 +38,12 @@ namespace LINVAST.Tests.Imperative.Builders.Go
                 {           // line 2
                     var x int;  // line 3, block begins
                     if x == 0 {
-                        x = x + 4;
+                        x = 4;
 
 
                     } else {
                         var x float32;
-                        var y = x + 3;
+                        var y = 3;
 
 
                     }

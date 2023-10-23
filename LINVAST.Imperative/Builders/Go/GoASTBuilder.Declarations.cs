@@ -27,7 +27,6 @@ namespace LINVAST.Imperative.Builders.Go
         {
             var importPath = new ImportNode(context.Start.Line, this.Visit(context.importPath()).As<IdNode>().Identifier);
 
-
             if (context.DOT() is null && context.IDENTIFIER() is null) {
                 return importPath;
             }
@@ -76,11 +75,8 @@ namespace LINVAST.Imperative.Builders.Go
                 exprType = t.As<LitExprNode>().TypeCode;
                 type = new DeclSpecsNode(context.Start.Line, exprType.ToString());
             }
-
             if (context.expressionList() is not null) {
-                
                 ExprListNode exprList = this.Visit(context.expressionList()).As<ExprListNode>();
-
                 idExprList = idListNodes.Identifiers.Zip(exprList.Expressions, (i, e) => new VarDeclNode(context.Start.Line, i, e));
             } else {
                 idExprList = idListNodes.Identifiers.Select(i => new VarDeclNode(context.Start.Line, i));

@@ -1,32 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Antlr4.Runtime;
-
-public abstract class GoParserBase : Parser
+﻿#nullable disable
+namespace LINVAST.Imperative.Builders.Go
 {
-    protected GoParserBase(ITokenStream input)
-        : base(input)
-    {
-    }
 
-    protected GoParserBase(ITokenStream input, TextWriter output, TextWriter errorOutput)
-        : base(input, output, errorOutput)
-    {
-    }
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using Antlr4.Runtime;
 
-
-    protected bool closingBracket()
+    public abstract class GoParserBase : Parser
     {
-        int la = tokenStream.LA(1);
-        return la == GoLexer.R_PAREN || la == GoLexer.R_CURLY;
-    }
-
-    private ITokenStream tokenStream
-    {
-        get
+        protected GoParserBase(ITokenStream input)
+            : base(input)
         {
-            return TokenStream;
+        }
+
+        protected GoParserBase(ITokenStream input, TextWriter output, TextWriter errorOutput)
+            : base(input, output, errorOutput)
+        {
+        }
+
+
+        protected bool closingBracket()
+        {
+            int la = tokenStream.LA(1);
+            return la == GoLexer.R_PAREN || la == GoLexer.R_CURLY;
+        }
+
+        private ITokenStream tokenStream {
+            get {
+                return TokenStream;
+            }
         }
     }
 }
