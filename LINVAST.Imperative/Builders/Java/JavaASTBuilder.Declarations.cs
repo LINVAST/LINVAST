@@ -17,7 +17,7 @@ namespace LINVAST.Imperative.Builders.Java
         #region package and import declarations
 
         public override ASTNode VisitPackageDeclaration([NotNull] PackageDeclarationContext ctx)
-            => throw new NotImplementedException("Package declarations.");
+            => new PackageNode(ctx.Start.Line, ctx.qualifiedName().GetText());
 
         public override ASTNode VisitImportDeclaration([NotNull] ImportDeclarationContext ctx)
         {

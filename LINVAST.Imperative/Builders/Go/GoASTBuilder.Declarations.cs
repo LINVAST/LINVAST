@@ -15,7 +15,8 @@ namespace LINVAST.Imperative.Builders.Go
 {
     public sealed partial class GoASTBuilder : GoParserBaseVisitor<ASTNode>, IASTBuilder<GoParser>
     {
-        public override ASTNode VisitPackageClause(GoParser.PackageClauseContext context) => throw new NotImplementedException("Packages");
+        public override ASTNode VisitPackageClause(GoParser.PackageClauseContext context) =>
+            new PackageNode(context.Start.Line, context.packageName.Text);
 
         public override ASTNode VisitDeclaration(GoParser.DeclarationContext context) => this.Visit(context.children.Single());
 
