@@ -1,5 +1,6 @@
 ﻿using System;
 using LINVAST.Imperative.Builders.Java;
+using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
 using LINVAST.Tests.Imperative.Builders.Common;
 using NUnit.Framework;
@@ -12,7 +13,7 @@ namespace LINVAST.Tests.Imperative.Builders.Java
         public void PackageDeclarationTest()
         {
             string src1 = "package mypkg;";
-            Assert.That(() => this.GenerateAST(src1), Throws.InstanceOf<NotImplementedException>());
+            Assert.AreEqual(new PackageNode(1, "mypkg"), this.GenerateAST(src1));
         }
 
 
