@@ -45,19 +45,19 @@ namespace LINVAST.Tests.Imperative.Builders.Go
         [Test]
         public void InvalidIfStatementTests()
         {
-            this.AssertThrows<SyntaxErrorException>("package test; if x ");
-            this.AssertThrows<SyntaxErrorException>("package test; if {x} {} else {} ");
-            this.AssertThrows<SyntaxErrorException>("package test; if x then { } else { } ");
-            this.AssertThrows<SyntaxErrorException>("package test; if (x > 1 {} ");
-            this.AssertThrows<SyntaxErrorException>("package test; if 1 ;; else ; ");
+            this.AssertThrows<SyntaxErrorException>("package test; func test() {if x }");
+            this.AssertThrows<SyntaxErrorException>("package test; func test() {if {x} {} else {} }");
+            this.AssertThrows<SyntaxErrorException>("package test; func test() {if x then { } else { } }");
+            this.AssertThrows<SyntaxErrorException>("package test; func test() {if (x > 1 {} }");
+            this.AssertThrows<SyntaxErrorException>("package test; func test() {if 1 ;; else ; }");
         }
 
         [Test]
         public void InvalidForStatementTests()
         {
-            this.AssertThrows<SyntaxErrorException>("package test; for (x := 0; x < 5; x++) {}");
-            this.AssertThrows<NotImplementedException>("package test; for x := 0; x < 5; x++ {}");
-            this.AssertThrows<SyntaxErrorException>("package test; for (;;;;){}");
+            this.AssertThrows<SyntaxErrorException>("package test; func test() {for (x := 0; x < 5; x++) {}}");
+            this.AssertThrows<NotImplementedException>("package test; func test() {for x := 0; x < 5; x++ {}}");
+            this.AssertThrows<SyntaxErrorException>("package test; func test() {for (;;;;){}}");
         }
 
 
