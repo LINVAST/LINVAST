@@ -68,10 +68,10 @@ var res = ConstantExpressionEvaluator.TryEvaluateAs<int>(expr);
 // Or implement your own custom visitor...
 class MyVisitor<int> : BaseASTVisitor<int>
 {
-	public override int Visit(ExprNode node) { 
-		// ... 
+	public override int Visit(ExprNode node) {
+		// ...
 	}
-	
+
 	// ...
 }
 ```

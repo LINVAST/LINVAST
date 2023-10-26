@@ -27,5 +27,5 @@
     <ProjectReference Include="..\LINVAST.Imperative\LINVAST.Imperative.csproj" />
     <ProjectReference Include="..\LINVAST\LINVAST.csproj" />
   </ItemGroup>
-
+  
 </Project>

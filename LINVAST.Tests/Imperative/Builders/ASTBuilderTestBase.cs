@@ -7,7 +7,6 @@ namespace LINVAST.Tests.Imperative.Builders
     {
         protected abstract ASTNode GenerateAST(string src);
 
-
         protected void AssertChildrenParentProperties(ASTNode node)
         {
             foreach (ASTNode child in node.Children)

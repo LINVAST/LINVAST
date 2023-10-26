@@ -252,7 +252,7 @@ namespace LINVAST.Imperative.Nodes.Common
         {
             ThrowIfNotPrimitiveTypes(x, y);
 
-            if (y is int || y is char || y is sbyte || y is byte)
+            if (y is int || y is long || y is char || y is sbyte || y is byte)
                 return x switch
                 {
                     ulong _ => Convert.ToUInt64(x) << Convert.ToInt32(y),
@@ -275,7 +275,7 @@ namespace LINVAST.Imperative.Nodes.Common
         {
             ThrowIfNotPrimitiveTypes(x, y);
 
-            if (y is int || y is char || y is sbyte || y is byte)
+            if (y is int || y is long || y is char || y is sbyte || y is byte)
                 return x switch
                 {
                     ulong _ => Convert.ToUInt64(x) >> Convert.ToInt32(y),
