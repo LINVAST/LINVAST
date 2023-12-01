@@ -8,7 +8,8 @@
 
 LINVAST is a set of libraries that provide a common language-invariant AST API for different programming languages by abstracting [ANTLR](https://www.antlr.org/) parse trees. Currently, the main focus of the project is the imperative programming paradigm, with supported languages:
 - `C` (almost complete support)
-- `Java` (partial support, currently in development)
+- `Java` (partial support, pendingn development)
+- `Go` (partial support, pending development)
 - `Lua` (partial support, pending development)
 
 ## Motivation and project description
