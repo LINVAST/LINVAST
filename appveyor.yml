@@ -50,4 +50,4 @@ test_script:
 deploy:
 - provider: NuGet
   api_key:
-    secure: $(NUGET_API_KEY)
+    secure: FBNj2AVj/zdWXSelRKh9u5IceHXlvTEssLN+aOTjin41RIENm8s7l7gOMDi/RezW   # Encrypted NuGet ey in AppVeyor (Account -> Encrypt YAML)
