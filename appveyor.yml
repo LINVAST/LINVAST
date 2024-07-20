@@ -27,9 +27,6 @@ build_script:
     Write-Host "Build: $BUILD_NUMBER / Branch: $BRANCH"
     Write-Host "Artifacts will be placed in: $dir"
 
-    # Nuget keys
-    $NUGET_API_KEY = "$Env:NUGET_API_KEY"
-
     Write-Host "Commencing build"
     & .\rebuild-all.ps1 -ArtifactLocation "$dir" -Configuration "Release" -VersionSuffix "$BUILD_SUFFIX" -BuildNumber $BUILD_NUMBER 
     
@@ -53,4 +50,4 @@ test_script:
 deploy:
 - provider: NuGet
   api_key:
-    secure: $NUGET_API_KEY
+    secure: $(NUGET_API_KEY)
