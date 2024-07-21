@@ -13,7 +13,7 @@ namespace LINVAST.Imperative.Visitors
         public static bool TryEvaluateAs<T>(ExprNode node, out T result)
         {
             object? res = new ConstantExpressionEvaluator().Visit(node);
-            if (res is { } && res is T castRes) {
+            if (res is not null && res is T castRes) {
                 result = castRes;
                 return true;
             } else {

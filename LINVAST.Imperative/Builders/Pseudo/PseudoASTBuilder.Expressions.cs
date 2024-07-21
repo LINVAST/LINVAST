@@ -11,19 +11,19 @@ namespace LINVAST.Imperative.Builders.Pseudo
     {
         public override ASTNode VisitExp([NotNull] ExpContext ctx)
         {
-            if (ctx.literal() is { } || ctx.var() is { } || ctx.cexp() is { })
+            if (ctx.literal() is not null || ctx.var() is not null || ctx.cexp() is not null)
                 return this.Visit(ctx.children.Single());
 
-            if (ctx.aop() is { })
+            if (ctx.aop() is not null)
                 return this.VisitArithmeticExpression(ctx.Start.Line, ctx.exp()[0], ctx.aop(), ctx.exp()[1]);
 
-            if (ctx.rop() is { })
+            if (ctx.rop() is not null)
                 return this.VisitRelationalExpression(ctx.Start.Line, ctx.exp()[0], ctx.rop(), ctx.exp()[1]);
 
-            if (ctx.lop() is { })
+            if (ctx.lop() is not null)
                 return this.VisitLogicExpression(ctx.Start.Line, ctx.exp()[0], ctx.lop(), ctx.exp()[1]);
 
-            if (ctx.uop() is { })
+            if (ctx.uop() is not null)
                 return this.VisitUnaryExpression(ctx.Start.Line, ctx.uop(), ctx.exp().Single());
 
             return this.Visit(ctx.exp().Single());

@@ -61,9 +61,9 @@ namespace LINVAST.Tests.Imperative.Builders.Java
             string src2 = "import static system;";
             string src3 = "import static system.text;";
 
-            Assert.That(() => this.GenerateAST(src1), Throws.InstanceOf<NotImplementedException>());
-            Assert.That(() => this.GenerateAST(src2), Throws.InstanceOf<NotImplementedException>());
-            Assert.That(() => this.GenerateAST(src3), Throws.InstanceOf<NotImplementedException>());
+            Assert.That(() => this.GenerateAST(src1), Throws.Nothing);
+            Assert.That(() => this.GenerateAST(src2), Throws.Nothing);
+            Assert.That(() => this.GenerateAST(src3), Throws.Nothing);
         }
 
 

@@ -28,22 +28,22 @@ namespace LINVAST.Imperative.Builders.Lua
                         throw new NotImplementedException("...");
                 }
 
-                if (ctx.number() is { })
+                if (ctx.number() is not null)
                     return LitExprNode.FromString(ctx.Start.Line, ctx.number().GetText());
 
-                if (ctx.@string() is { }) {
+                if (ctx.@string() is not null) {
                     string str = ctx.@string().GetText()[1..^1];
                     return new LitExprNode(ctx.Start.Line, str);
                 }
 
-                if (ctx.prefixexp() is { })
+                if (ctx.prefixexp() is not null)
                     return this.Visit(ctx.prefixexp());
 
-                if (ctx.functiondef() is { })
+                if (ctx.functiondef() is not null)
                     return this.Visit(ctx.functiondef());
             }
 
-            if (ctx.operatorComparison() is { }) {
+            if (ctx.operatorComparison() is not null) {
                 (ExprNode left, string symbol, ExprNode right) = ParseBinaryExpression();
                 var op = RelOpNode.FromSymbol(ctx.Start.Line, symbol);
                 return new RelExprNode(ctx.Start.Line, left, op, right);
@@ -51,14 +51,14 @@ namespace LINVAST.Imperative.Builders.Lua
 
             if (IsArithmeticExpressionContext(ctx)) {
                 (ExprNode left, string symbol, ExprNode right) = ParseBinaryExpression();
-                ArithmOpNode op = ctx.operatorBitwise() is { }
+                ArithmOpNode op = ctx.operatorBitwise() is not null
                     ? ArithmOpNode.FromBitwiseSymbol(ctx.Start.Line, symbol)
                     : ArithmOpNode.FromSymbol(ctx.Start.Line, symbol);
                 return new ArithmExprNode(ctx.Start.Line, left, op, right);
             }
 
             if (IsLogicExpressionContext(ctx, out string? logicOp)) {
-                if (ctx.operatorUnary() is { }) {
+                if (ctx.operatorUnary() is not null) {
                     ExprNode notOperand = this.Visit(ctx.exp().First()).As<ExprNode>();
                     var notOp = UnaryOpNode.FromSymbol(ctx.Start.Line, "not");
                     return new UnaryExprNode(ctx.Start.Line, notOp, notOperand);
@@ -69,13 +69,13 @@ namespace LINVAST.Imperative.Builders.Lua
                 return new LogicExprNode(ctx.Start.Line, left, op, right);
             }
 
-            if (ctx.operatorUnary() is { }) {
+            if (ctx.operatorUnary() is not null) {
                 ExprNode unaryOperand = this.Visit(ctx.exp().First()).As<ExprNode>();
                 var unaryOp = UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.children[0].GetText());
                 return new UnaryExprNode(ctx.Start.Line, unaryOp, unaryOperand);
             }
 
-            if (ctx.tableconstructor() is { })
+            if (ctx.tableconstructor() is not null)
                 return this.Visit(ctx.tableconstructor());
 
             // TODO
@@ -96,15 +96,14 @@ namespace LINVAST.Imperative.Builders.Lua
 
             static bool IsArithmeticExpressionContext(ExpContext ctx)
             {
-                return ctx.operatorAddSub() is { } || ctx.operatorMulDivMod() is { } || ctx.operatorBitwise() is { }
-                    || ctx.operatorStrcat() is { } || ctx.operatorPower() is { };
+                return ctx.operatorAddSub() is not null || ctx.operatorMulDivMod() is not null || ctx.operatorBitwise() is not null || ctx.operatorStrcat() is not null || ctx.operatorPower() is not null;
             }
 
             static bool IsLogicExpressionContext(ExpContext ctx, out string? op)
             {
                 op = null;
 
-                if (ctx.operatorAnd() is { } || ctx.operatorOr() is { }) {
+                if (ctx.operatorAnd() is not null || ctx.operatorOr() is not null) {
                     op = ctx.children[1].GetText();
                     return true;
                 }
@@ -136,20 +135,20 @@ namespace LINVAST.Imperative.Builders.Lua
         }
 
         public override ASTNode VisitVarOrExp([NotNull] VarOrExpContext ctx)
-            => ctx.exp() is { } ? this.Visit(ctx.exp()) : this.Visit(ctx.var());
+            => ctx.exp() is not null ? this.Visit(ctx.exp()) : this.Visit(ctx.var());
 
         public override ASTNode VisitNameAndArgs([NotNull] NameAndArgsContext ctx)
         {
-            if (ctx.NAME() is { })
+            if (ctx.NAME() is not null)
                 throw new NotImplementedException("NAME");
             return this.Visit(ctx.args());
         }
 
         public override ASTNode VisitArgs([NotNull] ArgsContext ctx)
         {
-            if (ctx.tableconstructor() is { } || ctx.@string() is { })
+            if (ctx.tableconstructor() is not null || ctx.@string() is not null)
                 throw new NotImplementedException("tableconstructor or string");
-            return ctx.explist() is { }
+            return ctx.explist() is not null
                 ? this.Visit(ctx.explist())
                 : new ExprListNode(ctx.Start.Line);
         }
@@ -160,7 +159,7 @@ namespace LINVAST.Imperative.Builders.Lua
         public override ASTNode VisitFuncbody([NotNull] FuncbodyContext ctx)
         {
             FuncParamsNode? @params = null;
-            if (ctx.parlist() is { })
+            if (ctx.parlist() is not null)
                 @params = this.Visit(ctx.parlist()).As<FuncParamsNode>();
             BlockStatNode def = this.Visit(ctx.block()).As<BlockStatNode>();
             return @params is null
@@ -185,7 +184,7 @@ namespace LINVAST.Imperative.Builders.Lua
         }
 
         public override ASTNode VisitTableconstructor([NotNull] TableconstructorContext ctx)
-            => ctx.fieldlist() is { } ? this.Visit(ctx.fieldlist()) : new DictInitNode(ctx.Start.Line);
+            => ctx.fieldlist() is not null ? this.Visit(ctx.fieldlist()) : new DictInitNode(ctx.Start.Line);
 
         public override ASTNode VisitFieldlist([NotNull] FieldlistContext ctx)
         {

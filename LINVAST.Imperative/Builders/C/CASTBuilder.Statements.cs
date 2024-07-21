@@ -80,14 +80,14 @@ namespace LINVAST.Imperative.Builders.C
             IterStatNode it;
             StatNode statement = this.Visit(ctx.statement()).As<StatNode>();
 
-            if (ctx.For() is { }) {
+            if (ctx.For() is not null) {
                 ForConditionContext forCondition = ctx.forCondition();
-                if (forCondition.forDeclaration() is { }) {
+                if (forCondition.forDeclaration() is not null) {
                     DeclarationNode decl = this.Visit(forCondition.forDeclaration()).As<DeclarationNode>();
                     GetForExpressions(forCondition, out ExprNode? cond, out ExprNode? inc);
                     return new ForStatNode(ctx.Start.Line, decl, cond, inc, statement);
                 } else {
-                    ExprNode? initExpr = forCondition.expression() is { } ? this.Visit(forCondition.expression()).As<ExprNode>() : null;
+                    ExprNode? initExpr = forCondition.expression() is not null ? this.Visit(forCondition.expression()).As<ExprNode>() : null;
                     GetForExpressions(forCondition, out ExprNode? cond, out ExprNode? inc);
                     return new ForStatNode(ctx.Start.Line, initExpr, cond, inc, statement);
                 }
@@ -96,7 +96,7 @@ namespace LINVAST.Imperative.Builders.C
             ExprNode condition = this.Visit(ctx.expression()).As<ExprNode>();
             it = new WhileStatNode(ctx.Start.Line, condition, statement);
 
-            return ctx.Do() is { }
+            return ctx.Do() is not null
                 ? throw new NotImplementedException("do-while")
                 : it;
 
@@ -135,7 +135,7 @@ namespace LINVAST.Imperative.Builders.C
             JumpStatType type = JumpStatementTypeConverter.FromString(ctx.children.First().GetText());
             switch (type) {
                 case JumpStatType.Return:
-                    ExprNode? expr = ctx.expression() is { } ? this.Visit(ctx.expression()).As<ExprNode>() : null;
+                    ExprNode? expr = ctx.expression() is not null ? this.Visit(ctx.expression()).As<ExprNode>() : null;
                     return new JumpStatNode(ctx.Start.Line, expr);
                 case JumpStatType.Goto:
                     var label = new IdNode(ctx.Start.Line, ctx.Identifier().GetText());

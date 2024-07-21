@@ -13,8 +13,8 @@ namespace LINVAST.Imperative.Builders.Java
     {
         public override ASTNode VisitMethodCall([NotNull] MethodCallContext ctx)
         {
-            if (ctx.IDENTIFIER() is { } && ctx.RPAREN() is { } && ctx.RPAREN() is { }) {
-                if (ctx.expressionList() is { }) {
+            if (ctx.IDENTIFIER() is not null && ctx.RPAREN() is not null && ctx.RPAREN() is not null) {
+                if (ctx.expressionList() is not null) {
                     ExprListNode param = this.Visit(ctx.expressionList()).As<ExprListNode>();
                     return new FuncCallExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText()), new TypeNameListNode(ctx.Start.Line), param);
                 } else {
@@ -22,8 +22,8 @@ namespace LINVAST.Imperative.Builders.Java
                 }
             }
 
-            if (ctx.THIS() is { } && ctx.RPAREN() is { } && ctx.RPAREN() is { }) {
-                if (ctx.expressionList() is { }) {
+            if (ctx.THIS() is not null && ctx.RPAREN() is not null && ctx.RPAREN() is not null) {
+                if (ctx.expressionList() is not null) {
                     ExprListNode param = this.Visit(ctx.expressionList()).As<ExprListNode>();
                     return new FuncCallExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, ctx.THIS().GetText()), new TypeNameListNode(ctx.Start.Line), param);
                 } else {
@@ -31,8 +31,8 @@ namespace LINVAST.Imperative.Builders.Java
                 }
             }
 
-            if (ctx.SUPER() is { } && ctx.RPAREN() is { } && ctx.RPAREN() is { }) {
-                if (ctx.expressionList() is { }) {
+            if (ctx.SUPER() is not null && ctx.RPAREN() is not null && ctx.RPAREN() is not null) {
+                if (ctx.expressionList() is not null) {
                     ExprListNode param = this.Visit(ctx.expressionList()).As<ExprListNode>();
                     return new FuncCallExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, ctx.SUPER().GetText()), new TypeNameListNode(ctx.Start.Line), param);
                 } else {
@@ -45,7 +45,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitExplicitGenericInvocation([NotNull] ExplicitGenericInvocationContext ctx)
         {
-            if (ctx.nonWildcardTypeArguments() is { } && ctx.explicitGenericInvocationSuffix() is { }) {
+            if (ctx.nonWildcardTypeArguments() is not null && ctx.explicitGenericInvocationSuffix() is not null) {
                 TypeNameListNode typeArgs = this.Visit(ctx.nonWildcardTypeArguments()).As<TypeNameListNode>();
                 FuncCallExprNode suffix = this.Visit(ctx.explicitGenericInvocationSuffix()).As<FuncCallExprNode>();
 
@@ -61,7 +61,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitExplicitGenericInvocationSuffix([NotNull] ExplicitGenericInvocationSuffixContext ctx)
         {
-            if (ctx.SUPER() is { } && ctx.superSuffix() is { }) {
+            if (ctx.SUPER() is not null && ctx.superSuffix() is not null) {
                 ASTNode? args = this.Visit(ctx.superSuffix());
 
                 if (args is ExprListNode) {
@@ -73,7 +73,7 @@ namespace LINVAST.Imperative.Builders.Java
                 }
             }
 
-            if (ctx.IDENTIFIER() is { } && ctx.arguments() is { }) {
+            if (ctx.IDENTIFIER() is not null && ctx.arguments() is not null) {
                 ExprListNode args = this.Visit(ctx.arguments()).As<ExprListNode>();
                 return new FuncCallExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText()), new TypeNameListNode(ctx.Start.Line), args);
             }
@@ -83,12 +83,12 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitSuperSuffix([NotNull] SuperSuffixContext ctx)
         {
-            if (ctx.DOT() is { } && ctx.IDENTIFIER() is { } && ctx.arguments() is { }) {
+            if (ctx.DOT() is not null && ctx.IDENTIFIER() is not null && ctx.arguments() is not null) {
                 ExprListNode args = this.Visit(ctx.arguments()).As<ExprListNode>();
                 return new FuncCallExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText()), new TypeNameListNode(ctx.Start.Line), args);
             }
 
-            if (ctx.arguments() is { }) {
+            if (ctx.arguments() is not null) {
                 return this.Visit(ctx.arguments()).As<ExprListNode>();
             }
 
@@ -100,13 +100,13 @@ namespace LINVAST.Imperative.Builders.Java
             if (ctx.formalParameter().Length > 0) {
                 System.Collections.Generic.IEnumerable<FuncParamNode>? p = ctx.formalParameter().Select(v => this.Visit(v).As<FuncParamNode>());
 
-                if (ctx.lastFormalParameter() is { }) {
+                if (ctx.lastFormalParameter() is not null) {
                     p.Append(this.Visit(ctx.lastFormalParameter()).As<FuncParamNode>());
                 }
                 return new FuncParamsNode(ctx.Start.Line, p);
             }
 
-            if (ctx.lastFormalParameter() is { }) {
+            if (ctx.lastFormalParameter() is not null) {
                 return new FuncParamsNode(ctx.Start.Line, this.Visit(ctx.lastFormalParameter()).As<FuncParamNode>());
             }
 
@@ -123,11 +123,11 @@ namespace LINVAST.Imperative.Builders.Java
                 modifiers = string.Join(" ", ctx.variableModifier().Select(v => this.Visit(v).As<TagNode>().GetText()));
             }
 
-            if (ctx.typeType() is { }) {
+            if (ctx.typeType() is not null) {
                 type = this.Visit(ctx.typeType()).As<TypeNameNode>();
             }
 
-            if (ctx.variableDeclaratorId() is { }) {
+            if (ctx.variableDeclaratorId() is not null) {
                 variableDeclaratorId = this.Visit(ctx.variableDeclaratorId()).As<IdNode>();
             }
 
@@ -150,11 +150,11 @@ namespace LINVAST.Imperative.Builders.Java
                 modifiers = string.Join(" ", ctx.variableModifier().Select(v => this.Visit(v).As<TagNode>().GetText()));
             }
 
-            if (ctx.typeType() is { }) {
+            if (ctx.typeType() is not null) {
                 type = this.Visit(ctx.typeType()).As<TypeNameNode>();
             }
 
-            if (ctx.variableDeclaratorId() is { }) {
+            if (ctx.variableDeclaratorId() is not null) {
                 variableDeclaratorId = this.Visit(ctx.variableDeclaratorId()).As<IdNode>();
             }
 
@@ -162,7 +162,7 @@ namespace LINVAST.Imperative.Builders.Java
                 var declSpecs = new DeclSpecsNode(ctx.Start.Line, modifiers, type.Identifier);
                 var decl = new VarDeclNode(ctx.Start.Line, variableDeclaratorId);
 
-                decl = ctx.annotation() is { }
+                decl = ctx.annotation() is not null
                     ? new VarDeclNode(ctx.Start.Line, ctx.annotation().Select(v => this.Visit(v).As<TagNode>()), variableDeclaratorId)
                     : new VarDeclNode(ctx.Start.Line, variableDeclaratorId);
 
@@ -174,24 +174,22 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitVariableModifier([NotNull] VariableModifierContext ctx)
         {
-            if (ctx.FINAL() is { }) {
+            if (ctx.FINAL() is not null) 
                 return new TagNode(ctx.Start.Line, ctx.FINAL().GetText());
-            }
 
-            if (ctx.annotation() is { }) {
+            if (ctx.annotation() is not null) 
                 return this.Visit(ctx.annotation()).As<TagNode>();
-            }
 
             throw new SyntaxErrorException("Unknown construct");
         }
 
         public override ASTNode VisitInnerCreator([NotNull] InnerCreatorContext ctx)
         {
-            if (ctx.IDENTIFIER() is { } && ctx.classCreatorRest() is { }) {
+            if (ctx.IDENTIFIER() is not null && ctx.classCreatorRest() is not null) {
                 ExprListNode expr = this.Visit(ctx.classCreatorRest()).As<ExprListNode>();
                 var id = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
 
-                if (ctx.nonWildcardTypeArgumentsOrDiamond() is { }) {
+                if (ctx.nonWildcardTypeArgumentsOrDiamond() is not null) {
                     TypeNameListNode type = this.Visit(ctx.nonWildcardTypeArgumentsOrDiamond()).As<TypeNameListNode>();
                     return new FuncCallExprNode(ctx.Start.Line, id, type, expr);
                 } else {
@@ -204,18 +202,18 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitCreator([NotNull] CreatorContext ctx)
         {
-            if (ctx.createdName() is { }) {
+            if (ctx.createdName() is not null) {
                 TypeNameNode typeNameNode = this.Visit(ctx.createdName()).As<TypeNameNode>();
                 var idNode = new IdNode(ctx.Start.Line, typeNameNode.GetText()); ;
 
-                if (ctx.arrayCreatorRest() is { }) {
+                if (ctx.arrayCreatorRest() is not null) {
                     return new ArrAccessExprNode(ctx.Start.Line, idNode, this.Visit(ctx.arrayCreatorRest()).As<ExprNode>());
                 }
 
-                if (ctx.classCreatorRest() is { }) {
+                if (ctx.classCreatorRest() is not null) {
                     ExprListNode args = this.Visit(ctx.classCreatorRest()).As<ExprListNode>();
 
-                    if (ctx.nonWildcardTypeArguments() is { }) {
+                    if (ctx.nonWildcardTypeArguments() is not null) {
                         TypeNameListNode typeArgs = this.Visit(ctx.nonWildcardTypeArguments()).As<TypeNameListNode>();
                         return new FuncCallExprNode(ctx.Start.Line, idNode, typeArgs, args);
                     } else {
@@ -238,7 +236,7 @@ namespace LINVAST.Imperative.Builders.Java
                 }
             }
 
-            if (ctx.primitiveType() is { }) {
+            if (ctx.primitiveType() is not null) {
                 return this.Visit(ctx.primitiveType()).As<TypeNameNode>();
             }
 
@@ -247,7 +245,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitTypeArgumentsOrDiamond([NotNull] TypeArgumentsOrDiamondContext ctx)
         {
-            if (ctx.typeArguments() is { }) {
+            if (ctx.typeArguments() is not null) {
                 return this.Visit(ctx.typeArguments()).As<TypeNameListNode>();
             } else {
                 return new TypeNameListNode(ctx.Start.Line);
@@ -256,8 +254,8 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitClassCreatorRest([NotNull] ClassCreatorRestContext ctx)
         {
-            if (ctx.arguments() is { }) {
-                if (ctx.classBody() is { }) {
+            if (ctx.arguments() is not null) {
+                if (ctx.classBody() is not null) {
                     ; //since VisitClassBody is not implemented yet
                 }
                 return this.Visit(ctx.arguments()).As<ExprListNode>();
@@ -268,7 +266,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitArrayCreatorRest([NotNull] ArrayCreatorRestContext ctx)
         {
-            if (ctx.arrayInitializer() is { }) {
+            if (ctx.arrayInitializer() is not null) {
                 return this.Visit(ctx.arrayInitializer()).As<ArrInitExprNode>();
             }
 
@@ -288,11 +286,11 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitVariableInitializer([NotNull] VariableInitializerContext ctx)
         {
-            if (ctx.arrayInitializer() is { }) {
+            if (ctx.arrayInitializer() is not null) {
                 return this.Visit(ctx.arrayInitializer()).As<ExprNode>();
             }
 
-            if (ctx.expression() is { }) {
+            if (ctx.expression() is not null) {
                 return this.Visit(ctx.expression()).As<ExprNode>();
             }
 
@@ -303,11 +301,11 @@ namespace LINVAST.Imperative.Builders.Java
         {
             IdNode? nameNode = null;
 
-            if (ctx.AT() is { } && ctx.qualifiedName() is { }) {
+            if (ctx.AT() is not null && ctx.qualifiedName() is not null) {
                 nameNode = this.Visit(ctx.qualifiedName()).As<IdNode>();
             }
 
-            if (ctx.altAnnotationQualifiedName() is { }) {
+            if (ctx.altAnnotationQualifiedName() is not null) {
                 nameNode = this.Visit(ctx.altAnnotationQualifiedName()).As<IdNode>();
             }
 
@@ -315,12 +313,12 @@ namespace LINVAST.Imperative.Builders.Java
                 throw new SyntaxErrorException("Unknown construct, bad annotation name");
             }
 
-            if (ctx.elementValuePairs() is { }) {
+            if (ctx.elementValuePairs() is not null) {
                 TagNode pairs = this.Visit(ctx.elementValuePairs()).As<TagNode>();
                 return new TagNode(ctx.Start.Line, nameNode.Identifier, pairs.Fields);
             }
 
-            if (ctx.elementValue() is { }) {
+            if (ctx.elementValue() is not null) {
                 ASTNode? element = this.Visit(ctx.elementValue());
                 return new TagNode(ctx.Start.Line, nameNode, new TagFieldNode(ctx.Start.Line, "value", new(ctx.Start.Line, element.GetText())));
             }
@@ -330,15 +328,15 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitElementValue([NotNull] ElementValueContext ctx)
         {
-            if (ctx.expression() is { }) {
+            if (ctx.expression() is not null) {
                 return this.Visit(ctx.expression()).As<ExprNode>();
             }
 
-            if (ctx.annotation() is { }) {
+            if (ctx.annotation() is not null) {
                 return this.Visit(ctx.annotation()).As<TagNode>();
             }
 
-            if (ctx.elementValueArrayInitializer() is { }) {
+            if (ctx.elementValueArrayInitializer() is not null) {
                 return this.Visit(ctx.elementValueArrayInitializer()).As<ArrInitExprNode>();
             }
 
@@ -350,7 +348,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitElementValuePair([NotNull] ElementValuePairContext ctx)
         {
-            if (ctx.IDENTIFIER() is { } && ctx.elementValue() is { }) {
+            if (ctx.IDENTIFIER() is not null && ctx.elementValue() is not null) {
                 ASTNode? element = this.Visit(ctx.elementValue());
                 return new TagFieldNode(ctx.Start.Line, ctx.IDENTIFIER().GetText(), new LitExprNode(ctx.Start.Line, element.GetText()));
             }
@@ -365,7 +363,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitArguments([NotNull] ArgumentsContext ctx)
         {
-            if (ctx.LPAREN() is { } && ctx.expressionList() is { } && ctx.RPAREN() is { }) {
+            if (ctx.LPAREN() is not null && ctx.expressionList() is not null && ctx.RPAREN() is not null) {
                 return this.Visit(ctx.expressionList()).As<ExprListNode>();
             }
 

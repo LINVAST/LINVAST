@@ -23,7 +23,7 @@ namespace LINVAST.Imperative.Builders.Pseudo
                             case "array":
                             case "list":
                             case "set":
-                                if (ctx.exp() is { }) {
+                                if (ctx.exp() is not null) {
                                     ExprNode init = this.Visit(ctx.exp()).As<ExprNode>();
                                     decl = new ArrDeclNode(ctx.Start.Line, name, init);
                                 } else {
@@ -34,7 +34,7 @@ namespace LINVAST.Imperative.Builders.Pseudo
                                 throw new SyntaxErrorException("Invalid complex type");
                         }
                     } else {
-                        if (ctx.exp() is { }) {
+                        if (ctx.exp() is not null) {
                             ExprNode init = this.Visit(ctx.exp()).As<ExprNode>();
                             decl = new VarDeclNode(ctx.Start.Line, name, init);
                         } else {

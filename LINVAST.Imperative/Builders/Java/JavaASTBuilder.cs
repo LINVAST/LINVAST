@@ -46,7 +46,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitCompilationUnit([NotNull] CompilationUnitContext ctx)
         {
-            if (ctx.packageDeclaration() is { }) {
+            if (ctx.packageDeclaration() is not null) {
                 // TODO package declaration
             }
 

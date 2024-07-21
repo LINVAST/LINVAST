@@ -13,7 +13,7 @@ namespace LINVAST.Tests.Imperative.Builders.Common
             this.AssertChildrenParentProperties(node);
             Assert.That(ConstantExpressionEvaluator.Evaluate(node.Condition), Is.EqualTo(condValue));
             Assert.That(node.ThenStat.Children, Has.Exactly(thenStatementCount).Items);
-            if (elseStatementCount is { }) {
+            if (elseStatementCount is not null) {
                 Assert.That(node.ElseStat, Is.Not.Null);
                 Assert.That(node.ElseStat!.Children, Has.Exactly(elseStatementCount.Value).Items);
             } else {

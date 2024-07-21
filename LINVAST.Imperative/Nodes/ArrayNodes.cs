@@ -10,7 +10,7 @@ namespace LINVAST.Imperative.Nodes
         [JsonIgnore]
         public ExprNode? SizeExpression
             => this.Children.Count > 2 ? this.Children[1].As<ExprNode>()
-                                       : this.Initializer is { } ? null
+                                       : this.Initializer is not null ? null
                                                                  : this.Children.ElementAtOrDefault(1) as ExprNode;
 
         [JsonIgnore]
@@ -36,7 +36,7 @@ namespace LINVAST.Imperative.Nodes
         {
             var sb = new StringBuilder(base.GetText());
             sb.Append('[').Append(this.SizeExpression?.ToString() ?? "").Append(']');
-            if (this.Initializer is { })
+            if (this.Initializer is not null)
                 sb.Append(" = ").Append(this.Initializer.ToString());
             return sb.ToString();
         }

@@ -15,16 +15,16 @@ namespace LINVAST.Imperative.Builders.Lua
     {
         public override ASTNode VisitStat([NotNull] StatContext ctx)
         {
-            if (ctx.varlist() is { }) {
+            if (ctx.varlist() is not null) {
                 ExprListNode vars = this.Visit(ctx.varlist()).As<ExprListNode>();
                 ExprListNode inits = this.Visit(ctx.explist()).As<ExprListNode>();
                 return CreateAssignmentNode(ctx.Start.Line, vars, inits);
             }
 
-            if (ctx.functioncall() is { })
+            if (ctx.functioncall() is not null)
                 return this.Visit(ctx.functioncall());
 
-            if (ctx.label() is { })
+            if (ctx.label() is not null)
                 return new LabeledStatNode(ctx.Start.Line, ctx.label().NAME().GetText(), new EmptyStatNode(ctx.Start.Line));
 
             switch (ctx.children.First().GetText()) {
@@ -80,7 +80,7 @@ namespace LINVAST.Imperative.Builders.Lua
                     if (ctx.children[1].GetText().Equals("function", StringComparison.InvariantCultureIgnoreCase))
                         return new EmptyStatNode(ctx.Start.Line);  // TODO
                     IdListNode vars = this.Visit(ctx.namelist()).As<IdListNode>();
-                    if (ctx.explist() is { }) {
+                    if (ctx.explist() is not null) {
                         // TODO 'local' info is lost here
                         ExprListNode inits = this.Visit(ctx.explist()).As<ExprListNode>();
                         return CreateAssignmentNode(ctx.Start.Line, new ExprListNode(vars.Line, vars.Identifiers), inits);
@@ -120,7 +120,7 @@ namespace LINVAST.Imperative.Builders.Lua
         public override ASTNode VisitRetstat([NotNull] RetstatContext ctx)
         {
             ExprNode? expr = null;
-            if (ctx.explist() is { })
+            if (ctx.explist() is not null)
                 expr = this.Visit(ctx.explist()).As<ExprNode>();
             return new JumpStatNode(ctx.Start.Line, expr);
         }
@@ -130,9 +130,9 @@ namespace LINVAST.Imperative.Builders.Lua
 
         public override ASTNode VisitVar([NotNull] VarContext ctx)
         {
-            if (ctx.NAME() is { }) {
+            if (ctx.NAME() is not null) {
                 var id = new IdNode(ctx.Start.Line, ctx.NAME().GetText());
-                if (ctx.varSuffix() is { } && ctx.varSuffix().Any()) {
+                if (ctx.varSuffix() is not null && ctx.varSuffix().Any()) {
                     // NOTE will require update once VisitVarSuffix is enhanced
                     ExprNode index = this.Visit(ctx.varSuffix().First()).As<ExprNode>();
                     return new ArrAccessExprNode(ctx.Start.Line, id, index);
@@ -145,7 +145,7 @@ namespace LINVAST.Imperative.Builders.Lua
         {
             if (ctx.nameAndArgs()?.Any() ?? false)
                 throw new NotImplementedException("nameAndArgs*");
-            if (ctx.NAME() is { })
+            if (ctx.NAME() is not null)
                 throw new NotImplementedException("Field access");
             return this.Visit(ctx.exp());
         }

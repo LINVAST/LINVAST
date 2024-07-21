@@ -17,7 +17,7 @@ namespace LINVAST.Imperative.Builders.C
                 decl = new FuncDeclNode(fname.Line, fname);
             FuncDeclNode fdecl = decl.As<FuncDeclNode>();
             BlockStatNode body = this.Visit(ctx.compoundStatement()).As<BlockStatNode>();
-            FuncDeclNode fdef = fdecl.ParametersNode is { }
+            FuncDeclNode fdef = fdecl.ParametersNode is not null
                 ? new FuncDeclNode(fdecl.Line, fdecl.IdentifierNode, fdecl.ParametersNode, body)
                 : new FuncDeclNode(fdecl.Line, fdecl.IdentifierNode, body);
             return new FuncNode(ctx.Start.Line, declSpecs, fdef);

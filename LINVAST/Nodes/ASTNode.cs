@@ -29,19 +29,17 @@ namespace LINVAST.Nodes
 
         protected ASTNode(int line, params ASTNode[] children)
         {
-            this.Children = children ?? Array.Empty<ASTNode>();
+            this.Children = children;
             this.Line = line;
-            if (children?.Any() ?? false) {
-                foreach (ASTNode child in children) {
-                    if (child.Line < this.Line)
-                        throw new ArgumentException("Parent node has greater line number than the child.");
-                    child.Parent = this;
-                }
+            foreach (ASTNode child in this.Children) {
+                if (child.Line < this.Line)
+                    throw new ArgumentException("Parent node has greater line number than the child.");
+                child.Parent = this;
             }
         }
 
-        protected ASTNode(int line, IEnumerable<ASTNode> children)
-            : this(line, children.ToArray())
+        protected ASTNode(int line, IEnumerable<ASTNode>? children)
+            : this(line, children?.ToArray() ?? new ASTNode[]{ })
         {
 
         }

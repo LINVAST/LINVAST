@@ -31,6 +31,16 @@ namespace LINVAST.Tests.Imperative.Builders.Java
         }
 
         [Test]
+        public void ExtendsQualifiedTypeClassDeclTest()
+        {
+            string src1 = "class Class1 extends java.sql.SqlConnection {}";
+            TypeDeclNode ast1 = this.GenerateAST(src1).As<TypeDeclNode>();
+
+            Assert.That(ast1.Identifier, Is.EqualTo("Class1"));
+            Assert.That(ast1.BaseTypes.Types.First().TypeName, Is.EqualTo("java.sql.SqlConnection"));
+        }
+
+        [Test]
         public void WithTypeParamsClassDeclTest()
         {
             string src1 = "class Name <Class1> {}";

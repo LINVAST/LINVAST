@@ -44,7 +44,7 @@ namespace LINVAST.Tests.Imperative.Builders.Common
             Assert.That(var.Parent, Is.EqualTo(decl.DeclaratorList));
             Assert.That(var.Identifier, Is.EqualTo(identifier));
             Assert.That(var.Children[0].As<IdNode>().Identifier, Is.EqualTo(identifier));
-            if (value is { }) {
+            if (value is not null) {
                 Assert.That(var.Initializer, Is.Not.Null);
                 Assert.That(var.Initializer!.Parent, Is.EqualTo(var));
                 Assert.That(ConstantExpressionEvaluator.Evaluate(var.Initializer), Is.EqualTo(value).Within(1e-10));
@@ -117,14 +117,14 @@ namespace LINVAST.Tests.Imperative.Builders.Common
             Assert.That(arr.Parent, Is.EqualTo(decl.DeclaratorList));
             Assert.That(arr.Identifier, Is.EqualTo(arrName));
             Assert.That(arr.Children[0].As<IdNode>().Identifier, Is.EqualTo(arrName));
-            if (size is { }) {
+            if (size is not null) {
                 Assert.That(arr.SizeExpression, Is.Not.Null);
                 Assert.That(arr.SizeExpression!.Parent, Is.EqualTo(arr));
                 Assert.That(ConstantExpressionEvaluator.Evaluate(arr.SizeExpression!), Is.EqualTo(size));
             } else {
                 Assert.That(arr.SizeExpression, Is.Null);
             }
-            if (init is { } && init.Any()) {
+            if (init is not null && init.Any()) {
                 Assert.That(arr.Initializer, Is.Not.Null);
                 Assert.That(arr.Initializer!.Parent, Is.EqualTo(arr));
                 Assert.That(arr.Initializer.Initializers.Select(e => ConstantExpressionEvaluator.Evaluate(e)), Is.EqualTo(init).Within(1e-10));

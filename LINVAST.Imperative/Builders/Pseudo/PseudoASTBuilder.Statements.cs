@@ -13,13 +13,13 @@ namespace LINVAST.Imperative.Builders.Pseudo
     {
         public override ASTNode VisitStatement([NotNull] StatementContext ctx)
         {
-            if (ctx.declaration() is { })
+            if (ctx.declaration() is not null)
                 return this.Visit(ctx.declaration());
 
-            if (ctx.assignment() is { })
+            if (ctx.assignment() is not null)
                 return this.Visit(ctx.assignment());
 
-            if (ctx.cexp() is { })
+            if (ctx.cexp() is not null)
                 return this.Visit(ctx.cexp());
 
             switch (ctx.children.First().GetText()) {

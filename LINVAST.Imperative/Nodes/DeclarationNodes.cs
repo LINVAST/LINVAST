@@ -89,7 +89,7 @@ namespace LINVAST.Imperative.Nodes
             var decl = other as DeclSpecsNode;
             if (!this.Modifiers.Equals(decl?.Modifiers))
                 return false;
-            return this.Type is { } ? this.Type.Equals(decl?.Type) : this.TypeName.Equals(decl?.TypeName);
+            return this.Type is not null ? this.Type.Equals(decl?.Type) : this.TypeName.Equals(decl?.TypeName);
         }
 
         public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.Modifiers, this.TypeName);
@@ -158,7 +158,7 @@ namespace LINVAST.Imperative.Nodes
 
 
         public override string GetText()
-            => this.Initializer is { } ? $"{base.GetText()} = {this.Initializer.GetText()}" : base.GetText();
+            => this.Initializer is not null ? $"{base.GetText()} = {this.Initializer.GetText()}" : base.GetText();
     }
 
     public sealed class TypeNameListNode : DeclListNode

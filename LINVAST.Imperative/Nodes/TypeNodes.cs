@@ -42,14 +42,20 @@ namespace LINVAST.Imperative.Nodes
     public sealed class EnumDeclNode : DeclNode
     {
         [JsonIgnore]
-        public IEnumerable<VarDeclNode> Constants => this.Children.Cast<VarDeclNode>();
+        public DeclListNode Constants => this.Children.ElementAt(1).As<DeclListNode>();
+
+        [JsonIgnore]
+        public IEnumerable<DeclStatNode> BodyDeclarations => this.Children.Skip(1).Select(c => c.As<DeclStatNode>());
 
 
-        public EnumDeclNode(int line, IdNode identifier, IEnumerable<VarDeclNode> constants)
+        public EnumDeclNode(int line, IdNode identifier)
+            : base(line, identifier) { }
+
+        public EnumDeclNode(int line, IdNode identifier, DeclListNode constants)
             : base(line, identifier, constants) { }
-
-        public EnumDeclNode(int line, IdNode identifier, params VarDeclNode[] constants)
-            : base(line, identifier, constants) { }
+        
+        public EnumDeclNode(int line, IdNode identifier, DeclListNode constants, IEnumerable<ASTNode> body)
+            : base(line, identifier, new ASTNode[] { constants }.Concat(body)) { }
     }
 
     public abstract class TypeNode : DeclStatNode

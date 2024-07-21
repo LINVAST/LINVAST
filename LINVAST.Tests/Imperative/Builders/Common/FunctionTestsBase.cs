@@ -50,7 +50,7 @@ namespace LINVAST.Tests.Imperative.Builders.Common
                 Assert.That(node.ReturnExpr, Is.Null);
             } else {
                 Assert.That(node.ReturnExpr, Is.Not.Null);
-                if (node.ReturnExpr is { })
+                if (node.ReturnExpr is not null)
                     Assert.That(ConstantExpressionEvaluator.Evaluate(node.ReturnExpr), Is.EqualTo(expected).Within(1e-10));
             }
         }

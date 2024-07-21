@@ -39,7 +39,7 @@ namespace LINVAST.Imperative.Nodes
         {
             var sb = new StringBuilder("import ");
             sb.Append(this.Directive);
-            if (this.QualifiedAs is { })
+            if (this.QualifiedAs is not null)
                 sb.Append(" as ").Append(this.QualifiedAs);
             sb.AppendLine();
             return sb.ToString();

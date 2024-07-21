@@ -13,7 +13,7 @@ namespace LINVAST.Imperative.Builders.C
     {
         public override ASTNode VisitDeclaration([NotNull] DeclarationContext ctx)
         {
-            if (ctx.staticAssertDeclaration() is { } || ctx.initDeclaratorList() is null)
+            if (ctx.staticAssertDeclaration() is not null || ctx.initDeclaratorList() is null)
                 throw new NotImplementedException("static assert");
 
             DeclSpecsNode declSpecs = this.Visit(ctx.declarationSpecifiers()).As<DeclSpecsNode>();
@@ -30,37 +30,37 @@ namespace LINVAST.Imperative.Builders.C
         public override ASTNode VisitDeclarator([NotNull] DeclaratorContext ctx)
         {
             DeclNode decl = this.Visit(ctx.directDeclarator()).As<DeclNode>();
-            if (ctx.pointer() is { })
+            if (ctx.pointer() is not null)
                 decl.PointerLevel++;
             return decl;
         }
 
         public override ASTNode VisitDirectDeclarator([NotNull] DirectDeclaratorContext ctx)
         {
-            if (ctx.declarator() is { })
+            if (ctx.declarator() is not null)
                 return this.Visit(ctx.declarator());
 
-            if (ctx.Identifier() is { }) {
+            if (ctx.Identifier() is not null) {
                 if (ctx.ChildCount == 1)
                     return new VarDeclNode(ctx.Start.Line, new IdNode(ctx.Start.Line, ctx.Identifier().ToString() ?? "<unknown_name>"));
                 else
                     throw new NotImplementedException("bit field");
             }
 
-            if (ctx.typeQualifierList() is { } || ctx.typeSpecifier() is { } || ctx.pointer() is { })
+            if (ctx.typeQualifierList() is not null || ctx.typeSpecifier() is not null || ctx.pointer() is not null)
                 throw new NotImplementedException("qualified arrays and function pointers");
 
             DeclNode decl = this.Visit(ctx.directDeclarator()).As<DeclNode>();
             if (decl is VarDeclNode var) {
                 if (AreBracketsTokensPresent(ctx)) {
-                    if (ctx.assignmentExpression() is { }) {
+                    if (ctx.assignmentExpression() is not null) {
                         ExprNode sizeExpr = this.Visit(ctx.assignmentExpression()).As<ExprNode>();
                         return new ArrDeclNode(ctx.Start.Line, var.IdentifierNode, sizeExpr);
                     } else {
                         return new ArrDeclNode(ctx.Start.Line, var.IdentifierNode);
                     }
                 } else if (AreParenTokensPresent(ctx)) {
-                    if (ctx.parameterTypeList() is { }) {
+                    if (ctx.parameterTypeList() is not null) {
                         FuncParamsNode @params = this.Visit(ctx.parameterTypeList()).As<FuncParamsNode>();
                         return new FuncDeclNode(ctx.Start.Line, var.IdentifierNode, @params);
                     } else {
@@ -85,10 +85,10 @@ namespace LINVAST.Imperative.Builders.C
 
 
             static bool AreParenTokensPresent(DirectDeclaratorContext ctx)
-                => ctx.GetToken(LeftParen, 0) is { } && ctx.GetToken(RightParen, 0) is { };
+                => ctx.GetToken(LeftParen, 0) is not null && ctx.GetToken(RightParen, 0) is not null;
 
             static bool AreBracketsTokensPresent(DirectDeclaratorContext ctx)
-                => ctx.GetToken(LeftBracket, 0) is { } && ctx.GetToken(RightBracket, 0) is { };
+                => ctx.GetToken(LeftBracket, 0) is not null && ctx.GetToken(RightBracket, 0) is not null;
         }
 
         public override ASTNode VisitDeclarationSpecifiers([NotNull] DeclarationSpecifiersContext ctx)
@@ -114,7 +114,7 @@ namespace LINVAST.Imperative.Builders.C
         {
             DeclNode declarator = this.Visit(ctx.declarator()).As<DeclNode>();
             ASTNode? init = null;
-            if (ctx.initializer() is { })
+            if (ctx.initializer() is not null)
                 init = this.Visit(ctx.initializer());
 
             if (declarator is VarDeclNode var)
@@ -139,7 +139,7 @@ namespace LINVAST.Imperative.Builders.C
 
         public override ASTNode VisitInitializerList([NotNull] InitializerListContext ctx)
         {
-            if (ctx.designation() is { })
+            if (ctx.designation() is not null)
                 throw new NotImplementedException("designation");
 
             ExprNode init = this.Visit(ctx.initializer()).As<ExprNode>();
@@ -152,6 +152,6 @@ namespace LINVAST.Imperative.Builders.C
         }
 
         public override ASTNode VisitInitializer([NotNull] InitializerContext ctx)
-            => ctx.assignmentExpression() is { } ? this.Visit(ctx.assignmentExpression()) : this.Visit(ctx.initializerList());
+            => ctx.assignmentExpression() is not null ? this.Visit(ctx.assignmentExpression()) : this.Visit(ctx.initializerList());
     }
 }

@@ -133,10 +133,10 @@ namespace LINVAST.Tests.Imperative.Builders.Java
             DeclStatNode ast2 = this.GenerateAST(src2).As<DeclStatNode>();
 
             Assert.That(ast1.Modifiers.ToString(), Is.EqualTo("private"));
-            Assert.That(ast1.Specifiers.Line, Is.EqualTo(1));
+            Assert.That(ast1.Specifiers.Line, Is.EqualTo(2));
             Assert.That(ast1.DeclaratorList.Declarators.First().Line, Is.EqualTo(2));
             Assert.That(ast2.Modifiers.ToString(), Is.EqualTo("private static"));
-            Assert.That(ast2.Specifiers.Line, Is.EqualTo(1));
+            Assert.That(ast2.Specifiers.Line, Is.EqualTo(3));
             Assert.That(ast2.DeclaratorList.Declarators.First().Line, Is.EqualTo(3));
         }
 
@@ -194,14 +194,14 @@ namespace LINVAST.Tests.Imperative.Builders.Java
         public void ConstructorDeclarationTest()
         {
             string src1 = "Class1 () {}";
-            Assert.That(() => this.GenerateAST(src1), Throws.InstanceOf<NotImplementedException>());
+            Assert.That(() => this.GenerateAST(src1), Throws.Nothing);
         }
 
         [Test]
         public void GenericConstructorDeclarationTest()
         {
             string src1 = "<Type1> Class1 () {}";
-            Assert.That(() => this.GenerateAST(src1), Throws.InstanceOf<NotImplementedException>());
+            Assert.That(() => this.GenerateAST(src1), Throws.Nothing);
         }
 
         [Test]

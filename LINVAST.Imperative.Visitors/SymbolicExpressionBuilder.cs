@@ -79,7 +79,7 @@ namespace LINVAST.Imperative.Visitors
 
             }
 
-            if (constantValue is { }) {
+            if (constantValue is not null) {
                 try {
                     expr = Expr.Parse(constantValue.ToString());
                     return expr;

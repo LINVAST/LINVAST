@@ -57,7 +57,7 @@ namespace LINVAST.Imperative.Builders.Lua
             IEnumerable<ASTNode> statements = ctx.stat().Select(c => this.Visit(c));
             if (!statements.Any() && ctx.retstat() is null)
                 throw new SyntaxErrorException("Missing statements in block");
-            if (ctx.retstat() is { })
+            if (ctx.retstat() is not null)
                 statements = statements.Concat(new[] { this.Visit(ctx.retstat()) });
 
             return new BlockStatNode(ctx.Start.Line, statements);
@@ -138,7 +138,7 @@ namespace LINVAST.Imperative.Builders.Lua
                     }
                 } else if (stat is FuncNode fdef) {
                     var @params = new List<string>();
-                    if (fdef.Parameters is { })
+                    if (fdef.Parameters is not null)
                         @params.AddRange(fdef.Parameters.Select(p => p.Declarator.Identifier));
                     @params = @params.Except(declaredVars).ToList();
 
@@ -147,7 +147,7 @@ namespace LINVAST.Imperative.Builders.Lua
                     if (fdef.Definition is null)
                         throw new SyntaxErrorException($"Function {fdef.Identifier} lacking defition in line {fdef.Line}");
                     var alteredDefinition = new BlockStatNode(fdef.Definition.Line, this.AddDeclarations(fdef.Definition.Children, declaredVars));
-                    FuncDeclNode alteredDeclarator = fdef.ParametersNode is { }
+                    FuncDeclNode alteredDeclarator = fdef.ParametersNode is not null
                         ? new FuncDeclNode(fdef.Declarator.Line, fdef.Declarator.IdentifierNode, fdef.ParametersNode, fdef.Definition)
                         : new FuncDeclNode(fdef.Declarator.Line, fdef.Declarator.IdentifierNode, fdef.Definition);
                     nodes.Add(new FuncNode(fdef.Line, fdef.Specifiers, fdef.Declarator));
@@ -156,7 +156,7 @@ namespace LINVAST.Imperative.Builders.Lua
                 } else if (stat is IfStatNode @if) {
                     IfStatNode alteredIf;
                     var alteredThen = new BlockStatNode(@if.ThenStat.Line, this.AddDeclarations(@if.ThenStat.Children, declaredVars));
-                    if (@if.ElseStat is { }) {
+                    if (@if.ElseStat is not null) {
                         var alteredElse = new BlockStatNode(@if.ElseStat.Line, this.AddDeclarations(@if.ElseStat.Children, declaredVars));
                         alteredIf = new IfStatNode(@if.Line, @if.Condition, alteredThen, alteredElse);
                     } else {

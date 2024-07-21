@@ -73,12 +73,12 @@ namespace LINVAST.Imperative.Nodes
         {
             var sb = new StringBuilder();
             sb.Append(base.GetText()).Append('(');
-            if (this.TemplateArgs is { })
+            if (this.TemplateArgs is not null)
                 sb.Append('<').AppendJoin(',', this.TemplateArgs.Types).Append('>');
-            if (this.ParametersNode is { })
+            if (this.ParametersNode is not null)
                 sb.Append(this.ParametersNode.GetText());
             sb.Append(')');
-            if (this.Definition is { })
+            if (this.Definition is not null)
                 sb.Append(this.Definition.GetText());
             else
                 sb.Append(';');

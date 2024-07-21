@@ -147,9 +147,9 @@ namespace LINVAST.Imperative.Nodes
         public override string GetText()
         {
             var sb = new StringBuilder(this.Type.ToStringToken());
-            if (this.Type == JumpStatType.Return && this.ReturnExpr is { })
+            if (this.Type == JumpStatType.Return && this.ReturnExpr is not null)
                 sb.Append(' ').Append(this.ReturnExpr.GetText());
-            else if (this.Type == JumpStatType.Goto && this.GotoLabel is { })
+            else if (this.Type == JumpStatType.Goto && this.GotoLabel is not null)
                 sb.Append(' ').Append(this.GotoLabel.GetText());
             sb.Append(';');
             return sb.ToString();
@@ -229,14 +229,14 @@ namespace LINVAST.Imperative.Nodes
         public override string GetText()
         {
             var sb = new StringBuilder("for (");
-            if (this.ForDeclaration is { })
+            if (this.ForDeclaration is not null)
                 sb.Append(this.ForDeclaration.GetText());
-            else if (this.InitExpr is { })
+            else if (this.InitExpr is not null)
                 sb.Append(this.InitExpr.GetText());
             sb.Append("; ");
             sb.Append(this.Condition.GetText());
             sb.Append("; ");
-            if (this.IncrExpr is { })
+            if (this.IncrExpr is not null)
                 sb.Append(this.IncrExpr.GetText());
             sb.Append(") { ");
             sb.Append(this.Statement.GetText());

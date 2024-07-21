@@ -14,7 +14,7 @@ namespace LINVAST.Imperative.Builders.C
     {
         public override ASTNode VisitExpression([NotNull] ExpressionContext ctx)
         {
-            if (ctx.expression() is { })
+            if (ctx.expression() is not null)
                 throw new NotImplementedException("expression list");
 
             return this.Visit(ctx.assignmentExpression());
@@ -22,10 +22,10 @@ namespace LINVAST.Imperative.Builders.C
 
         public override ASTNode VisitAssignmentExpression([NotNull] AssignmentExpressionContext ctx)
         {
-            if (ctx.DigitSequence() is { })
+            if (ctx.DigitSequence() is not null)
                 throw new NotImplementedException("digit sequence");
 
-            if (ctx.conditionalExpression() is { })
+            if (ctx.conditionalExpression() is not null)
                 return this.Visit(ctx.conditionalExpression());
 
             ExprNode unary = this.Visit(ctx.unaryExpression()).As<ExprNode>();
@@ -177,7 +177,7 @@ namespace LINVAST.Imperative.Builders.C
 
         public override ASTNode VisitUnaryExpression([NotNull] UnaryExpressionContext ctx)
         {
-            if (ctx.postfixExpression() is { })
+            if (ctx.postfixExpression() is not null)
                 return this.Visit(ctx.postfixExpression());
 
             ExprNode expr;
@@ -194,17 +194,17 @@ namespace LINVAST.Imperative.Builders.C
 
         public override ASTNode VisitPostfixExpression([NotNull] PostfixExpressionContext ctx)
         {
-            if (ctx.primaryExpression() is { })
+            if (ctx.primaryExpression() is not null)
                 return this.Visit(ctx.primaryExpression());
 
-            if (ctx.typeName() is { } || ctx.initializerList() is { })
+            if (ctx.typeName() is not null || ctx.initializerList() is not null)
                 throw new NotImplementedException("initializers");
 
             ExprNode expr = this.Visit(ctx.postfixExpression()).As<ExprNode>();
             switch (ctx.children[1].GetText()) {
                 case "(":
                     if (expr is IdNode fname) {
-                        if (ctx.argumentExpressionList() is { }) {
+                        if (ctx.argumentExpressionList() is not null) {
                             ExprListNode? args = this.Visit(ctx.argumentExpressionList()).As<ExprListNode>();
                             return new FuncCallExprNode(ctx.Start.Line, fname, args);
                         } else {
@@ -231,20 +231,20 @@ namespace LINVAST.Imperative.Builders.C
 
         public override ASTNode VisitPrimaryExpression([NotNull] PrimaryExpressionContext ctx)
         {
-            if (ctx.Identifier() is { }) {
+            if (ctx.Identifier() is not null) {
                 string name = ctx.Identifier().GetText();
                 if (name.Equals("null", StringComparison.InvariantCultureIgnoreCase))
                     return new NullLitExprNode(ctx.Start.Line);
                 return new IdNode(ctx.Start.Line, name);
             }
 
-            if (ctx.Constant() is { })
+            if (ctx.Constant() is not null)
                 return LitExprNode.FromString(ctx.Start.Line, ctx.Constant().GetText());
 
-            if (ctx.expression() is { })
+            if (ctx.expression() is not null)
                 return this.Visit(ctx.expression());
 
-            if (ctx.StringLiteral() is { })
+            if (ctx.StringLiteral() is not null)
                 return new LitExprNode(ctx.Start.Line, string.Join("", ctx.StringLiteral().Select(t => t.GetText()[1..^1])));
 
             throw new NotImplementedException("__*");

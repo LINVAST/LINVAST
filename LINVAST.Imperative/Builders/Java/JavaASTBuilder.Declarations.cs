@@ -21,14 +21,15 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitImportDeclaration([NotNull] ImportDeclarationContext ctx)
         {
-            if (ctx.STATIC() is { })
-                throw new NotImplementedException("static import");
+            string? qualifiedAs = null;
+            if (ctx.STATIC() is not null)
+                qualifiedAs = "static";
 
             var directive = new StringBuilder(this.Visit(ctx.qualifiedName()).As<IdNode>().GetText());
-            if (ctx.MUL() is { })
+            if (ctx.MUL() is not null)
                 directive.Append(".*");
 
-            return new ImportNode(ctx.Start.Line, directive.ToString());
+            return new ImportNode(ctx.Start.Line, directive.ToString(), qualifiedAs);
         }
 
         #endregion
@@ -69,19 +70,40 @@ namespace LINVAST.Imperative.Builders.Java
         {
             var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
 
-            if (ctx.typeList() is { })
+            if (ctx.typeList() is not null)
                 throw new NotImplementedException("enum implements interface");
 
-            IEnumerable<VarDeclNode> constants = new VarDeclNode[] { };
-            if (ctx.enumConstants() is { }) {
-                BlockStatNode block = this.Visit(ctx.enumConstants()).As<BlockStatNode>();
-                constants = block.Children.Select(c => c.As<VarDeclNode>());
+            var constantsNode = new DeclListNode(ctx.Start.Line);
+            if (ctx.enumConstants() is not null) {
+                IEnumerable<DeclNode> constants = ctx.enumConstants().enumConstant().Select(c => this.Visit(c).As<DeclNode>());
+                constantsNode = new DeclListNode(ctx.Start.Line, constants);
             }
 
-            if (ctx.enumBodyDeclarations() is { })
-                throw new NotImplementedException("enum class body");
+            IEnumerable<ASTNode>? enumBodyNodes = null;
+            if (ctx.enumBodyDeclarations() is not null) {
+                enumBodyNodes = ctx.enumBodyDeclarations().classBodyDeclaration().Select(this.VisitClassBodyDeclaration);
+            }
+                
+            return enumBodyNodes is null
+                ? new EnumDeclNode(ctx.Start.Line, identifier, constantsNode) 
+                : new EnumDeclNode(ctx.Start.Line, identifier, constantsNode, enumBodyNodes);
+        }
 
-            return new EnumDeclNode(ctx.Start.Line, identifier, constants);
+        public override ASTNode VisitEnumConstant([NotNull] EnumConstantContext ctx)
+        {
+            int line = ctx.Start.Line;
+
+            IEnumerable<TagNode>? annotations = null;
+            if (ctx.annotation() is not null) {
+                annotations = ctx.annotation().Select(a => this.Visit(a).As<TagNode>());
+            }
+                
+            if (ctx.arguments() is not null)
+                throw new NotImplementedException("enum args");
+            
+            return annotations is null
+                ? new VarDeclNode(line, new IdNode(line, ctx.IDENTIFIER().GetText())) 
+                : new VarDeclNode(line, annotations, new IdNode(line, ctx.IDENTIFIER().GetText()));
         }
 
         public override ASTNode VisitEnumBodyDeclarations([NotNull] EnumBodyDeclarationsContext ctx)
@@ -92,11 +114,11 @@ namespace LINVAST.Imperative.Builders.Java
             var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
 
             TypeNameListNode? templateParams = null;
-            if (ctx.typeParameters() is { })
+            if (ctx.typeParameters() is not null)
                 templateParams = this.Visit(ctx.typeParameters()).As<TypeNameListNode>();
 
             TypeNameListNode? baseTypes = null;
-            if (ctx.typeList() is { })
+            if (ctx.typeList() is not null)
                 baseTypes = this.Visit(ctx.typeList()).As<TypeNameListNode>();
 
             IEnumerable<DeclStatNode> declarations;
@@ -111,37 +133,28 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitClassBodyDeclaration([NotNull] ClassBodyDeclarationContext ctx)
         {
-            if (ctx.SEMI() is { })
+            if (ctx.SEMI() is not null)
                 return new EmptyStatNode(ctx.Start.Line);
 
-            if (ctx.STATIC() is { } || ctx.block() is { })
+            if (ctx.STATIC() is not null || ctx.block() is not null)
                 throw new NotImplementedException("static- and non-static- blocks in a class");
 
             // we use private method ProcessModifier instead of overriding VisitModifier
             string modifiers = "";
-            int? declSpecsStartLine = null;
             if (ctx.modifier() is { } modifierCtxList && modifierCtxList.Any()) {
                 modifiers = string.Join(" ", modifierCtxList.Select(modCtx => this.ProcessModifier(modCtx)));
-                declSpecsStartLine = modifierCtxList.First().Start.Line;
             }
 
             MemberDeclarationContext memberDeclCtx = ctx.memberDeclaration();
-
-            DeclSpecsNode declSpecs;
-            TypeNameNode? typeName = TypeName(memberDeclCtx);
-            if (typeName is { }) { // if memberDeclaration is anything but constructor- or genericConstructor- Declaration
-                declSpecsStartLine ??= typeName.Line;
-                declSpecs = new DeclSpecsNode(declSpecsStartLine ?? ctx.Start.Line, modifiers, typeName);
-            } else { // if memberDeclaration is constructor- or genericConstructor- Declaration
-                throw new NotImplementedException("constructors");
-            }
-            DeclListNode declList = memberDeclCtx.fieldDeclaration() is { }
+            TypeNameNode typeName = TypeName(memberDeclCtx);
+            var declSpecs = new DeclSpecsNode(typeName.Line, modifiers, typeName);
+            DeclListNode declList = memberDeclCtx.fieldDeclaration() is not null
                 ? this.Visit(memberDeclCtx).As<DeclListNode>()
                 : new DeclListNode(memberDeclCtx.Start.Line, this.Visit(memberDeclCtx).As<DeclNode>());
+            
             return new DeclStatNode(ctx.Start.Line, declSpecs, declList);
 
-
-            TypeNameNode? TypeName([NotNull] MemberDeclarationContext ctx)
+            TypeNameNode TypeName([NotNull] MemberDeclarationContext ctx)
             {
                 if (ctx.classDeclaration() is { } clsDeclCtx)
                     return new TypeNameNode(clsDeclCtx.Start.Line, clsDeclCtx.IDENTIFIER().GetText());
@@ -152,7 +165,7 @@ namespace LINVAST.Imperative.Builders.Java
                 if (ctx.enumDeclaration() is { } enumDeclCtx)
                     return new TypeNameNode(enumDeclCtx.Start.Line, enumDeclCtx.IDENTIFIER().GetText());
 
-                if (ctx.annotationTypeDeclaration() is { })
+                if (ctx.annotationTypeDeclaration() is not null)
                     throw new NotImplementedException("annotation type declaration");
 
                 if (ctx.methodDeclaration() is { } methodDeclCtx)
@@ -164,11 +177,15 @@ namespace LINVAST.Imperative.Builders.Java
                 if (ctx.fieldDeclaration() is { } fieldDeclCtx)
                     return this.Visit(fieldDeclCtx.typeType()).As<TypeNameNode>();
 
-                if (ctx.constructorDeclaration() is { })
-                    return null;
+                if (ctx.constructorDeclaration() is not null) {
+                    ConstructorDeclarationContext cctx = ctx.constructorDeclaration();
+                    return new TypeNameNode(ctx.Start.Line, cctx.IDENTIFIER().GetText());
+                }
 
-                if (ctx.genericConstructorDeclaration() is { })
-                    return null;
+                if (ctx.genericConstructorDeclaration() is not null) {
+                    ConstructorDeclarationContext cctx = ctx.genericConstructorDeclaration().constructorDeclaration();
+                    return new TypeNameNode(ctx.Start.Line, cctx.IDENTIFIER().GetText());
+                }
 
                 // unreachable path
                 throw new SyntaxErrorException("Source file contained unexpected content");
@@ -192,7 +209,7 @@ namespace LINVAST.Imperative.Builders.Java
             if (ctx.LBRACK().Length > 0)
                 throw new NotImplementedException("brackets after method definition");
 
-            if (ctx.THROWS() is { })
+            if (ctx.THROWS() is not null)
                 throw new NotImplementedException("exceptions");
 
             BlockStatNode body = this.Visit(ctx.methodBody()).As<BlockStatNode>();
@@ -212,10 +229,23 @@ namespace LINVAST.Imperative.Builders.Java
         }
 
         public override ASTNode VisitGenericConstructorDeclaration([NotNull] GenericConstructorDeclarationContext ctx)
-            => throw new NotImplementedException("constructors");
+        {
+            TypeNameListNode templateArgs = this.Visit(ctx.typeParameters()).As<TypeNameListNode>();
+            FuncDeclNode ctorDecl = this.VisitConstructorDeclaration(ctx.constructorDeclaration()).As<FuncDeclNode>();
+            return new FuncDeclNode(ctx.Start.Line, ctorDecl.IdentifierNode, templateArgs, ctorDecl.Definition);
+        }
 
         public override ASTNode VisitConstructorDeclaration([NotNull] ConstructorDeclarationContext ctx)
-            => throw new NotImplementedException("constructors");
+        {
+            var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
+            FuncParamsNode @params = this.Visit(ctx.formalParameters()).As<FuncParamsNode>();
+
+            if (ctx.THROWS() is not null)
+                throw new NotImplementedException("throws");
+
+            var body = new BlockStatNode(ctx.Start.Line, ctx.constructorBody.blockStatement().Select(this.Visit));
+            return new FuncDeclNode(ctx.Start.Line, identifier, @params, body);
+        }
 
         public override ASTNode VisitFieldDeclaration([NotNull] FieldDeclarationContext ctx)
             => this.Visit(ctx.variableDeclarators()); // DeclListNode
@@ -226,7 +256,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitInterfaceBodyDeclaration([NotNull] InterfaceBodyDeclarationContext ctx)
         {
-            if (ctx.SEMI() is { })
+            if (ctx.SEMI() is not null)
                 return new EmptyStatNode(ctx.Start.Line);
 
             var modifiers = new StringBuilder("");
@@ -273,7 +303,7 @@ namespace LINVAST.Imperative.Builders.Java
                 if (ctx.interfaceDeclaration() is { } interfaceDeclCtx)
                     return new TypeNameNode(interfaceDeclCtx.Start.Line, interfaceDeclCtx.IDENTIFIER().GetText());
 
-                if (ctx.annotationTypeDeclaration() is { })
+                if (ctx.annotationTypeDeclaration() is not null)
                     throw new NotImplementedException("annotation type declaration");
 
                 if (ctx.classDeclaration() is { } clsDeclCtx)
@@ -311,11 +341,11 @@ namespace LINVAST.Imperative.Builders.Java
         {
             var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
 
-            if (ctx.annotation() is { } && ctx.annotation().Any())
+            if (ctx.annotation() is not null && ctx.annotation().Any())
                 throw new NotImplementedException("annotations");
 
             TypeNameListNode? templateArgs = null;
-            if (ctx.typeParameters() is { })
+            if (ctx.typeParameters() is not null)
                 templateArgs = this.Visit(ctx.typeParameters()).As<TypeNameListNode>();
 
             FuncParamsNode @params = this.Visit(ctx.formalParameters()).As<FuncParamsNode>();
@@ -324,7 +354,7 @@ namespace LINVAST.Imperative.Builders.Java
             if (ctx.LBRACK().Length > 0)
                 throw new NotImplementedException("brackets after method definition");
 
-            if (ctx.THROWS() is { })
+            if (ctx.THROWS() is not null)
                 throw new NotImplementedException("exceptions");
 
             BlockStatNode body = this.Visit(ctx.methodBody()).As<BlockStatNode>();
@@ -399,7 +429,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         public override ASTNode VisitLocalTypeDeclaration([NotNull] LocalTypeDeclarationContext ctx)
         {
-            if (ctx.SEMI() is { })
+            if (ctx.SEMI() is not null)
                 return new EmptyStatNode(ctx.Start.Line);
 
             string modifiers = "";
@@ -411,14 +441,14 @@ namespace LINVAST.Imperative.Builders.Java
                 declSpecsStartLine = clssOrInterfaceModList.First().Start.Line;
             }
 
-            if (ctx.classDeclaration() is { }) {
+            if (ctx.classDeclaration() is not null) {
                 TypeDeclNode decl = this.Visit(ctx.classDeclaration()).As<TypeDeclNode>();
                 declSpecsStartLine ??= decl.Line;
                 var declSpecs = new DeclSpecsNode(declSpecsStartLine ?? ctx.Start.Line, modifiers, decl.Identifier);
                 return new ClassNode(ctx.Start.Line, declSpecs, decl);
             }
 
-            if (ctx.interfaceDeclaration() is { }) {
+            if (ctx.interfaceDeclaration() is not null) {
                 TypeDeclNode decl = this.Visit(ctx.interfaceDeclaration()).As<TypeDeclNode>();
                 declSpecsStartLine ??= decl.Line;
                 var declSpecs = new DeclSpecsNode(declSpecsStartLine ?? ctx.Start.Line, modifiers, decl.Identifier);
@@ -453,7 +483,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         private string ProcessClassOrInterfaceModifier([NotNull] ClassOrInterfaceModifierContext classOrInterfaceModCtx)
         {
-            if (classOrInterfaceModCtx.annotation() is { })
+            if (classOrInterfaceModCtx.annotation() is not null)
                 throw new NotImplementedException("annotations");
 
             return classOrInterfaceModCtx.GetText();
@@ -461,7 +491,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         private string ProcessInterfaceMethodModifier([NotNull] InterfaceMethodModifierContext interfaceMethodModCtx)
         {
-            if (interfaceMethodModCtx.annotation() is { })
+            if (interfaceMethodModCtx.annotation() is not null)
                 throw new NotImplementedException("annotations");
 
             return interfaceMethodModCtx.GetText();
@@ -469,7 +499,7 @@ namespace LINVAST.Imperative.Builders.Java
 
         private string ProcessVariableModifier(VariableModifierContext variableModifierCtx)
         {
-            if (variableModifierCtx.annotation() is { })
+            if (variableModifierCtx.annotation() is not null)
                 throw new NotImplementedException("annotations");
 
             return variableModifierCtx.GetText();
