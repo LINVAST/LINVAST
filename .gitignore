@@ -521,3 +521,15 @@ MigrationBackup/
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 
 # End of https://www.gitignore.io/api/csharp,visualstudio,visualstudiocode
+
+# LaTeX auxiliary files
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+docs/*.fdb_latexmk
+docs/*.fls
+docs/*.synctex.gz
+
+# Mac specific files
+.DS_STORE
