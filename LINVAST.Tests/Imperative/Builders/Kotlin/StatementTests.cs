@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using LINVAST.Imperative.Builders.Kotlin;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
@@ -151,12 +152,68 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
                 Throws.InstanceOf<NotImplementedException>());
         }
 
+        // --- forExpression ---
+
         [Test]
-        public void ForThrowsTest()
+        public void SimpleForTest()
+        {
+            ForeachStatNode node = new KotlinASTBuilder()
+                .BuildFromSource("for (x in items) { }", p => p.forExpression())
+                .As<ForeachStatNode>();
+            Assert.That(node.Iterator.Identifier, Is.EqualTo("x"));
+            Assert.That(node.Iterable.As<IdNode>().Identifier, Is.EqualTo("items"));
+            Assert.That(node.Statement, Is.InstanceOf<BlockStatNode>());
+        }
+
+        [Test]
+        public void ForWithExplicitTypeTest()
+        {
+            ForeachStatNode node = new KotlinASTBuilder()
+                .BuildFromSource("for (x: Int in items) { }", p => p.forExpression())
+                .As<ForeachStatNode>();
+            Assert.That(node.Iterator.Identifier, Is.EqualTo("x"));
+            Assert.That(node.IteratorType.TypeName, Is.EqualTo("Int"));
+            Assert.That(node.Iterable.As<IdNode>().Identifier, Is.EqualTo("items"));
+        }
+
+        [Test]
+        public void ForWithBodyTest()
+        {
+            ForeachStatNode node = new KotlinASTBuilder()
+                .BuildFromSource("for (x in items) { return x }", p => p.forExpression())
+                .As<ForeachStatNode>();
+            Assert.That(node.Statement.As<BlockStatNode>().Children, Has.Exactly(1).Items);
+            Assert.That(node.Statement.As<BlockStatNode>().Children.Single(), Is.InstanceOf<JumpStatNode>());
+        }
+
+        [Test]
+        public void ForWithFunctionCallIterableThrowsTest()
         {
             Assert.That(
-                () => new KotlinASTBuilder().BuildFromSource("for (x in listOf(1)) { }", p => p.forExpression()),
+                () => new KotlinASTBuilder().BuildFromSource("for (x in listOf(1, 2, 3)) { }", p => p.forExpression()),
                 Throws.InstanceOf<NotImplementedException>());
+        }
+
+        [Test]
+        public void ForDestructuringTwoVarsTest()
+        {
+            ForeachStatNode node = new KotlinASTBuilder()
+                .BuildFromSource("for ((a, b) in pairs) { }", p => p.forExpression())
+                .As<ForeachStatNode>();
+            Assert.That(node.IteratorDeclaration.DeclaratorList.Declarators, Has.Exactly(2).Items);
+            Assert.That(node.IteratorDeclaration.DeclaratorList.Declarators.ElementAt(0).Identifier, Is.EqualTo("a"));
+            Assert.That(node.IteratorDeclaration.DeclaratorList.Declarators.ElementAt(1).Identifier, Is.EqualTo("b"));
+            Assert.That(node.Iterable.As<IdNode>().Identifier, Is.EqualTo("pairs"));
+        }
+
+        [Test]
+        public void ForDestructuringThreeVarsTest()
+        {
+            ForeachStatNode node = new KotlinASTBuilder()
+                .BuildFromSource("for ((a, b, c) in triples) { }", p => p.forExpression())
+                .As<ForeachStatNode>();
+            Assert.That(node.IteratorDeclaration.DeclaratorList.Declarators, Has.Exactly(3).Items);
+            Assert.That(node.IteratorDeclaration.DeclaratorList.Declarators.ElementAt(2).Identifier, Is.EqualTo("c"));
         }
     }
 }

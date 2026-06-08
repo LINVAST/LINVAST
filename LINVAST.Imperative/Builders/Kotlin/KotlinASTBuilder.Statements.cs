@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using LINVAST.Builders;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Imperative.Nodes.Common;
@@ -54,7 +56,31 @@ namespace LINVAST.Imperative.Builders.Kotlin
         //                               IN expression RPAREN NL* controlStructureBody?
         public override ASTNode VisitForExpression(KotlinParser.ForExpressionContext ctx)
         {
-            throw new NotImplementedException("for expression is not supported");
+            int line = ctx.Start.Line;
+            ExprNode iterable = this.Visit(ctx.expression()).As<ExprNode>();
+            StatNode body = ctx.controlStructureBody() != null
+                ? this.Visit(ctx.controlStructureBody()).As<StatNode>()
+                : new BlockStatNode(line);
+
+            if (ctx.multiVariableDeclaration() != null) {
+                DeclStatNode iteratorDecl = this.BuildMultiVarIteratorDecl(ctx.multiVariableDeclaration());
+                return new ForeachStatNode(line, iteratorDecl, iterable, body);
+            }
+
+            var varDecl = ctx.variableDeclaration();
+            TypeNameNode type = new TypeNameNode(line, varDecl.type()?.GetText() ?? "var");
+            IdNode iterator = new IdNode(line, varDecl.simpleIdentifier().GetText());
+            return new ForeachStatNode(line, type, iterator, iterable, body);
+        }
+
+        private DeclStatNode BuildMultiVarIteratorDecl(KotlinParser.MultiVariableDeclarationContext ctx)
+        {
+            int line = ctx.Start.Line;
+            IEnumerable<VarDeclNode> declarators = ctx.variableDeclaration()
+                .Select(v => new VarDeclNode(v.Start.Line, new IdNode(v.Start.Line, v.simpleIdentifier().GetText())));
+            var declSpecs = new DeclSpecsNode(line, new TypeNameNode(line, "var"));
+            var declList = new DeclListNode(line, declarators);
+            return new DeclStatNode(line, declSpecs, declList);
         }
 
         // Grammar rule: jumpExpression : THROW NL* expression
