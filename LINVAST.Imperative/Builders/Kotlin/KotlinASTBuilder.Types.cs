@@ -8,18 +8,6 @@ namespace LINVAST.Imperative.Builders.Kotlin
 {
     public sealed partial class KotlinASTBuilder : KotlinParserBaseVisitor<ASTNode>, IASTBuilder<KotlinParser>
     {
-        // Grammar rule:
-        // classDeclaration : modifierList? (CLASS | INTERFACE) NL* simpleIdentifier
-        //                       (NL* typeParameters)? (NL* primaryConstructor)?
-        //                       (NL* COLON NL* delegationSpecifiers)? (NL* typeConstraints)?
-        //                       (NL* classBody | NL* enumClassBody)?
-        //
-        // TODO: support class declarations
-        public override ASTNode VisitClassDeclaration(KotlinParser.ClassDeclarationContext ctx)
-        {
-            throw new NotImplementedException("class declaration is not supported");
-        }
-
         // Grammar rule: userType : simpleUserType (NL* DOT NL* simpleUserType)*
         // e.g. val x: Int or val list: List<String>
         public override ASTNode VisitUserType(KotlinParser.UserTypeContext ctx)
