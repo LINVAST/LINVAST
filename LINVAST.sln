@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LINVAST.Runner", "LINVAST.Runner\LINVAST.Runner.csproj", "{36D9E0C4-F66C-4EF1-AEEE-BDF330A27651}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
 		{22EAF91A-DC0A-465E-A3CA-48365569D88B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{22EAF91A-DC0A-465E-A3CA-48365569D88B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{22EAF91A-DC0A-465E-A3CA-48365569D88B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36D9E0C4-F66C-4EF1-AEEE-BDF330A27651}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36D9E0C4-F66C-4EF1-AEEE-BDF330A27651}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36D9E0C4-F66C-4EF1-AEEE-BDF330A27651}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36D9E0C4-F66C-4EF1-AEEE-BDF330A27651}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
