@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +31,17 @@ using static LINVAST.Imperative.Builders.Lua.LuaParser;
 namespace LINVAST.Imperative.Builders.Lua
 {
     [ASTBuilder(".lua")]
+    /// <summary>
+    /// Builds a Lua language AST from source code.
+    /// </summary>
+
     public sealed partial class LuaASTBuilder : LuaBaseVisitor<ASTNode>, IASTBuilder<LuaParser>
     {
+        /// <summary>
+        /// Creates an ANTLR parser for the given source code.
+        /// </summary>
+        /// <param name="code">The source code to parse.</param>
+        /// <returns>An ANTLR parser configured for the source code.</returns>
         public LuaParser CreateParser(string code)
         {
             ICharStream stream = CharStreams.fromstring(code);
@@ -30,12 +55,29 @@ namespace LINVAST.Imperative.Builders.Lua
             return parser;
         }
 
+        /// <summary>
+        /// Builds an AST from the given source code.
+        /// </summary>
+        /// <param name="code">The source code to build the AST from.</param>
+        /// <returns>The root AST node representing the parsed source.</returns>
         public ASTNode BuildFromSource(string code)
             => this.Visit(this.CreateParser(code).chunk());
 
+        /// <summary>
+        /// Builds an AST from the given source code using a custom entry point.
+        /// </summary>
+        /// <param name="code">The source code to build the AST from.</param>
+        /// <param name="entryProvider">A function that selects the entry point context from the parser.</param>
+        /// <returns>The root AST node representing the parsed source.</returns>
         public ASTNode BuildFromSource(string code, Func<LuaParser, ParserRuleContext> entryProvider)
             => this.Visit(entryProvider(this.CreateParser(code)));
 
+        /// <summary>
+        /// Visits a parse tree and returns the corresponding AST node.
+        /// </summary>
+        /// <param name="tree">The parse tree to visit.</param>
+        /// <returns>The AST node resulting from visiting the parse tree.</returns>
+        /// <exception cref="SyntaxErrorException">Thrown when the source file contains unexpected content.</exception>
         public override ASTNode Visit(IParseTree tree)
         {
             LogObj.Visit(tree as ParserRuleContext);
@@ -46,6 +88,11 @@ namespace LINVAST.Imperative.Builders.Lua
             }
         }
 
+        /// <summary>
+        /// Visits the chunk parse tree context.
+        /// </summary>
+        /// <param name="ctx">The chunk parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitChunk([NotNull] ChunkContext ctx)
         {
             if (!ctx.block().stat().Any() && ctx.block().retstat() is null)
@@ -55,6 +102,11 @@ namespace LINVAST.Imperative.Builders.Lua
             return new SourceNode(this.AddDeclarations(block.Children));
         }
 
+        /// <summary>
+        /// Visits the block parse tree context.
+        /// </summary>
+        /// <param name="ctx">The block parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitBlock([NotNull] BlockContext ctx)
         {
             IEnumerable<ASTNode> statements = ctx.stat().Select(c => this.Visit(c));

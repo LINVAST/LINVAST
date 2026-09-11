@@ -1,10 +1,35 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
 ﻿using System;
 using LINVAST.Exceptions;
 
 namespace LINVAST.Imperative.Nodes.Common
 {
+    /// <summary>
+    /// Provides primitive binary operations for arithmetic, relational, logical, and bitwise expressions.
+    /// </summary>
     public static class BinaryOperations
     {
+        /// <summary>
+        /// Returns a binary arithmetic function for the given operator symbol.
+        /// </summary>
+        /// <param name="symbol">The symbol operand.</param>
+        /// <returns>A delegate that performs the arithmetic operation.</returns>
         public static Func<object, object, object> ArithmeticFromSymbol(string symbol)
         {
             return symbol switch
@@ -25,6 +50,11 @@ namespace LINVAST.Imperative.Nodes.Common
             };
         }
 
+        /// <summary>
+        /// Returns a binary relational function for the given operator symbol.
+        /// </summary>
+        /// <param name="symbol">The symbol operand.</param>
+        /// <returns>A delegate that performs the relational comparison.</returns>
         public static Func<object, object, bool> RelationalFromSymbol(string symbol)
         {
             return symbol switch
@@ -42,6 +72,11 @@ namespace LINVAST.Imperative.Nodes.Common
             };
         }
 
+        /// <summary>
+        /// Returns a binary assignment function for the given operator symbol.
+        /// </summary>
+        /// <param name="symbol">The symbol operand.</param>
+        /// <returns>A delegate that performs the assignment operation.</returns>
         public static Func<object, object, object> AssignmentFromSymbol(string symbol)
         {
             return symbol switch
@@ -63,6 +98,11 @@ namespace LINVAST.Imperative.Nodes.Common
             };
         }
 
+        /// <summary>
+        /// Returns a binary bitwise function for the given operator symbol.
+        /// </summary>
+        /// <param name="symbol">The symbol operand.</param>
+        /// <returns>A delegate that performs the bitwise operation.</returns>
         public static Func<object, object, object> BitwiseBinaryFromSymbol(string symbol)
         {
             return symbol switch
@@ -76,6 +116,11 @@ namespace LINVAST.Imperative.Nodes.Common
             };
         }
 
+        /// <summary>
+        /// Returns a binary logical function for the given operator symbol.
+        /// </summary>
+        /// <param name="symbol">The symbol operand.</param>
+        /// <returns>A delegate that performs the logical operation.</returns>
         public static Func<bool, bool, bool> LogicFromSymbol(string symbol)
         {
             return symbol switch
@@ -89,6 +134,13 @@ namespace LINVAST.Imperative.Nodes.Common
         }
 
 
+        /// <summary>
+        /// Adds two primitive values.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>The sum of x and y.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when addition is not supported.</exception>
         public static object AddPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -123,6 +175,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot add non-primitive types");
         }
 
+        /// <summary>
+        /// Subtracts two primitive values.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>The difference of x and y.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when subtraction is not supported.</exception>
         public static object SubtractPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -155,6 +214,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot subtract non-primitive types");
         }
 
+        /// <summary>
+        /// Multiplies two primitive values.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>The product of x and y.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when multiplication is not supported.</exception>
         public static object MultiplyPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -187,6 +253,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot multiply non-primitive types");
         }
 
+        /// <summary>
+        /// Divides two primitive values.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>The quotient of x divided by y.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when division is not supported.</exception>
         public static object DividePrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -219,6 +292,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot divide non-primitive types");
         }
 
+        /// <summary>
+        /// Divides two primitive values.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>The quotient of x divided by y.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when division is not supported.</exception>
         public static object FloorDividePrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -255,6 +335,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot divide non-primitive types");
         }
 
+        /// <summary>
+        /// Raises x to the power of y.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>x raised to the power of y.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when exponentiation is not supported.</exception>
         public static object PowerPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -291,6 +378,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot exponentiate non-primitive types");
         }
 
+        /// <summary>
+        /// Computes the modulus of two primitive values.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>The remainder of x divided by y.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when modulus is not supported.</exception>
         public static object ModulusPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -323,6 +417,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot divide non-primitive types");
         }
 
+        /// <summary>
+        /// Performs a left bitwise shift.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>The result of shifting x left by y bits.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when shifting is not supported.</exception>
         public static object ShiftLeftPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -346,6 +447,13 @@ namespace LINVAST.Imperative.Nodes.Common
             }
         }
 
+        /// <summary>
+        /// Performs a right bitwise shift.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>The result of shifting x right by y bits.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when shifting is not supported.</exception>
         public static object ShiftRightPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -369,6 +477,13 @@ namespace LINVAST.Imperative.Nodes.Common
             }
         }
 
+        /// <summary>
+        /// Performs a bitwise AND operation.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>The result of x AND y.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when the operation is not supported.</exception>
         public static object BitwiseAndPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -397,6 +512,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot perform bitwise and on non-primitive types");
         }
 
+        /// <summary>
+        /// Performs a bitwise XOR operation.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>The result of x XOR y.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when the operation is not supported.</exception>
         public static object BitwiseXorPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -425,6 +547,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot perform bitwise xor on non-primitive types");
         }
 
+        /// <summary>
+        /// Performs a bitwise OR operation.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>The result of x OR y.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when the operation is not supported.</exception>
         public static object BitwiseOrPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -453,6 +582,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot perform bitwise or on non-primitive types");
         }
 
+        /// <summary>
+        /// Compares two primitive values using less-than.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>True if x is less than y; otherwise, false.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when comparison is not supported.</exception>
         public static bool LessThanPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -485,6 +621,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot compare non-primitive types");
         }
 
+        /// <summary>
+        /// Compares two primitive values using less-than-or-equal.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>True if x is less than or equal to y; otherwise, false.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when comparison is not supported.</exception>
         public static bool LessThanOrEqualPrimitive(object x, object y)
 
         {
@@ -518,6 +661,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot compare non-primitive types");
         }
 
+        /// <summary>
+        /// Compares two primitive values using greater-than.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>True if x is greater than y; otherwise, false.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when comparison is not supported.</exception>
         public static bool GreaterThanPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -550,6 +700,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot compare non-primitive types");
         }
 
+        /// <summary>
+        /// Compares two primitive values using greater-than-or-equal.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>True if x is greater than or equal to y; otherwise, false.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type or when comparison is not supported.</exception>
         public static bool GreaterThanOrEqualPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -582,6 +739,13 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot compare non-primitive types");
         }
 
+        /// <summary>
+        /// Compares two primitive values for equality.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>True if x equals y; otherwise, false.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type.</exception>
         public static bool EqualsPrimitive(object x, object y)
         {
             ThrowIfNotPrimitiveTypes(x, y);
@@ -589,6 +753,13 @@ namespace LINVAST.Imperative.Nodes.Common
             return x.Equals(y);
         }
 
+        /// <summary>
+        /// Compares two primitive values for equality.
+        /// </summary>
+        /// <param name="x">The x operand.</param>
+        /// <param name="y">The y operand.</param>
+        /// <returns>True if x equals y; otherwise, false.</returns>
+        /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type.</exception>
         public static bool NotEqualsPrimitive(object x, object y)
             => !EqualsPrimitive(x, y);
 

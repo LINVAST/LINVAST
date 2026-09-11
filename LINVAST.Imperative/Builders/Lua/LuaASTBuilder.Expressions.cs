@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +25,25 @@ using static LINVAST.Imperative.Builders.Lua.LuaParser;
 
 namespace LINVAST.Imperative.Builders.Lua
 {
+    /// <summary>
+    /// Builds a Lua language AST from source code.
+    /// </summary>
+
     public sealed partial class LuaASTBuilder : LuaBaseVisitor<ASTNode>, IASTBuilder<LuaParser>
     {
+        /// <summary>
+        /// Visits the explist parse tree context.
+        /// </summary>
+        /// <param name="ctx">The explist parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExplist([NotNull] ExplistContext ctx)
             => new ExprListNode(ctx.Start.Line, ctx.exp().Select(v => this.Visit(v).As<ExprNode>()));
 
+        /// <summary>
+        /// Visits the exp parse tree context.
+        /// </summary>
+        /// <param name="ctx">The exp parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExp([NotNull] ExpContext ctx)
         {
             if (!ctx.exp()?.Any() ?? true) {
@@ -117,6 +147,11 @@ namespace LINVAST.Imperative.Builders.Lua
             }
         }
 
+        /// <summary>
+        /// Visits the prefixexp parse tree context.
+        /// </summary>
+        /// <param name="ctx">The prefixexp parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitPrefixexp([NotNull] PrefixexpContext ctx)
         {
             ASTNode varOrExp = this.Visit(ctx.varOrExp());
@@ -129,12 +164,27 @@ namespace LINVAST.Imperative.Builders.Lua
             return expr;
         }
 
+        /// <summary>
+        /// Visits the var or exp parse tree context.
+        /// </summary>
+        /// <param name="ctx">The var or exp parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitVarOrExp([NotNull] VarOrExpContext ctx)
             => ctx.exp() is not null ? this.Visit(ctx.exp()) : this.Visit(ctx.var());
 
+        /// <summary>
+        /// Visits the name and args parse tree context.
+        /// </summary>
+        /// <param name="ctx">The name and args parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitNameAndArgs([NotNull] NameAndArgsContext ctx)
             => this.Visit(ctx.args());
 
+        /// <summary>
+        /// Visits the args parse tree context.
+        /// </summary>
+        /// <param name="ctx">The args parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitArgs([NotNull] ArgsContext ctx)
         {
             if (ctx.tableconstructor() is not null) {
@@ -152,9 +202,19 @@ namespace LINVAST.Imperative.Builders.Lua
                 : new ExprListNode(ctx.Start.Line);
         }
 
+        /// <summary>
+        /// Visits the functiondef parse tree context.
+        /// </summary>
+        /// <param name="ctx">The functiondef parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFunctiondef([NotNull] FunctiondefContext ctx)
             => this.Visit(ctx.funcbody());
 
+        /// <summary>
+        /// Visits the funcbody parse tree context.
+        /// </summary>
+        /// <param name="ctx">The funcbody parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFuncbody([NotNull] FuncbodyContext ctx)
         {
             FuncParamsNode? @params = null;
@@ -166,6 +226,11 @@ namespace LINVAST.Imperative.Builders.Lua
                 : new LambdaFuncExprNode(ctx.Start.Line, @params, def);
         }
 
+        /// <summary>
+        /// Visits the parlist parse tree context.
+        /// </summary>
+        /// <param name="ctx">The parlist parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitParlist([NotNull] ParlistContext ctx)
         {
             bool isVariadic = ctx.GetText().Contains("...", StringComparison.Ordinal);
@@ -182,9 +247,19 @@ namespace LINVAST.Imperative.Builders.Lua
             return new FuncParamsNode(ctx.Start.Line, @params) { IsVariadic = isVariadic };
         }
 
+        /// <summary>
+        /// Visits the tableconstructor parse tree context.
+        /// </summary>
+        /// <param name="ctx">The tableconstructor parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitTableconstructor([NotNull] TableconstructorContext ctx)
             => ctx.fieldlist() is not null ? this.Visit(ctx.fieldlist()) : new DictInitNode(ctx.Start.Line);
 
+        /// <summary>
+        /// Visits the fieldlist parse tree context.
+        /// </summary>
+        /// <param name="ctx">The fieldlist parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFieldlist([NotNull] FieldlistContext ctx)
         {
             if (IsExpressionList(ctx))
@@ -214,6 +289,11 @@ namespace LINVAST.Imperative.Builders.Lua
                 => ctx.field().All(f => f.children.Count == 1);
         }
 
+        /// <summary>
+        /// Visits the field parse tree context.
+        /// </summary>
+        /// <param name="ctx">The field parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitField([NotNull] FieldContext ctx)
         {
             if (ctx.children.Count == 1)

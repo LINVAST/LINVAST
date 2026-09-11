@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System.Linq;
 using Antlr4.Runtime.Misc;
 using LINVAST.Builders;
@@ -9,8 +25,17 @@ using static LINVAST.Imperative.Builders.Pseudo.PseudoParser;
 
 namespace LINVAST.Imperative.Builders.Pseudo
 {
+    /// <summary>
+    /// Builds a Pseudo language AST from source code.
+    /// </summary>
+
     public sealed partial class PseudoASTBuilder : PseudoBaseVisitor<ASTNode>, IASTBuilder<PseudoParser>
     {
+        /// <summary>
+        /// Visits the statement parse tree context.
+        /// </summary>
+        /// <param name="ctx">The statement parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStatement([NotNull] StatementContext ctx)
         {
             if (ctx.declaration() is not null)
@@ -59,6 +84,11 @@ namespace LINVAST.Imperative.Builders.Pseudo
             }
         }
 
+        /// <summary>
+        /// Visits the assignment parse tree context.
+        /// </summary>
+        /// <param name="ctx">The assignment parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAssignment([NotNull] AssignmentContext ctx)
         {
             ExprNode left = this.Visit(ctx.var()).As<ExprNode>();

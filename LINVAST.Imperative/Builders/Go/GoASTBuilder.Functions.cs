@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System;
 using System.Linq;
 using LINVAST.Builders;
@@ -6,8 +22,17 @@ using LINVAST.Nodes;
 
 namespace LINVAST.Imperative.Builders.Go
 {
+    /// <summary>
+    /// Builds a Go language AST from source code.
+    /// </summary>
+
     public sealed partial class GoASTBuilder : GoParserBaseVisitor<ASTNode>, IASTBuilder<GoParser>
     {
+        /// <summary>
+        /// Visits the function decl parse tree context.
+        /// </summary>
+        /// <param name="context">The function decl parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFunctionDecl(GoParser.FunctionDeclContext context)
         {
             var funcName = new IdNode(context.Start.Line, context.IDENTIFIER().GetText());
@@ -42,6 +67,11 @@ namespace LINVAST.Imperative.Builders.Go
             throw new Exception("Unreachable code was reached!");
         }
 
+        /// <summary>
+        /// Visits the parameters parse tree context.
+        /// </summary>
+        /// <param name="context">The parameters parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitParameters(GoParser.ParametersContext context)
         {
             var paramsArr = context.parameterDecl()
@@ -56,6 +86,11 @@ namespace LINVAST.Imperative.Builders.Go
         }
 
         // note this returns FuncParamsNode, NOT FuncParamNode !
+        /// <summary>
+        /// Visits the parameter decl parse tree context.
+        /// </summary>
+        /// <param name="context">The parameter decl parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitParameterDecl(GoParser.ParameterDeclContext context)
         {
             TypeNameNode paramType = this.Visit(context.type_()).As<TypeNameNode>();
@@ -84,6 +119,11 @@ namespace LINVAST.Imperative.Builders.Go
         // this effectively returns a FuncNode for unnamed function without a body,
         // as there is no {return value, params} ASTNode
         // (not the greatest solution)
+        /// <summary>
+        /// Visits the signature parse tree context.
+        /// </summary>
+        /// <param name="context">The signature parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSignature(GoParser.SignatureContext context)
         {
             DeclSpecsNode? retTypeNode = null;
@@ -104,6 +144,11 @@ namespace LINVAST.Imperative.Builders.Go
         
         # region method-specific stuff
 
+        /// <summary>
+        /// Visits the method decl parse tree context.
+        /// </summary>
+        /// <param name="context">The method decl parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitMethodDecl(GoParser.MethodDeclContext context)
         {
             FuncParamNode receiver = this.Visit(context.receiver()).As<FuncParamNode>();
@@ -132,6 +177,11 @@ namespace LINVAST.Imperative.Builders.Go
                 new FuncDeclNode(context.Start.Line, funcName, parameters));
         }
 
+        /// <summary>
+        /// Visits the receiver parse tree context.
+        /// </summary>
+        /// <param name="context">The receiver parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitReceiver(GoParser.ReceiverContext context)
         {
             FuncParamsNode receiver = this.Visit(context.parameters()).As<FuncParamsNode>();

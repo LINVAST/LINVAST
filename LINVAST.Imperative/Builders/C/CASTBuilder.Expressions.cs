@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System;
 using System.Linq;
 using Antlr4.Runtime.Misc;
@@ -10,8 +26,17 @@ using static LINVAST.Imperative.Builders.C.CParser;
 
 namespace LINVAST.Imperative.Builders.C
 {
+    /// <summary>
+    /// Builds a C language AST from source code.
+    /// </summary>
+
     public sealed partial class CASTBuilder : CBaseVisitor<ASTNode>, IASTBuilder<CParser>
     {
+        /// <summary>
+        /// Visits the expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExpression([NotNull] ExpressionContext ctx)
         {
             ExprNode expr = this.Visit(ctx.assignmentExpression()).As<ExprNode>();
@@ -25,6 +50,11 @@ namespace LINVAST.Imperative.Builders.C
             return expr;
         }
 
+        /// <summary>
+        /// Visits the assignment expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The assignment expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAssignmentExpression([NotNull] AssignmentExpressionContext ctx)
         {
             if (ctx.DigitSequence() is not null)
@@ -41,6 +71,11 @@ namespace LINVAST.Imperative.Builders.C
             return new AssignExprNode(ctx.Start.Line, unary, op, expr);
         }
 
+        /// <summary>
+        /// Visits the conditional expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The conditional expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitConditionalExpression([NotNull] ConditionalExpressionContext ctx)
         {
             ExprNode expr = this.Visit(ctx.logicalOrExpression()).As<ExprNode>();
@@ -52,9 +87,19 @@ namespace LINVAST.Imperative.Builders.C
             return new CondExprNode(ctx.Start.Line, expr, thenExpr, elseExpr);
         }
 
+        /// <summary>
+        /// Visits the constant expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The constant expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitConstantExpression([NotNull] ConstantExpressionContext ctx)
             => this.Visit(ctx.conditionalExpression());
 
+        /// <summary>
+        /// Visits the logical or expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The logical or expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitLogicalOrExpression([NotNull] LogicalOrExpressionContext ctx)
         {
             if (ctx.ChildCount > 1) {
@@ -67,6 +112,11 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the logical and expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The logical and expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitLogicalAndExpression([NotNull] LogicalAndExpressionContext ctx)
         {
             if (ctx.ChildCount > 1) {
@@ -79,6 +129,11 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the inclusive or expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The inclusive or expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInclusiveOrExpression([NotNull] InclusiveOrExpressionContext ctx)
         {
             if (ctx.ChildCount > 1) {
@@ -92,6 +147,11 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the exclusive or expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The exclusive or expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExclusiveOrExpression([NotNull] ExclusiveOrExpressionContext ctx)
         {
             if (ctx.ChildCount > 1) {
@@ -105,6 +165,11 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the and expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The and expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAndExpression([NotNull] AndExpressionContext ctx)
         {
             if (ctx.ChildCount > 1) {
@@ -118,6 +183,11 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the equality expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The equality expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitEqualityExpression([NotNull] EqualityExpressionContext ctx)
         {
             if (ctx.equalityExpression() is null)
@@ -129,6 +199,11 @@ namespace LINVAST.Imperative.Builders.C
             return new RelExprNode(ctx.Start.Line, left, op, right);
         }
 
+        /// <summary>
+        /// Visits the relational expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The relational expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitRelationalExpression([NotNull] RelationalExpressionContext ctx)
         {
             if (ctx.relationalExpression() is null)
@@ -140,6 +215,11 @@ namespace LINVAST.Imperative.Builders.C
             return new RelExprNode(ctx.Start.Line, left, op, right);
         }
 
+        /// <summary>
+        /// Visits the shift expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The shift expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitShiftExpression([NotNull] ShiftExpressionContext ctx)
         {
             if (ctx.ChildCount > 1) {
@@ -152,6 +232,11 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the additive expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The additive expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAdditiveExpression([NotNull] AdditiveExpressionContext ctx)
         {
             if (ctx.ChildCount > 1) {
@@ -164,6 +249,11 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the multiplicative expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The multiplicative expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitMultiplicativeExpression([NotNull] MultiplicativeExpressionContext ctx)
         {
             if (ctx.ChildCount > 1) {
@@ -176,6 +266,11 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the cast expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The cast expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCastExpression([NotNull] CastExpressionContext ctx)
         {
             if (ctx.DigitSequence() is not null)
@@ -186,6 +281,11 @@ namespace LINVAST.Imperative.Builders.C
                 : this.Visit(ctx.castExpression());
         }
 
+        /// <summary>
+        /// Visits the unary expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The unary expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitUnaryExpression([NotNull] UnaryExpressionContext ctx)
         {
             if (ctx.postfixExpression() is not null)
@@ -215,6 +315,11 @@ namespace LINVAST.Imperative.Builders.C
             return new UnaryExprNode(ctx.Start.Line, op, expr);
         }
 
+        /// <summary>
+        /// Visits the postfix expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The postfix expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitPostfixExpression([NotNull] PostfixExpressionContext ctx)
         {
             if (ctx.primaryExpression() is not null)
@@ -258,6 +363,11 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the primary expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The primary expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitPrimaryExpression([NotNull] PrimaryExpressionContext ctx)
         {
             if (ctx.Identifier() is not null) {
@@ -300,9 +410,19 @@ namespace LINVAST.Imperative.Builders.C
             throw new NotImplementedException("primary expression");
         }
 
+        /// <summary>
+        /// Visits the generic selection parse tree context.
+        /// </summary>
+        /// <param name="ctx">The generic selection parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitGenericSelection([NotNull] GenericSelectionContext ctx)
             => this.Visit(ctx.genericAssocList());
 
+        /// <summary>
+        /// Visits the generic assoc list parse tree context.
+        /// </summary>
+        /// <param name="ctx">The generic assoc list parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitGenericAssocList([NotNull] GenericAssocListContext ctx)
         {
             ExprNode expr = this.Visit(ctx.genericAssociation()).As<ExprNode>();
@@ -314,9 +434,19 @@ namespace LINVAST.Imperative.Builders.C
             return IsDefaultGenericAssociation(ctx.genericAssociation()) ? expr : listExpr;
         }
 
+        /// <summary>
+        /// Visits the generic association parse tree context.
+        /// </summary>
+        /// <param name="ctx">The generic association parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitGenericAssociation([NotNull] GenericAssociationContext ctx)
             => this.Visit(ctx.assignmentExpression());
 
+        /// <summary>
+        /// Visits the argument expression list parse tree context.
+        /// </summary>
+        /// <param name="ctx">The argument expression list parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitArgumentExpressionList([NotNull] ArgumentExpressionListContext ctx)
         {
             ExprListNode args;

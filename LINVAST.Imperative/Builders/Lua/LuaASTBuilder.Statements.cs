@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +27,17 @@ using static LINVAST.Imperative.Builders.Lua.LuaParser;
 
 namespace LINVAST.Imperative.Builders.Lua
 {
+    /// <summary>
+    /// Builds a Lua language AST from source code.
+    /// </summary>
+
     public sealed partial class LuaASTBuilder : LuaBaseVisitor<ASTNode>, IASTBuilder<LuaParser>
     {
+        /// <summary>
+        /// Visits the stat parse tree context.
+        /// </summary>
+        /// <param name="ctx">The stat parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStat([NotNull] StatContext ctx)
         {
             if (ctx.varlist() is not null) {
@@ -213,6 +238,11 @@ namespace LINVAST.Imperative.Builders.Lua
             }
         }
 
+        /// <summary>
+        /// Visits the retstat parse tree context.
+        /// </summary>
+        /// <param name="ctx">The retstat parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitRetstat([NotNull] RetstatContext ctx)
         {
             ExprNode? expr = null;
@@ -221,9 +251,19 @@ namespace LINVAST.Imperative.Builders.Lua
             return new JumpStatNode(ctx.Start.Line, expr);
         }
 
+        /// <summary>
+        /// Visits the varlist parse tree context.
+        /// </summary>
+        /// <param name="ctx">The varlist parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitVarlist([NotNull] VarlistContext ctx)
             => new ExprListNode(ctx.Start.Line, ctx.var().Select(v => this.Visit(v).As<ExprNode>()));
 
+        /// <summary>
+        /// Visits the var parse tree context.
+        /// </summary>
+        /// <param name="ctx">The var parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitVar([NotNull] VarContext ctx)
         {
             ExprNode expr = ctx.NAME() is not null
@@ -245,6 +285,11 @@ namespace LINVAST.Imperative.Builders.Lua
             return expr;
         }
 
+        /// <summary>
+        /// Visits the var suffix parse tree context.
+        /// </summary>
+        /// <param name="ctx">The var suffix parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitVarSuffix([NotNull] VarSuffixContext ctx)
         {
             if (ctx.NAME() is not null)
@@ -252,9 +297,19 @@ namespace LINVAST.Imperative.Builders.Lua
             return this.Visit(ctx.exp());
         }
 
+        /// <summary>
+        /// Visits the namelist parse tree context.
+        /// </summary>
+        /// <param name="ctx">The namelist parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitNamelist([NotNull] NamelistContext ctx)
             => new IdListNode(ctx.Start.Line, ctx.NAME().Select(v => new IdNode(ctx.Start.Line, v.GetText())));
 
+        /// <summary>
+        /// Visits the functioncall parse tree context.
+        /// </summary>
+        /// <param name="ctx">The functioncall parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFunctioncall([NotNull] FunctioncallContext ctx)
         {
             ExprNode expr = this.Visit(ctx.varOrExp()).As<ExprNode>();
@@ -263,6 +318,11 @@ namespace LINVAST.Imperative.Builders.Lua
             return expr;
         }
 
+        /// <summary>
+        /// Visits the funcname parse tree context.
+        /// </summary>
+        /// <param name="ctx">The funcname parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFuncname([NotNull] FuncnameContext ctx)
             => new IdNode(ctx.Start.Line, ctx.GetText());
     }

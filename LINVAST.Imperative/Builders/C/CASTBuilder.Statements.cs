@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System;
 using System.Linq;
 using Antlr4.Runtime.Misc;
@@ -11,8 +27,17 @@ using static LINVAST.Imperative.Builders.C.CParser;
 
 namespace LINVAST.Imperative.Builders.C
 {
+    /// <summary>
+    /// Builds a C language AST from source code.
+    /// </summary>
+
     public sealed partial class CASTBuilder : CBaseVisitor<ASTNode>, IASTBuilder<CParser>
     {
+        /// <summary>
+        /// Visits the compound statement parse tree context.
+        /// </summary>
+        /// <param name="ctx">The compound statement parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCompoundStatement([NotNull] CompoundStatementContext ctx)
         {
             return ctx.blockItemList() is null
@@ -20,6 +45,11 @@ namespace LINVAST.Imperative.Builders.C
                 : this.Visit(ctx.blockItemList());
         }
 
+        /// <summary>
+        /// Visits the block item list parse tree context.
+        /// </summary>
+        /// <param name="ctx">The block item list parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitBlockItemList([NotNull] BlockItemListContext ctx)
         {
             BlockStatNode block;
@@ -32,12 +62,27 @@ namespace LINVAST.Imperative.Builders.C
             return new BlockStatNode(ctx.Start.Line, block.Children.Concat(new[] { item }));
         }
 
+        /// <summary>
+        /// Visits the block item parse tree context.
+        /// </summary>
+        /// <param name="ctx">The block item parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitBlockItem([NotNull] BlockItemContext ctx)
             => this.Visit(ctx.children.Single());
 
+        /// <summary>
+        /// Visits the statement parse tree context.
+        /// </summary>
+        /// <param name="ctx">The statement parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStatement([NotNull] StatementContext ctx)
             => this.Visit(ctx.children.Single());
 
+        /// <summary>
+        /// Visits the labeled statement parse tree context.
+        /// </summary>
+        /// <param name="ctx">The labeled statement parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitLabeledStatement([NotNull] LabeledStatementContext ctx)
         {
             string label;
@@ -52,6 +97,11 @@ namespace LINVAST.Imperative.Builders.C
             return new LabeledStatNode(ctx.Start.Line, label, statement);
         }
 
+        /// <summary>
+        /// Visits the expression statement parse tree context.
+        /// </summary>
+        /// <param name="ctx">The expression statement parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExpressionStatement([NotNull] ExpressionStatementContext ctx)
         {
             if (ctx.expression() is null)
@@ -61,6 +111,11 @@ namespace LINVAST.Imperative.Builders.C
             return new ExprStatNode(ctx.Start.Line, expr);
         }
 
+        /// <summary>
+        /// Visits the selection statement parse tree context.
+        /// </summary>
+        /// <param name="ctx">The selection statement parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSelectionStatement([NotNull] SelectionStatementContext ctx)
         {
             switch (ctx.children.First().GetText()) {
@@ -83,6 +138,11 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the iteration statement parse tree context.
+        /// </summary>
+        /// <param name="ctx">The iteration statement parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitIterationStatement([NotNull] IterationStatementContext ctx)
         {
             IterStatNode it;
@@ -128,6 +188,11 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the for expression parse tree context.
+        /// </summary>
+        /// <param name="ctx">The for expression parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitForExpression([NotNull] ForExpressionContext ctx)
         {
             ExprListNode exprs;
@@ -141,6 +206,11 @@ namespace LINVAST.Imperative.Builders.C
             return new ExprListNode(ctx.Start.Line, exprs.Expressions.Concat(new[] { expr }));
         }
 
+        /// <summary>
+        /// Visits the jump statement parse tree context.
+        /// </summary>
+        /// <param name="ctx">The jump statement parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitJumpStatement([NotNull] JumpStatementContext ctx)
         {
             JumpStatType type = JumpStatementTypeConverter.FromString(ctx.children.First().GetText());

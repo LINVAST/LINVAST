@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,14 +28,28 @@ using static LINVAST.Imperative.Builders.Java.JavaParser;
 
 namespace LINVAST.Imperative.Builders.Java
 {
+    /// <summary>
+    /// Builds a Java language AST from source code.
+    /// </summary>
+
     public sealed partial class JavaASTBuilder : JavaBaseVisitor<ASTNode>, IASTBuilder<JavaParser>
     {
 
         #region package and import declarations
 
+        /// <summary>
+        /// Visits the package declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The package declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitPackageDeclaration([NotNull] PackageDeclarationContext ctx)
             => new PackageNode(ctx.Start.Line, ctx.qualifiedName().GetText());
 
+        /// <summary>
+        /// Visits the import declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The import declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitImportDeclaration([NotNull] ImportDeclarationContext ctx)
         {
             string? qualifiedAs = null;
@@ -37,6 +67,11 @@ namespace LINVAST.Imperative.Builders.Java
 
         #region class, enum, interface declarations
 
+        /// <summary>
+        /// Visits the class declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The class declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitClassDeclaration([NotNull] ClassDeclarationContext ctx)
         {
             var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
@@ -67,6 +102,11 @@ namespace LINVAST.Imperative.Builders.Java
                 declarations);
         }
 
+        /// <summary>
+        /// Visits the enum declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The enum declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitEnumDeclaration([NotNull] EnumDeclarationContext ctx)
         {
             var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
@@ -87,6 +127,11 @@ namespace LINVAST.Imperative.Builders.Java
                 : new EnumDeclNode(ctx.Start.Line, identifier, constantsNode, enumBodyNodes);
         }
 
+        /// <summary>
+        /// Visits the enum constant parse tree context.
+        /// </summary>
+        /// <param name="ctx">The enum constant parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitEnumConstant([NotNull] EnumConstantContext ctx)
         {
             int line = ctx.Start.Line;
@@ -110,9 +155,19 @@ namespace LINVAST.Imperative.Builders.Java
                 : new VarDeclNode(line, annotations, new IdNode(line, ctx.IDENTIFIER().GetText()), initializer);
         }
 
+        /// <summary>
+        /// Visits the enum body declarations parse tree context.
+        /// </summary>
+        /// <param name="ctx">The enum body declarations parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitEnumBodyDeclarations([NotNull] EnumBodyDeclarationsContext ctx)
             => new BlockStatNode(ctx.Start.Line, ctx.classBodyDeclaration().Select(this.VisitClassBodyDeclaration));
 
+        /// <summary>
+        /// Visits the interface declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The interface declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInterfaceDeclaration([NotNull] InterfaceDeclarationContext ctx)
         {
             var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
@@ -135,6 +190,11 @@ namespace LINVAST.Imperative.Builders.Java
                 declarations);
         }
 
+        /// <summary>
+        /// Visits the class body declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The class body declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitClassBodyDeclaration([NotNull] ClassBodyDeclarationContext ctx)
         {
             if (ctx.SEMI() is not null && ctx.ChildCount == 1)
@@ -208,9 +268,19 @@ namespace LINVAST.Imperative.Builders.Java
 
         #region class member declarations
 
+        /// <summary>
+        /// Visits the member declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The member declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitMemberDeclaration([NotNull] MemberDeclarationContext ctx)
             => this.Visit(ctx.children.Single());
 
+        /// <summary>
+        /// Visits the method declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The method declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitMethodDeclaration([NotNull] MethodDeclarationContext ctx)
         {
             var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
@@ -222,6 +292,11 @@ namespace LINVAST.Imperative.Builders.Java
             return new FuncDeclNode(ctx.Start.Line, identifier, @params, body);
         }
 
+        /// <summary>
+        /// Visits the generic method declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The generic method declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitGenericMethodDeclaration([NotNull] GenericMethodDeclarationContext ctx)
         {
             TypeNameListNode templateArgs = this.Visit(ctx.typeParameters()).As<TypeNameListNode>();
@@ -233,6 +308,11 @@ namespace LINVAST.Imperative.Builders.Java
                     func.Definition ?? throw new SyntaxErrorException("Unknown construct"));
         }
 
+        /// <summary>
+        /// Visits the generic constructor declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The generic constructor declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitGenericConstructorDeclaration([NotNull] GenericConstructorDeclarationContext ctx)
         {
             TypeNameListNode templateArgs = this.Visit(ctx.typeParameters()).As<TypeNameListNode>();
@@ -240,6 +320,11 @@ namespace LINVAST.Imperative.Builders.Java
             return new FuncDeclNode(ctx.Start.Line, ctorDecl.IdentifierNode, templateArgs, ctorDecl.Definition);
         }
 
+        /// <summary>
+        /// Visits the constructor declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The constructor declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitConstructorDeclaration([NotNull] ConstructorDeclarationContext ctx)
         {
             var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
@@ -249,6 +334,11 @@ namespace LINVAST.Imperative.Builders.Java
             return new FuncDeclNode(ctx.Start.Line, identifier, @params, body);
         }
 
+        /// <summary>
+        /// Visits the field declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The field declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFieldDeclaration([NotNull] FieldDeclarationContext ctx)
             => this.Visit(ctx.variableDeclarators()); // DeclListNode
 
@@ -256,6 +346,11 @@ namespace LINVAST.Imperative.Builders.Java
 
         #region interface member declarations
 
+        /// <summary>
+        /// Visits the interface body declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The interface body declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInterfaceBodyDeclaration([NotNull] InterfaceBodyDeclarationContext ctx)
         {
             if (ctx.SEMI() is not null && ctx.ChildCount == 1)
@@ -333,13 +428,28 @@ namespace LINVAST.Imperative.Builders.Java
 
         }
 
+        /// <summary>
+        /// Visits the interface member declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The interface member declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInterfaceMemberDeclaration([NotNull] InterfaceMemberDeclarationContext ctx)
             => base.Visit(ctx.children.Single());
 
+        /// <summary>
+        /// Visits the const declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The const declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitConstDeclaration([NotNull] ConstDeclarationContext ctx)
             => new DeclListNode(ctx.Start.Line, ctx.constantDeclarator().Select(
                 constDeclCtx => this.Visit(constDeclCtx).As<DeclNode>()));
 
+        /// <summary>
+        /// Visits the constant declarator parse tree context.
+        /// </summary>
+        /// <param name="ctx">The constant declarator parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitConstantDeclarator([NotNull] ConstantDeclaratorContext ctx)
         {
             var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
@@ -353,6 +463,11 @@ namespace LINVAST.Imperative.Builders.Java
             return new VarDeclNode(ctx.Start.Line, identifier, init);
         }
 
+        /// <summary>
+        /// Visits the interface method declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The interface method declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInterfaceMethodDeclaration([NotNull] InterfaceMethodDeclarationContext ctx)
         {
             var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
@@ -370,6 +485,11 @@ namespace LINVAST.Imperative.Builders.Java
                 @params, body);
         }
 
+        /// <summary>
+        /// Visits the generic interface method declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The generic interface method declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitGenericInterfaceMethodDeclaration([NotNull] GenericInterfaceMethodDeclarationContext ctx)
         {
             TypeNameListNode templateArgs = this.Visit(ctx.typeParameters()).As<TypeNameListNode>();
@@ -386,10 +506,20 @@ namespace LINVAST.Imperative.Builders.Java
 
         #region variable declarators
 
+        /// <summary>
+        /// Visits the variable declarators parse tree context.
+        /// </summary>
+        /// <param name="ctx">The variable declarators parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitVariableDeclarators([NotNull] VariableDeclaratorsContext ctx)
             => new DeclListNode(ctx.Start.Line, ctx.variableDeclarator().Select(
                 varDeclCtx => this.Visit(varDeclCtx).As<DeclNode>()));
 
+        /// <summary>
+        /// Visits the variable declarator parse tree context.
+        /// </summary>
+        /// <param name="ctx">The variable declarator parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitVariableDeclarator([NotNull] VariableDeclaratorContext ctx)
         {
             VariableDeclaratorIdContext varDeclIdCtx = ctx.variableDeclaratorId();
@@ -411,6 +541,11 @@ namespace LINVAST.Imperative.Builders.Java
             return new VarDeclNode(ctx.Start.Line, identifier);
         }
 
+        /// <summary>
+        /// Visits the variable declarator id parse tree context.
+        /// </summary>
+        /// <param name="ctx">The variable declarator id parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitVariableDeclaratorId([NotNull] VariableDeclaratorIdContext ctx)
             => new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
 
@@ -418,6 +553,11 @@ namespace LINVAST.Imperative.Builders.Java
 
         #region local declarations
 
+        /// <summary>
+        /// Visits the local variable declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The local variable declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitLocalVariableDeclaration([NotNull] LocalVariableDeclarationContext ctx)
         {
             string modifiers = "";
@@ -444,6 +584,11 @@ namespace LINVAST.Imperative.Builders.Java
                 : new DeclStatNode(ctx.Start.Line, declSpecs, declList);
         }
 
+        /// <summary>
+        /// Visits the local type declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The local type declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitLocalTypeDeclaration([NotNull] LocalTypeDeclarationContext ctx)
         {
             if (ctx.SEMI() is not null)
@@ -480,6 +625,11 @@ namespace LINVAST.Imperative.Builders.Java
 
         #region annotation declarations
 
+        /// <summary>
+        /// Visits the annotation type declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The annotation type declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAnnotationTypeDeclaration([NotNull] AnnotationTypeDeclarationContext ctx)
         {
             var identifier = new IdNode(ctx.Start.Line, ctx.IDENTIFIER().GetText());
@@ -492,9 +642,19 @@ namespace LINVAST.Imperative.Builders.Java
                 block.Children.OfType<DeclStatNode>());
         }
 
+        /// <summary>
+        /// Visits the annotation type body parse tree context.
+        /// </summary>
+        /// <param name="ctx">The annotation type body parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAnnotationTypeBody([NotNull] AnnotationTypeBodyContext ctx)
             => new BlockStatNode(ctx.Start.Line, ctx.annotationTypeElementDeclaration().Select(this.Visit));
 
+        /// <summary>
+        /// Visits the annotation type element declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The annotation type element declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAnnotationTypeElementDeclaration([NotNull] AnnotationTypeElementDeclarationContext ctx)
         {
             if (ctx.SEMI() is not null)
@@ -580,13 +740,28 @@ namespace LINVAST.Imperative.Builders.Java
 
         #region other (overriden just for the purposes of testing the above methods)
 
+        /// <summary>
+        /// Visits the qualified name parse tree context.
+        /// </summary>
+        /// <param name="ctx">The qualified name parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitQualifiedName([NotNull] QualifiedNameContext ctx)
             => new IdNode(ctx.Start.Line,
                 string.Join('.', ctx.IDENTIFIER().Select(id => id.GetText())));
 
+        /// <summary>
+        /// Visits the block parse tree context.
+        /// </summary>
+        /// <param name="ctx">The block parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitBlock([NotNull] BlockContext ctx)
             => new BlockStatNode(ctx.Start.Line, ctx.blockStatement().Select(s => this.Visit(s)));
 
+        /// <summary>
+        /// Visits the block statement parse tree context.
+        /// </summary>
+        /// <param name="ctx">The block statement parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitBlockStatement([NotNull] BlockStatementContext ctx)
         {
             if (ctx.localVariableDeclaration() is not null)
@@ -598,6 +773,11 @@ namespace LINVAST.Imperative.Builders.Java
             return this.Visit(ctx.localTypeDeclaration());
         }
 
+        /// <summary>
+        /// Visits the statement parse tree context.
+        /// </summary>
+        /// <param name="ctx">The statement parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStatement([NotNull] StatementContext ctx)
         {
             if (ctx.blockLabel is not null)
@@ -709,18 +889,38 @@ namespace LINVAST.Imperative.Builders.Java
             throw new NotImplementedException($"Java statement: {ctx.Start.Text}");
         }
 
+        /// <summary>
+        /// Visits the catch clause parse tree context.
+        /// </summary>
+        /// <param name="ctx">The catch clause parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCatchClause([NotNull] CatchClauseContext ctx)
             => new LabeledStatNode(
                 ctx.Start.Line,
                 $"catch {ctx.catchType().GetText()} {ctx.IDENTIFIER().GetText()}",
                 this.Visit(ctx.block()).As<BlockStatNode>());
 
+        /// <summary>
+        /// Visits the catch type parse tree context.
+        /// </summary>
+        /// <param name="ctx">The catch type parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCatchType([NotNull] CatchTypeContext ctx)
             => new TypeNameNode(ctx.Start.Line, ctx.GetText());
 
+        /// <summary>
+        /// Visits the finally block parse tree context.
+        /// </summary>
+        /// <param name="ctx">The finally block parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFinallyBlock([NotNull] FinallyBlockContext ctx)
             => new LabeledStatNode(ctx.Start.Line, "finally", this.Visit(ctx.block()).As<BlockStatNode>());
 
+        /// <summary>
+        /// Visits the switch block statement group parse tree context.
+        /// </summary>
+        /// <param name="ctx">The switch block statement group parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSwitchBlockStatementGroup([NotNull] SwitchBlockStatementGroupContext ctx)
         {
             StatNode statement = new BlockStatNode(ctx.Start.Line, ctx.blockStatement().Select(this.Visit));
@@ -730,18 +930,43 @@ namespace LINVAST.Imperative.Builders.Java
             return statement;
         }
 
+        /// <summary>
+        /// Visits the switch label parse tree context.
+        /// </summary>
+        /// <param name="ctx">The switch label parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSwitchLabel([NotNull] SwitchLabelContext ctx)
             => new LabeledStatNode(ctx.Start.Line, this.SwitchLabelText(ctx), new EmptyStatNode(ctx.Start.Line));
 
+        /// <summary>
+        /// Visits the class body parse tree context.
+        /// </summary>
+        /// <param name="ctx">The class body parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitClassBody([NotNull] ClassBodyContext ctx)
             => new BlockStatNode(ctx.Start.Line);
 
+        /// <summary>
+        /// Visits the interface body parse tree context.
+        /// </summary>
+        /// <param name="ctx">The interface body parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInterfaceBody([NotNull] InterfaceBodyContext ctx)
             => new BlockStatNode(ctx.Start.Line);
 
+        /// <summary>
+        /// Visits the method body parse tree context.
+        /// </summary>
+        /// <param name="ctx">The method body parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitMethodBody([NotNull] MethodBodyContext ctx)
             => ctx.block() is not null ? this.Visit(ctx.block()) : new BlockStatNode(ctx.Start.Line);
 
+        /// <summary>
+        /// Visits the formal parameters parse tree context.
+        /// </summary>
+        /// <param name="ctx">The formal parameters parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFormalParameters([NotNull] FormalParametersContext ctx)
             => new FuncParamsNode(ctx.Start.Line);
 

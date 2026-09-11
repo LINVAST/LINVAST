@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System;
 using System.Linq;
 using Antlr4.Runtime.Misc;
@@ -9,8 +25,17 @@ using static LINVAST.Imperative.Builders.Java.JavaParser;
 
 namespace LINVAST.Imperative.Builders.Java
 {
+    /// <summary>
+    /// Builds a Java language AST from source code.
+    /// </summary>
+
     public sealed partial class JavaASTBuilder : JavaBaseVisitor<ASTNode>, IASTBuilder<JavaParser>
     {
+        /// <summary>
+        /// Visits the method call parse tree context.
+        /// </summary>
+        /// <param name="ctx">The method call parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitMethodCall([NotNull] MethodCallContext ctx)
         {
             if (ctx.IDENTIFIER() is not null && ctx.RPAREN() is not null && ctx.RPAREN() is not null) {
@@ -43,6 +68,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the explicit generic invocation parse tree context.
+        /// </summary>
+        /// <param name="ctx">The explicit generic invocation parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExplicitGenericInvocation([NotNull] ExplicitGenericInvocationContext ctx)
         {
             if (ctx.nonWildcardTypeArguments() is not null && ctx.explicitGenericInvocationSuffix() is not null) {
@@ -59,6 +89,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the explicit generic invocation suffix parse tree context.
+        /// </summary>
+        /// <param name="ctx">The explicit generic invocation suffix parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExplicitGenericInvocationSuffix([NotNull] ExplicitGenericInvocationSuffixContext ctx)
         {
             if (ctx.SUPER() is not null && ctx.superSuffix() is not null) {
@@ -81,6 +116,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the super suffix parse tree context.
+        /// </summary>
+        /// <param name="ctx">The super suffix parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSuperSuffix([NotNull] SuperSuffixContext ctx)
         {
             if (ctx.DOT() is not null && ctx.IDENTIFIER() is not null && ctx.arguments() is not null) {
@@ -95,6 +135,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the formal parameter list parse tree context.
+        /// </summary>
+        /// <param name="ctx">The formal parameter list parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFormalParameterList([NotNull] FormalParameterListContext ctx)
         {
             if (ctx.formalParameter().Length > 0) {
@@ -113,6 +158,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the formal parameter parse tree context.
+        /// </summary>
+        /// <param name="ctx">The formal parameter parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFormalParameter([NotNull] FormalParameterContext ctx)
         {
             string modifiers = "";
@@ -140,6 +190,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the last formal parameter parse tree context.
+        /// </summary>
+        /// <param name="ctx">The last formal parameter parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitLastFormalParameter([NotNull] LastFormalParameterContext ctx)
         {
             string modifiers = "";
@@ -172,6 +227,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the variable modifier parse tree context.
+        /// </summary>
+        /// <param name="ctx">The variable modifier parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitVariableModifier([NotNull] VariableModifierContext ctx)
         {
             if (ctx.FINAL() is not null) 
@@ -183,6 +243,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the inner creator parse tree context.
+        /// </summary>
+        /// <param name="ctx">The inner creator parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInnerCreator([NotNull] InnerCreatorContext ctx)
         {
             if (ctx.IDENTIFIER() is not null && ctx.classCreatorRest() is not null) {
@@ -200,6 +265,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the creator parse tree context.
+        /// </summary>
+        /// <param name="ctx">The creator parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCreator([NotNull] CreatorContext ctx)
         {
             if (ctx.createdName() is not null) {
@@ -228,6 +298,11 @@ namespace LINVAST.Imperative.Builders.Java
                 new ExprListNode(ctx.Start.Line, new IdNode(ctx.Start.Line, ctx.GetText())));
         }
 
+        /// <summary>
+        /// Visits the created name parse tree context.
+        /// </summary>
+        /// <param name="ctx">The created name parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCreatedName([NotNull] CreatedNameContext ctx)
         {
             if (ctx.IDENTIFIER().Any()) {
@@ -246,6 +321,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the type arguments or diamond parse tree context.
+        /// </summary>
+        /// <param name="ctx">The type arguments or diamond parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitTypeArgumentsOrDiamond([NotNull] TypeArgumentsOrDiamondContext ctx)
         {
             if (ctx.typeArguments() is not null) {
@@ -255,6 +335,11 @@ namespace LINVAST.Imperative.Builders.Java
             }
         }
 
+        /// <summary>
+        /// Visits the class creator rest parse tree context.
+        /// </summary>
+        /// <param name="ctx">The class creator rest parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitClassCreatorRest([NotNull] ClassCreatorRestContext ctx)
         {
             if (ctx.arguments() is not null) {
@@ -267,6 +352,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the array creator rest parse tree context.
+        /// </summary>
+        /// <param name="ctx">The array creator rest parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitArrayCreatorRest([NotNull] ArrayCreatorRestContext ctx)
         {
             if (ctx.arrayInitializer() is not null) {
@@ -283,9 +373,19 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the array initializer parse tree context.
+        /// </summary>
+        /// <param name="ctx">The array initializer parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitArrayInitializer([NotNull] ArrayInitializerContext ctx)
             => new ArrInitExprNode(ctx.Start.Line, ctx.variableInitializer().Select(v => this.Visit(v).As<ExprNode>()));
 
+        /// <summary>
+        /// Visits the variable initializer parse tree context.
+        /// </summary>
+        /// <param name="ctx">The variable initializer parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitVariableInitializer([NotNull] VariableInitializerContext ctx)
         {
             if (ctx.arrayInitializer() is not null) {
@@ -299,6 +399,11 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the annotation parse tree context.
+        /// </summary>
+        /// <param name="ctx">The annotation parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAnnotation([NotNull] AnnotationContext ctx)
         {
             IdNode? nameNode = null;
@@ -328,6 +433,11 @@ namespace LINVAST.Imperative.Builders.Java
             return new TagNode(ctx.Start.Line, nameNode);
         }
 
+        /// <summary>
+        /// Visits the element value parse tree context.
+        /// </summary>
+        /// <param name="ctx">The element value parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitElementValue([NotNull] ElementValueContext ctx)
         {
             if (ctx.expression() is not null) {
@@ -345,9 +455,19 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the element value pairs parse tree context.
+        /// </summary>
+        /// <param name="ctx">The element value pairs parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitElementValuePairs([NotNull] ElementValuePairsContext ctx)
             => new TagNode(ctx.Start.Line, "tmp", ctx.elementValuePair().Select(v => this.Visit(v).As<TagFieldNode>()));
 
+        /// <summary>
+        /// Visits the element value pair parse tree context.
+        /// </summary>
+        /// <param name="ctx">The element value pair parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitElementValuePair([NotNull] ElementValuePairContext ctx)
         {
             if (ctx.IDENTIFIER() is not null && ctx.elementValue() is not null) {
@@ -357,12 +477,27 @@ namespace LINVAST.Imperative.Builders.Java
             throw new SyntaxErrorException("Unknown construct");
         }
 
+        /// <summary>
+        /// Visits the element value array initializer parse tree context.
+        /// </summary>
+        /// <param name="ctx">The element value array initializer parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitElementValueArrayInitializer([NotNull] ElementValueArrayInitializerContext ctx)
             => new ArrInitExprNode(ctx.Start.Line, ctx.elementValue().Select(v => this.Visit(v).As<ExprNode>()));
 
+        /// <summary>
+        /// Visits the alt annotation qualified name parse tree context.
+        /// </summary>
+        /// <param name="ctx">The alt annotation qualified name parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAltAnnotationQualifiedName([NotNull] AltAnnotationQualifiedNameContext ctx)
             => new IdNode(ctx.Start.Line, string.Join('.', ctx.IDENTIFIER().Select(id => id.GetText())));
 
+        /// <summary>
+        /// Visits the arguments parse tree context.
+        /// </summary>
+        /// <param name="ctx">The arguments parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitArguments([NotNull] ArgumentsContext ctx)
         {
             if (ctx.LPAREN() is not null && ctx.RPAREN() is not null)

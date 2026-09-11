@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System;
 using System.Data;
 using System.Globalization;
@@ -10,8 +26,17 @@ using LINVAST.Nodes;
 
 namespace LINVAST.Imperative.Builders.Go
 {
+    /// <summary>
+    /// Builds a Go language AST from source code.
+    /// </summary>
+
     public sealed partial class GoASTBuilder : GoParserBaseVisitor<ASTNode>, IASTBuilder<GoParser>
     {
+        /// <summary>
+        /// Visits the expression parse tree context.
+        /// </summary>
+        /// <param name="context">The expression parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExpression(GoParser.ExpressionContext context)
         {
             if (context.primaryExpr() is not null) {
@@ -86,10 +111,20 @@ namespace LINVAST.Imperative.Builders.Go
             throw new NotSupportedException("Unsupported expression: " + context);
         }
 
+        /// <summary>
+        /// Visits the expression list parse tree context.
+        /// </summary>
+        /// <param name="context">The expression list parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExpressionList(GoParser.ExpressionListContext context) =>
             new ExprListNode(context.Start.Line, 
                 context.expression().Select(e => this.Visit(e).As<ExprNode>()));
 
+        /// <summary>
+        /// Visits the primary expr parse tree context.
+        /// </summary>
+        /// <param name="context">The primary expr parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitPrimaryExpr(GoParser.PrimaryExprContext context)
         {
             if (context.operand() is not null) {
@@ -142,6 +177,11 @@ namespace LINVAST.Imperative.Builders.Go
             throw new NotSupportedException("Invalid primary expression: " + context);
         }
         
+        /// <summary>
+        /// Visits the arguments parse tree context.
+        /// </summary>
+        /// <param name="context">The arguments parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitArguments(GoParser.ArgumentsContext context)
         {
             if (context.ELLIPSIS() is not null) {
@@ -167,15 +207,35 @@ namespace LINVAST.Imperative.Builders.Go
             return this.Visit(context.expressionList()).As<ExprListNode>();
         }
         
+        /// <summary>
+        /// Visits the method expr parse tree context.
+        /// </summary>
+        /// <param name="context">The method expr parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitMethodExpr(GoParser.MethodExprContext context) =>
             new IdNode(context.Start.Line, context.GetText());
 
+        /// <summary>
+        /// Visits the receiver type parse tree context.
+        /// </summary>
+        /// <param name="context">The receiver type parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitReceiverType(GoParser.ReceiverTypeContext context) => 
             new TypeNameNode(context.Start.Line, context.GetText());
 
+        /// <summary>
+        /// Visits the literal parse tree context.
+        /// </summary>
+        /// <param name="context">The literal parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitLiteral(GoParser.LiteralContext context) =>
             this.Visit(context.children.Single());
 
+        /// <summary>
+        /// Visits the operand parse tree context.
+        /// </summary>
+        /// <param name="context">The operand parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitOperand(GoParser.OperandContext context)
         {
             if (context.literal() is not null) return this.Visit(context.literal());
@@ -184,12 +244,27 @@ namespace LINVAST.Imperative.Builders.Go
             throw new NotSupportedException("Invalid operand context: " + context);
         }
 
+        /// <summary>
+        /// Visits the operand name parse tree context.
+        /// </summary>
+        /// <param name="context">The operand name parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitOperandName(GoParser.OperandNameContext context) =>
             new IdNode(context.Start.Line, context.IDENTIFIER().GetText());
 
+        /// <summary>
+        /// Visits the index parse tree context.
+        /// </summary>
+        /// <param name="context">The index parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitIndex(GoParser.IndexContext context) =>
             this.Visit(context.expression()).As<ExprNode>();
         
+        /// <summary>
+        /// Visits the basic lit parse tree context.
+        /// </summary>
+        /// <param name="context">The basic lit parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitBasicLit(GoParser.BasicLitContext context)
         {
             if (context.NIL_LIT() is not null) {
@@ -211,6 +286,11 @@ namespace LINVAST.Imperative.Builders.Go
             throw new NotSupportedException("Unsupported basic literal: " + context);
         }
 
+        /// <summary>
+        /// Visits the composite lit parse tree context.
+        /// </summary>
+        /// <param name="context">The composite lit parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCompositeLit(GoParser.CompositeLitContext context)
         {
             string typeName = context.literalType().GetText();
@@ -220,9 +300,19 @@ namespace LINVAST.Imperative.Builders.Go
                 : new ConsExprNode(context.Start.Line, new IdNode(context.Start.Line, typeName));
         }
 
+        /// <summary>
+        /// Visits the element list parse tree context.
+        /// </summary>
+        /// <param name="context">The element list parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitElementList(GoParser.ElementListContext context) => 
             new ExprListNode(context.Start.Line, context.keyedElement().Select(k => this.Visit(k).As<ExprNode>()));
 
+        /// <summary>
+        /// Visits the keyed element parse tree context.
+        /// </summary>
+        /// <param name="context">The keyed element parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitKeyedElement(GoParser.KeyedElementContext context)
         {
             ExprNode element = this.Visit(context.element()).As<ExprNode>();
@@ -233,17 +323,37 @@ namespace LINVAST.Imperative.Builders.Go
             return new DictEntryNode(context.Start.Line, new IdNode(context.Start.Line, key.GetText()), element);
         }
 
+        /// <summary>
+        /// Visits the key parse tree context.
+        /// </summary>
+        /// <param name="context">The key parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitKey(GoParser.KeyContext context) => 
             this.Visit(context.children.Single());
 
+        /// <summary>
+        /// Visits the literal type parse tree context.
+        /// </summary>
+        /// <param name="context">The literal type parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitLiteralType(GoParser.LiteralTypeContext context) => 
             new TypeNameNode(context.Start.Line, context.GetText());
 
+        /// <summary>
+        /// Visits the literal value parse tree context.
+        /// </summary>
+        /// <param name="context">The literal value parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitLiteralValue(GoParser.LiteralValueContext context) =>
             context.elementList() is null
                 ? new ExprListNode(context.Start.Line)
                 : this.Visit(context.elementList()).As<ExprListNode>();
         
+        /// <summary>
+        /// Visits the function lit parse tree context.
+        /// </summary>
+        /// <param name="context">The function lit parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFunctionLit(GoParser.FunctionLitContext context)
         {
             FuncNode signature = this.Visit(context.signature()).As<FuncNode>();
@@ -253,17 +363,42 @@ namespace LINVAST.Imperative.Builders.Go
                 : new LambdaFuncExprNode(context.Start.Line, signature.ParametersNode, body);
         }
 
+        /// <summary>
+        /// Visits the element parse tree context.
+        /// </summary>
+        /// <param name="context">The element parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitElement(GoParser.ElementContext context) =>
             this.Visit(context.children.Single()).As<ExprNode>();
         
+        /// <summary>
+        /// Visits the element type parse tree context.
+        /// </summary>
+        /// <param name="context">The element type parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitElementType(GoParser.ElementTypeContext context) => this.Visit(context.type_());
 
+        /// <summary>
+        /// Visits the qualified ident parse tree context.
+        /// </summary>
+        /// <param name="context">The qualified ident parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitQualifiedIdent(GoParser.QualifiedIdentContext context) =>
             new TypeNameNode(context.Start.Line, context.GetText());
 
+        /// <summary>
+        /// Visits the type assertion parse tree context.
+        /// </summary>
+        /// <param name="context">The type assertion parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitTypeAssertion(GoParser.TypeAssertionContext context) =>
             this.Visit(context.type_()).As<TypeNameNode>();
 
+        /// <summary>
+        /// Visits the integer parse tree context.
+        /// </summary>
+        /// <param name="context">The integer parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInteger(GoParser.IntegerContext context)
         {
             if (context.RUNE_LIT() is not null) {
@@ -301,6 +436,11 @@ namespace LINVAST.Imperative.Builders.Go
             throw new NotSupportedException("Unsupported integer literal: " + context);
         }
 
+        /// <summary>
+        /// Visits the string_ parse tree context.
+        /// </summary>
+        /// <param name="context">The string_ parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitString_(GoParser.String_Context context)
         {
             string text = context.GetText();
@@ -314,6 +454,11 @@ namespace LINVAST.Imperative.Builders.Go
                 text[1..(text.Length-1)]);
         } 
 
+        /// <summary>
+        /// Visits the slice_ parse tree context.
+        /// </summary>
+        /// <param name="context">The slice_ parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSlice_(GoParser.Slice_Context context) =>
             new IdNode(context.Start.Line, context.GetText());
     }

@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System.Linq;
 using Antlr4.Runtime.Misc;
 using LINVAST.Builders;
@@ -7,8 +23,17 @@ using static LINVAST.Imperative.Builders.Pseudo.PseudoParser;
 
 namespace LINVAST.Imperative.Builders.Pseudo
 {
+    /// <summary>
+    /// Builds a Pseudo language AST from source code.
+    /// </summary>
+
     public sealed partial class PseudoASTBuilder : PseudoBaseVisitor<ASTNode>, IASTBuilder<PseudoParser>
     {
+        /// <summary>
+        /// Visits the exp parse tree context.
+        /// </summary>
+        /// <param name="ctx">The exp parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExp([NotNull] ExpContext ctx)
         {
             if (ctx.literal() is not null || ctx.var() is not null || ctx.cexp() is not null)
@@ -29,6 +54,11 @@ namespace LINVAST.Imperative.Builders.Pseudo
             return this.Visit(ctx.exp().Single());
         }
 
+        /// <summary>
+        /// Visits the var parse tree context.
+        /// </summary>
+        /// <param name="ctx">The var parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitVar([NotNull] VarContext ctx)
         {
             var v = new IdNode(ctx.Start.Line, ctx.NAME().GetText());
@@ -39,15 +69,35 @@ namespace LINVAST.Imperative.Builders.Pseudo
             return new ArrAccessExprNode(ctx.Start.Line, v, arrIndex);
         }
 
+        /// <summary>
+        /// Visits the iexp parse tree context.
+        /// </summary>
+        /// <param name="ctx">The iexp parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitIexp([NotNull] IexpContext ctx)
             => this.Visit(ctx.children.First());
 
+        /// <summary>
+        /// Visits the literal parse tree context.
+        /// </summary>
+        /// <param name="ctx">The literal parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitLiteral([NotNull] LiteralContext ctx)
             => LitExprNode.FromString(ctx.Start.Line, ctx.children.Single().GetText());
 
+        /// <summary>
+        /// Visits the aexp parse tree context.
+        /// </summary>
+        /// <param name="ctx">The aexp parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAexp([NotNull] AexpContext ctx)
             => this.VisitArithmeticExpression(ctx.Start.Line, ctx.exp()[0], ctx.aop(), ctx.exp()[1]);
 
+        /// <summary>
+        /// Visits the cexp parse tree context.
+        /// </summary>
+        /// <param name="ctx">The cexp parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCexp([NotNull] CexpContext ctx)
         {
             var fname = new IdNode(ctx.Start.Line, ctx.NAME().GetText());
@@ -58,6 +108,11 @@ namespace LINVAST.Imperative.Builders.Pseudo
             return new FuncCallExprNode(ctx.Start.Line, fname, args);
         }
 
+        /// <summary>
+        /// Visits the explist parse tree context.
+        /// </summary>
+        /// <param name="ctx">The explist parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExplist([NotNull] ExplistContext ctx)
             => new ExprListNode(ctx.Start.Line, ctx.exp().Select(e => this.Visit(e).As<ExprNode>()));
 

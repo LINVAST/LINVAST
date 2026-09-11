@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,19 +25,43 @@ using Serilog;
 
 namespace LINVAST.Imperative.Builders.Go
 {
+    /// <summary>
+    /// Builds a Go language AST from source code.
+    /// </summary>
+
     public sealed partial class GoASTBuilder : GoParserBaseVisitor<ASTNode>, IASTBuilder<GoParser>
     {
+        /// <summary>
+        /// Visits the statement parse tree context.
+        /// </summary>
+        /// <param name="context">The statement parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStatement(GoParser.StatementContext context) =>
             this.Visit(context.children.Single());
         
+        /// <summary>
+        /// Visits the simple stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The simple stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSimpleStmt(GoParser.SimpleStmtContext context) => 
             this.Visit(context.children.Single());
         
+        /// <summary>
+        /// Visits the block parse tree context.
+        /// </summary>
+        /// <param name="context">The block parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitBlock(GoParser.BlockContext context) =>
             context.statementList() is null
                 ? new BlockStatNode(context.Start.Line)
                 : this.Visit(context.statementList());
 
+        /// <summary>
+        /// Visits the statement list parse tree context.
+        /// </summary>
+        /// <param name="context">The statement list parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStatementList(GoParser.StatementListContext context)
         {
             if (context.statement() is null)
@@ -31,6 +71,11 @@ namespace LINVAST.Imperative.Builders.Go
             return new BlockStatNode(context.Start.Line, stmts);
         }
 
+        /// <summary>
+        /// Visits the assignment parse tree context.
+        /// </summary>
+        /// <param name="context">The assignment parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAssignment(GoParser.AssignmentContext context)
         {
             GoParser.ExpressionListContext[]? exprs = context.expressionList();
@@ -53,18 +98,43 @@ namespace LINVAST.Imperative.Builders.Go
             return new BlockStatNode(context.Start.Line, assignments); // this is very hacky; todo multi-assignment statement
         }
 
+        /// <summary>
+        /// Visits the assign_op parse tree context.
+        /// </summary>
+        /// <param name="context">The assign_op parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitAssign_op(GoParser.Assign_opContext context) => 
             AssignOpNode.FromSymbol(context.Start.Line, context.GetText()); // this should cover most of the cases
 
+        /// <summary>
+        /// Visits the break stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The break stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitBreakStmt(GoParser.BreakStmtContext context)  =>
             new JumpStatNode(context.Start.Line, JumpStatType.Break);
 
+        /// <summary>
+        /// Visits the continue stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The continue stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitContinueStmt(GoParser.ContinueStmtContext context)  =>
             new JumpStatNode(context.Start.Line, JumpStatType.Continue);
 
+        /// <summary>
+        /// Visits the empty stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The empty stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitEmptyStmt(GoParser.EmptyStmtContext context) =>
             new EmptyStatNode(context.Start.Line);
 
+        /// <summary>
+        /// Visits the for stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The for stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitForStmt(GoParser.ForStmtContext context)
         {
             BlockStatNode body = this.Visit(context.block()).As<BlockStatNode>();
@@ -92,6 +162,11 @@ namespace LINVAST.Imperative.Builders.Go
             return new ForStatNode(context.Start.Line, (ExprNode?)null, null, null, body);
         }
 
+        /// <summary>
+        /// Visits the range clause parse tree context.
+        /// </summary>
+        /// <param name="context">The range clause parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitRangeClause(GoParser.RangeClauseContext context)
         {
             ExprNode iterable = this.Visit(context.expression()).As<ExprNode>();
@@ -110,9 +185,19 @@ namespace LINVAST.Imperative.Builders.Go
             return this.MarkerExpression(context.Start.Line, "__linvast_range", args);
         }
         
+        /// <summary>
+        /// Visits the goto stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The goto stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitGotoStmt(GoParser.GotoStmtContext context) => 
             new JumpStatNode(context.Start.Line, new IdNode(context.Start.Line, context.IDENTIFIER().GetText()));
 
+        /// <summary>
+        /// Visits the if stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The if stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitIfStmt(GoParser.IfStmtContext context)
         {
             ExprNode cond = this.Visit(context.expression()).As<ExprNode>();
@@ -137,6 +222,11 @@ namespace LINVAST.Imperative.Builders.Go
             return new BlockStatNode(context.Start.Line, this.Visit(context.simpleStmt()), ifStmt);
         }
 
+        /// <summary>
+        /// Visits the labeled stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The labeled stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitLabeledStmt(GoParser.LabeledStmtContext context)
         {
             string label = context.IDENTIFIER().GetText();
@@ -146,6 +236,11 @@ namespace LINVAST.Imperative.Builders.Go
             return new LabeledStatNode(context.Start.Line, label, statement);
         }
 
+        /// <summary>
+        /// Visits the return stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The return stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitReturnStmt(GoParser.ReturnStmtContext context)
         {
             if (context.expressionList() is null)
@@ -155,9 +250,19 @@ namespace LINVAST.Imperative.Builders.Go
             return new JumpStatNode(context.Start.Line, exprList);
         }
 
+        /// <summary>
+        /// Visits the expression stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The expression stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExpressionStmt(GoParser.ExpressionStmtContext context) => 
             new ExprStatNode(context.Start.Line, this.Visit(context.expression()).As<ExprNode>());
 
+        /// <summary>
+        /// Visits the inc dec stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The inc dec stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitIncDecStmt(GoParser.IncDecStmtContext context)
         {
             ExprNode exprNode = this.Visit(context.expression()).As<ExprNode>();
@@ -173,21 +278,46 @@ namespace LINVAST.Imperative.Builders.Go
             throw new Exception("Invalid IncDecStmtContext: " + context);
         }
         
+        /// <summary>
+        /// Visits the go stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The go stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitGoStmt(GoParser.GoStmtContext context) =>
             this.MarkerStatement(context.Start.Line, "__linvast_go", this.Visit(context.expression()).As<ExprNode>());
         
+        /// <summary>
+        /// Visits the defer stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The defer stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitDeferStmt(GoParser.DeferStmtContext context) =>
             this.MarkerStatement(context.Start.Line, "__linvast_defer", this.Visit(context.expression()).As<ExprNode>());
         
+        /// <summary>
+        /// Visits the select stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The select stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSelectStmt(GoParser.SelectStmtContext context)
         {
             var body = new BlockStatNode(context.Start.Line, context.commClause().Select(this.Visit));
             return new SwitchStatNode(context.Start.Line, new LitExprNode(context.Start.Line, true), body);
         }
 
+        /// <summary>
+        /// Visits the comm case parse tree context.
+        /// </summary>
+        /// <param name="context">The comm case parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCommCase(GoParser.CommCaseContext context) =>
             new IdNode(context.Start.Line, this.CommCaseLabel(context));
 
+        /// <summary>
+        /// Visits the comm clause parse tree context.
+        /// </summary>
+        /// <param name="context">The comm clause parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCommClause(GoParser.CommClauseContext context)
         {
             BlockStatNode statements = context.statementList() is null
@@ -196,6 +326,11 @@ namespace LINVAST.Imperative.Builders.Go
             return new LabeledStatNode(context.Start.Line, this.CommCaseLabel(context.commCase()), statements);
         }
         
+        /// <summary>
+        /// Visits the recv stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The recv stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitRecvStmt(GoParser.RecvStmtContext context)
         {
             ExprNode receive = this.Visit(context.recvExpr).As<ExprNode>();
@@ -218,6 +353,11 @@ namespace LINVAST.Imperative.Builders.Go
             return new ExprStatNode(context.Start.Line, receive);
         }
 
+        /// <summary>
+        /// Visits the send stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The send stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSendStmt(GoParser.SendStmtContext context)
         {
             ExprNode channel = this.Visit(context.channel).As<ExprNode>();
@@ -225,9 +365,19 @@ namespace LINVAST.Imperative.Builders.Go
             return this.MarkerStatement(context.Start.Line, "__linvast_send", channel, value);
         }
 
+        /// <summary>
+        /// Visits the switch stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The switch stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSwitchStmt(GoParser.SwitchStmtContext context) =>
             this.Visit(context.children.Single());
 
+        /// <summary>
+        /// Visits the type switch stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The type switch stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitTypeSwitchStmt(GoParser.TypeSwitchStmtContext context)
         {
             ExprNode condition = this.Visit(context.typeSwitchGuard()).As<ExprNode>();
@@ -240,6 +390,11 @@ namespace LINVAST.Imperative.Builders.Go
             return new BlockStatNode(context.Start.Line, this.Visit(context.simpleStmt()), switchNode);
         }
 
+        /// <summary>
+        /// Visits the expr switch stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The expr switch stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExprSwitchStmt(GoParser.ExprSwitchStmtContext context)
         {
             ExprNode condition = context.expression() is null
@@ -254,6 +409,11 @@ namespace LINVAST.Imperative.Builders.Go
             return new BlockStatNode(context.Start.Line, this.Visit(context.simpleStmt()), switchNode);
         }
         
+        /// <summary>
+        /// Visits the expr case clause parse tree context.
+        /// </summary>
+        /// <param name="context">The expr case clause parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExprCaseClause(GoParser.ExprCaseClauseContext context)
         {
             BlockStatNode statements = context.statementList() is null
@@ -262,12 +422,27 @@ namespace LINVAST.Imperative.Builders.Go
             return new LabeledStatNode(context.Start.Line, this.ExprSwitchCaseLabel(context.exprSwitchCase()), statements);
         }
 
+        /// <summary>
+        /// Visits the expr switch case parse tree context.
+        /// </summary>
+        /// <param name="context">The expr switch case parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitExprSwitchCase(GoParser.ExprSwitchCaseContext context) =>
             new IdNode(context.Start.Line, this.ExprSwitchCaseLabel(context));
 
+        /// <summary>
+        /// Visits the type switch case parse tree context.
+        /// </summary>
+        /// <param name="context">The type switch case parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitTypeSwitchCase(GoParser.TypeSwitchCaseContext context) =>
             new IdNode(context.Start.Line, this.TypeSwitchCaseLabel(context));
         
+        /// <summary>
+        /// Visits the type switch guard parse tree context.
+        /// </summary>
+        /// <param name="context">The type switch guard parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitTypeSwitchGuard(GoParser.TypeSwitchGuardContext context)
         {
             ExprNode switched = this.Visit(context.primaryExpr()).As<ExprNode>();
@@ -277,6 +452,11 @@ namespace LINVAST.Imperative.Builders.Go
             return new FuncCallExprNode(context.Start.Line, new IdNode(context.Start.Line, "__linvast_type_switch"), args);
         }
 
+        /// <summary>
+        /// Visits the type case clause parse tree context.
+        /// </summary>
+        /// <param name="context">The type case clause parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitTypeCaseClause(GoParser.TypeCaseClauseContext context)
         {
             BlockStatNode statements = context.statementList() is null
@@ -285,6 +465,11 @@ namespace LINVAST.Imperative.Builders.Go
             return new LabeledStatNode(context.Start.Line, this.TypeSwitchCaseLabel(context.typeSwitchCase()), statements);
         }
 
+        /// <summary>
+        /// Visits the fallthrough stmt parse tree context.
+        /// </summary>
+        /// <param name="context">The fallthrough stmt parse tree context.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFallthroughStmt(GoParser.FallthroughStmtContext context) =>
             new ExprStatNode(context.Start.Line, new FuncCallExprNode(context.Start.Line, new IdNode(context.Start.Line, "__linvast_fallthrough")));
 

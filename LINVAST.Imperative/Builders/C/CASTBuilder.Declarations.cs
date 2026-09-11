@@ -1,3 +1,19 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +28,17 @@ using static LINVAST.Imperative.Builders.C.CParser;
 
 namespace LINVAST.Imperative.Builders.C
 {
+    /// <summary>
+    /// Builds a C language AST from source code.
+    /// </summary>
+
     public sealed partial class CASTBuilder : CBaseVisitor<ASTNode>, IASTBuilder<CParser>
     {
+        /// <summary>
+        /// Visits the declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitDeclaration([NotNull] DeclarationContext ctx)
         {
             if (ctx.staticAssertDeclaration() is not null)
@@ -32,6 +57,11 @@ namespace LINVAST.Imperative.Builders.C
             return CreateDeclarationStatement(ctx.Start.Line, declSpecs, declList);
         }
 
+        /// <summary>
+        /// Visits the declarator parse tree context.
+        /// </summary>
+        /// <param name="ctx">The declarator parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitDeclarator([NotNull] DeclaratorContext ctx)
         {
             DeclNode decl = this.Visit(ctx.directDeclarator()).As<DeclNode>();
@@ -40,6 +70,11 @@ namespace LINVAST.Imperative.Builders.C
             return decl;
         }
 
+        /// <summary>
+        /// Visits the direct declarator parse tree context.
+        /// </summary>
+        /// <param name="ctx">The direct declarator parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitDirectDeclarator([NotNull] DirectDeclaratorContext ctx)
         {
             if (ctx.declarator() is not null)
@@ -116,20 +151,40 @@ namespace LINVAST.Imperative.Builders.C
             }
         }
 
+        /// <summary>
+        /// Visits the declaration specifiers parse tree context.
+        /// </summary>
+        /// <param name="ctx">The declaration specifiers parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitDeclarationSpecifiers([NotNull] DeclarationSpecifiersContext ctx)
         {
             string[] specs = ctx.declarationSpecifier().Select(DeclarationSpecifierText).ToArray();
             return CreateDeclSpecs(ctx.Start.Line, specs);
         }
 
+        /// <summary>
+        /// Visits the type specifier parse tree context.
+        /// </summary>
+        /// <param name="ctx">The type specifier parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitTypeSpecifier([NotNull] TypeSpecifierContext ctx)
             => new TypeNameNode(ctx.Start.Line, TypeSpecifierText(ctx));
 
+        /// <summary>
+        /// Visits the struct or union specifier parse tree context.
+        /// </summary>
+        /// <param name="ctx">The struct or union specifier parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStructOrUnionSpecifier([NotNull] StructOrUnionSpecifierContext ctx)
             => ctx.structDeclarationList() is not null
                 ? this.CreateStructNode(ctx)
                 : new TypeNameNode(ctx.Start.Line, StructTypeName(ctx));
 
+        /// <summary>
+        /// Visits the struct declaration list parse tree context.
+        /// </summary>
+        /// <param name="ctx">The struct declaration list parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStructDeclarationList([NotNull] StructDeclarationListContext ctx)
         {
             ASTNode decl = this.Visit(ctx.structDeclaration());
@@ -141,6 +196,11 @@ namespace LINVAST.Imperative.Builders.C
             return new BlockStatNode(ctx.Start.Line, list.Children.Concat(new[] { decl }));
         }
 
+        /// <summary>
+        /// Visits the struct declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The struct declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStructDeclaration([NotNull] StructDeclarationContext ctx)
         {
             if (ctx.staticAssertDeclaration() is not null)
@@ -157,12 +217,22 @@ namespace LINVAST.Imperative.Builders.C
             return CreateDeclarationStatement(ctx.Start.Line, declSpecs, declList);
         }
 
+        /// <summary>
+        /// Visits the specifier qualifier list parse tree context.
+        /// </summary>
+        /// <param name="ctx">The specifier qualifier list parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSpecifierQualifierList([NotNull] SpecifierQualifierListContext ctx)
         {
             string[] specs = SpecifierQualifierTexts(ctx).ToArray();
             return CreateDeclSpecs(ctx.Start.Line, specs);
         }
 
+        /// <summary>
+        /// Visits the struct declarator list parse tree context.
+        /// </summary>
+        /// <param name="ctx">The struct declarator list parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStructDeclaratorList([NotNull] StructDeclaratorListContext ctx)
         {
             IEnumerable<DeclNode> declarators = StructDeclarators(ctx)
@@ -172,6 +242,11 @@ namespace LINVAST.Imperative.Builders.C
             return new DeclListNode(ctx.Start.Line, declarators);
         }
 
+        /// <summary>
+        /// Visits the struct declarator parse tree context.
+        /// </summary>
+        /// <param name="ctx">The struct declarator parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStructDeclarator([NotNull] StructDeclaratorContext ctx)
         {
             if (ctx.declarator() is null)
@@ -180,6 +255,11 @@ namespace LINVAST.Imperative.Builders.C
             return this.Visit(ctx.declarator());
         }
 
+        /// <summary>
+        /// Visits the init declarator list parse tree context.
+        /// </summary>
+        /// <param name="ctx">The init declarator list parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInitDeclaratorList([NotNull] InitDeclaratorListContext ctx)
         {
             DeclNode decl = this.Visit(ctx.initDeclarator()).As<DeclNode>();
@@ -191,6 +271,11 @@ namespace LINVAST.Imperative.Builders.C
             return new DeclListNode(ctx.Start.Line, list.Declarators.Concat(new[] { decl }));
         }
 
+        /// <summary>
+        /// Visits the init declarator parse tree context.
+        /// </summary>
+        /// <param name="ctx">The init declarator parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInitDeclarator([NotNull] InitDeclaratorContext ctx)
         {
             DeclNode declarator = this.Visit(ctx.declarator()).As<DeclNode>();
@@ -218,6 +303,11 @@ namespace LINVAST.Imperative.Builders.C
             return declarator;
         }
 
+        /// <summary>
+        /// Visits the initializer list parse tree context.
+        /// </summary>
+        /// <param name="ctx">The initializer list parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInitializerList([NotNull] InitializerListContext ctx)
         {
             ExprNode init = this.Visit(ctx.initializer()).As<ExprNode>();
@@ -229,9 +319,19 @@ namespace LINVAST.Imperative.Builders.C
             return new ArrInitExprNode(ctx.Start.Line, list.Initializers.Concat(new[] { init }));
         }
 
+        /// <summary>
+        /// Visits the initializer parse tree context.
+        /// </summary>
+        /// <param name="ctx">The initializer parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInitializer([NotNull] InitializerContext ctx)
             => ctx.assignmentExpression() is not null ? this.Visit(ctx.assignmentExpression()) : this.Visit(ctx.initializerList());
 
+        /// <summary>
+        /// Visits the static assert declaration parse tree context.
+        /// </summary>
+        /// <param name="ctx">The static assert declaration parse tree context. Must not be null.</param>
+        /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStaticAssertDeclaration([NotNull] StaticAssertDeclarationContext ctx)
             => new EmptyStatNode(ctx.Start.Line);
 

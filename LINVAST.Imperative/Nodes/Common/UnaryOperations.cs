@@ -1,11 +1,37 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
 ﻿using System;
 using System.Collections;
 using LINVAST.Exceptions;
 
 namespace LINVAST.Imperative.Nodes.Common
 {
+    /// <summary>
+    /// Provides static methods for evaluating unary operations on primitive types.
+    /// </summary>
     public static class UnaryOperations
     {
+        /// <summary>
+        /// Gets the unary operation function for the specified symbol.
+        /// </summary>
+        /// <param name="symbol">The unary operator symbol (e.g., "+", "-", "!", "++").</param>
+        /// <returns>A function that applies the unary operation to a value.</returns>
+        /// <exception cref="UnknownOperatorException">Thrown when the symbol is not a recognized unary operator.</exception>
         public static Func<object, object> UnaryFromSymbol(string symbol)
         {
             return symbol switch
@@ -24,6 +50,13 @@ namespace LINVAST.Imperative.Nodes.Common
             };
         }
 
+        /// <summary>
+        /// Negates a primitive value.
+        /// </summary>
+        /// <param name="x">The value to negate.</param>
+        /// <returns>The negated value.</returns>
+        /// <exception cref="SyntaxErrorException">Thrown when attempting to negate a string.</exception>
+        /// <exception cref="EvaluationException">Thrown when the value is not a primitive type.</exception>
         public static object NegatePrimitive(object x)
         {
             ThrowIfNotPrimitiveType(x);
@@ -58,6 +91,12 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot negate non-primitive types");
         }
 
+        /// <summary>
+        /// Performs a bitwise NOT operation on a primitive value.
+        /// </summary>
+        /// <param name="x">The value to operate on.</param>
+        /// <returns>The result of the bitwise NOT operation.</returns>
+        /// <exception cref="EvaluationException">Thrown when the value is not a primitive type or is a floating-point type.</exception>
         public static object BitwiseNotPrimitive(object x)
         {
             ThrowIfNotPrimitiveType(x);
@@ -86,6 +125,12 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot perform bitwise not on non-primitive types");
         }
 
+        /// <summary>
+        /// Increments a primitive value by one.
+        /// </summary>
+        /// <param name="x">The value to increment.</param>
+        /// <returns>The incremented value.</returns>
+        /// <exception cref="EvaluationException">Thrown when the value is not a primitive type.</exception>
         public static object IncrementPrimitive(object x)
         {
             ThrowIfNotPrimitiveType(x);
@@ -120,6 +165,12 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot perform increment on non-primitive types");
         }
 
+        /// <summary>
+        /// Decrements a primitive value by one.
+        /// </summary>
+        /// <param name="x">The value to decrement.</param>
+        /// <returns>The decremented value.</returns>
+        /// <exception cref="EvaluationException">Thrown when the value is not a primitive type.</exception>
         public static object DecrementPrimitive(object x)
         {
             ThrowIfNotPrimitiveType(x);
@@ -154,6 +205,12 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot perform decrement on non-primitive types");
         }
 
+        /// <summary>
+        /// Performs a logical NOT operation on a primitive value.
+        /// </summary>
+        /// <param name="x">The value to operate on.</param>
+        /// <returns>The result of the logical NOT operation.</returns>
+        /// <exception cref="EvaluationException">Thrown when the value is not a primitive type.</exception>
         public static object NotPrimitive(object x)
         {
             ThrowIfNotPrimitiveType(x);
@@ -190,6 +247,12 @@ namespace LINVAST.Imperative.Nodes.Common
                 throw new EvaluationException("Cannot perform negate on non-primitive types");
         }
 
+        /// <summary>
+        /// Gets the length of a string or collection.
+        /// </summary>
+        /// <param name="x">The string or collection whose length to get.</param>
+        /// <returns>The length of the string or count of the collection.</returns>
+        /// <exception cref="EvaluationException">Thrown when the value does not have a length property.</exception>
         public static object LengthPrimitive(object x)
         {
             if (x is string str)
