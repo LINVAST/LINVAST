@@ -34,12 +34,16 @@ namespace LINVAST.Imperative.Nodes.Common
         private static readonly Regex _floatRegex =
             new(@"^(?<value>([0-9]*\.?[0-9]+([e][-+]?[0-9]+)?))(?<suffix>[flmd]?)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _charRegex =
-            new(@"^'(?<value>.)'$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            new("^'(?<value>(?:\\\\[btnfr\"'\\\\]|\\\\[0-3]?[0-7]?[0-7]|\\\\u[0-9a-fA-F]{4}|[^'\\\\]))'$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 
         public static bool TryConvert(string str, out object? literal, out string? suffix)
         {
             literal = suffix = null;
+
+            if (TryConvertToChar(str, out literal))
+                return true;
+
             str = str.Replace("_", string.Empty).ToLowerInvariant();
             if (string.Equals(str, "null", StringComparison.InvariantCultureIgnoreCase))
                 return true;
@@ -54,8 +58,6 @@ namespace LINVAST.Imperative.Nodes.Common
             if (TryConvertToFloat(str, out literal, out suffix))
                 return true;
             if (TryConvertToBool(str, out literal))
-                return true;
-            if (TryConvertToChar(str, out literal))
                 return true;
             return false;
         }
@@ -185,10 +187,44 @@ namespace LINVAST.Imperative.Nodes.Common
                 return false;
 
             string @char = m.Groups["value"].Value;
-            if (!char.TryParse(@char, out char value))
-                return false;
-            literal = value;
-            return true;
+            if (char.TryParse(@char, out char value))
+            {
+                literal = value;
+                return true;
+            }
+
+            if (@char.Length >= 2 && @char[0] == '\\')
+            {
+                literal = @char[1] switch
+                {
+                    'b' => '\b',
+                    't' => '\t',
+                    'n' => '\n',
+                    'f' => '\f',
+                    'r' => '\r',
+                    '"' => '"',
+                    '\'' => '\'',
+                    '\\' => '\\',
+                    _ => null,
+                };
+                if (literal is char)
+                    return true;
+
+                if (@char[1] >= '0' && @char[1] <= '7')
+                {
+                    literal = (char)Convert.ToByte(@char[1..], 8);
+                    return true;
+                }
+
+                if (@char[1] == 'u' && @char.Length >= 6)
+                {
+                    literal = (char)Convert.ToInt32(@char[2..6], 16);
+                    return true;
+                }
+            }
+
+            literal = null;
+            return false;
         }
 
         private static bool TryPerformConverter<T>(Func<string?, T> converter, string str, out T? result)

@@ -68,6 +68,7 @@ namespace LINVAST.Imperative.Nodes.Common
                 "~=" => NotEqualsPrimitive,
                 "%=" => throw new NotImplementedException(symbol),
                 "//=" => throw new NotImplementedException(symbol),
+                "instanceof" => InstanceOfPrimitive,
                 _ => throw new UnknownOperatorException(symbol),
             };
         }
@@ -762,6 +763,18 @@ namespace LINVAST.Imperative.Nodes.Common
         /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type.</exception>
         public static bool NotEqualsPrimitive(object x, object y)
             => !EqualsPrimitive(x, y);
+
+        /// <summary>
+        /// Checks whether the left operand is an instance of the type specified by the right operand.
+        /// </summary>
+        /// <param name="x">The left operand.</param>
+        /// <param name="y">The right operand, representing the type name.</param>
+        /// <returns>True if the left operand is an instance of the specified type; otherwise, false.</returns>
+        public static bool InstanceOfPrimitive(object x, object y)
+        {
+            string typeName = y?.ToString() ?? string.Empty;
+            return x is {} value && value.GetType().FullName == typeName;
+        }
 
 
         private static void ThrowIfNotPrimitiveTypes(object x, object y)
