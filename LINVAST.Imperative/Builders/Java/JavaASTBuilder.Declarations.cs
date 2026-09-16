@@ -95,7 +95,7 @@ namespace LINVAST.Imperative.Builders.Java
 
             IEnumerable<DeclStatNode> declarations;
             BlockStatNode block = this.Visit(ctx.classBody()).As<BlockStatNode>();
-            declarations = block.Children.Cast<DeclStatNode>();
+            declarations = block.Children.OfType<DeclStatNode>();
 
             return new TypeDeclNode(ctx.Start.Line, identifier, templateParams,
                 new TypeNameListNode(baseTypesStartLine, baseTypes),
@@ -182,7 +182,7 @@ namespace LINVAST.Imperative.Builders.Java
 
             IEnumerable<DeclStatNode> declarations;
             BlockStatNode block = this.Visit(ctx.interfaceBody()).As<BlockStatNode>();
-            declarations = block.Children.Select(c => c.As<DeclStatNode>());
+            declarations = block.Children.OfType<DeclStatNode>();
 
             return new TypeDeclNode(ctx.Start.Line, identifier,
                 templateParams ?? new TypeNameListNode(ctx.Start.Line),
@@ -925,7 +925,10 @@ namespace LINVAST.Imperative.Builders.Java
         {
             StatNode statement = new BlockStatNode(ctx.Start.Line, ctx.blockStatement().Select(this.Visit));
             foreach (SwitchLabelContext label in ctx.switchLabel().Reverse())
-                statement = new LabeledStatNode(label.Start.Line, this.SwitchLabelText(label), statement);
+                statement = new LabeledStatNode(
+                    Math.Min(label.Start.Line, statement.Line),
+                    this.SwitchLabelText(label),
+                    statement);
 
             return statement;
         }
@@ -944,7 +947,7 @@ namespace LINVAST.Imperative.Builders.Java
         /// <param name="ctx">The class body parse tree context. Must not be null.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitClassBody([NotNull] ClassBodyContext ctx)
-            => new BlockStatNode(ctx.Start.Line);
+            => new BlockStatNode(ctx.Start.Line, ctx.classBodyDeclaration().Select(this.Visit));
 
         /// <summary>
         /// Visits the interface body parse tree context.
@@ -952,7 +955,7 @@ namespace LINVAST.Imperative.Builders.Java
         /// <param name="ctx">The interface body parse tree context. Must not be null.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInterfaceBody([NotNull] InterfaceBodyContext ctx)
-            => new BlockStatNode(ctx.Start.Line);
+            => new BlockStatNode(ctx.Start.Line, ctx.interfaceBodyDeclaration().Select(this.Visit));
 
         /// <summary>
         /// Visits the method body parse tree context.
@@ -968,7 +971,11 @@ namespace LINVAST.Imperative.Builders.Java
         /// <param name="ctx">The formal parameters parse tree context. Must not be null.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFormalParameters([NotNull] FormalParametersContext ctx)
-            => new FuncParamsNode(ctx.Start.Line);
+        {
+            if (ctx.formalParameterList() is not null)
+                return this.Visit(ctx.formalParameterList()).As<FuncParamsNode>();
+            return new FuncParamsNode(ctx.Start.Line);
+        }
 
         private string SwitchLabelText([NotNull] SwitchLabelContext ctx)
         {

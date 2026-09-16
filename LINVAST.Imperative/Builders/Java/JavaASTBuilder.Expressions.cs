@@ -269,7 +269,7 @@ namespace LINVAST.Imperative.Builders.Java
             }
 
             if (ctx.expression().Any() && ctx.INSTANCEOF() is not null && ctx.typeType() is not null) {
-                return new RelExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), RelOpNode.FromSymbol(ctx.Start.Line, ctx.INSTANCEOF().GetText()), this.Visit(ctx.typeType()).As<ExprNode>());
+                return new RelExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), RelOpNode.FromSymbol(ctx.Start.Line, ctx.INSTANCEOF().GetText()), new IdNode(ctx.Start.Line, ctx.typeType().GetText()));
             }
 
             if (ctx.NEW() is not null && ctx.innerCreator() is not null) {

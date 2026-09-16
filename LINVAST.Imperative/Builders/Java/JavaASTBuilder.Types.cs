@@ -40,7 +40,7 @@ namespace LINVAST.Imperative.Builders.Java
         {
             int ctxStartLine = ctx.Start.Line;
             string? modifiers = "";
-            if (ctx.classOrInterfaceModifier() is not null) {
+            if (ctx.classOrInterfaceModifier().Any()) {
                 ctxStartLine = ctx.classOrInterfaceModifier().First().Start.Line;
                 modifiers = string.Join(" ", ctx.classOrInterfaceModifier()
                     .Select(c => this.ProcessClassOrInterfaceModifier(c))
@@ -237,6 +237,9 @@ namespace LINVAST.Imperative.Builders.Java
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitTypeArgument([NotNull] TypeArgumentContext ctx)
         {
+            if (ctx.typeType() is null)
+                return new TypeNameNode(ctx.Start.Line, "?");
+
             if (ctx.EXTENDS() is not null || ctx.SUPER() is not null) {
                 //TODO EXTENDS/SUPER
                 return this.Visit(ctx.typeType());
