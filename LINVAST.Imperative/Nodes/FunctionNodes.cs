@@ -412,13 +412,13 @@ namespace LINVAST.Imperative.Nodes
         /// Gets the parameter declaration specifiers (type and modifiers).
         /// </summary>
         [JsonIgnore]
-        public DeclSpecsNode Specifiers => this.Children[0].As<DeclSpecsNode>();
+        public DeclSpecsNode Specifiers => this.ChildrenWithoutTags.ElementAt(0).As<DeclSpecsNode>();
 
         /// <summary>
         /// Gets the parameter declarator.
         /// </summary>
         [JsonIgnore]
-        public DeclNode Declarator => this.Children[1].As<DeclNode>();
+        public DeclNode Declarator => this.ChildrenWithoutTags.ElementAt(1).As<DeclNode>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncParamNode"/> class.

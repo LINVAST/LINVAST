@@ -213,6 +213,117 @@ namespace LINVAST.Imperative.Nodes
             : base(line, expr) { }
     }
 
+    // Python-specific
+    /// <summary>
+    /// Represents a delete statement node.
+    /// </summary>
+    public sealed class DeleteStatNode : SimpleStatNode
+    {
+        /// <summary>
+        /// Gets the target expressions to delete.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<ExprNode> Targets => this.Children.Cast<ExprNode>();
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DeleteStatNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="targets">The target expressions to delete.</param>
+        public DeleteStatNode(int line, IEnumerable<ExprNode> targets)
+            : base(line, targets.Cast<ASTNode>()) { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DeleteStatNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="targets">The target expressions to delete.</param>
+        public DeleteStatNode(int line, params ExprNode[] targets)
+            : base(line, targets.Cast<ASTNode>()) { }
+
+
+        /// <summary>
+        /// Returns the text representation of the delete statement.
+        /// </summary>
+        /// <returns>The text representation.</returns>
+        public override string GetText() => $"del {string.Join(", ", this.Targets.Select(t => t.GetText()))}";
+    }
+
+    // Python-specific
+    /// <summary>
+    /// Represents a global statement node.
+    /// </summary>
+    public sealed class GlobalStatNode : SimpleStatNode
+    {
+        /// <summary>
+        /// Gets the identifiers declared as global.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<IdNode> Identifiers => this.Children.Cast<IdNode>();
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GlobalStatNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="identifiers">The identifiers declared as global.</param>
+        public GlobalStatNode(int line, IEnumerable<IdNode> identifiers)
+            : base(line, identifiers.Cast<ASTNode>()) { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GlobalStatNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="identifiers">The identifiers declared as global.</param>
+        public GlobalStatNode(int line, params IdNode[] identifiers)
+            : base(line, identifiers.Cast<ASTNode>()) { }
+
+
+        /// <summary>
+        /// Returns the text representation of the global statement.
+        /// </summary>
+        /// <returns>The text representation.</returns>
+        public override string GetText() => $"global {string.Join(", ", this.Identifiers.Select(i => i.Identifier))}";
+    }
+
+    // Python-specific
+    /// <summary>
+    /// Represents a nonlocal statement node.
+    /// </summary>
+    public sealed class NonlocalStatNode : SimpleStatNode
+    {
+        /// <summary>
+        /// Gets the identifiers declared as nonlocal.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<IdNode> Identifiers => this.Children.Cast<IdNode>();
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NonlocalStatNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="identifiers">The identifiers declared as nonlocal.</param>
+        public NonlocalStatNode(int line, IEnumerable<IdNode> identifiers)
+            : base(line, identifiers.Cast<ASTNode>()) { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NonlocalStatNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="identifiers">The identifiers declared as nonlocal.</param>
+        public NonlocalStatNode(int line, params IdNode[] identifiers)
+            : base(line, identifiers.Cast<ASTNode>()) { }
+
+
+        /// <summary>
+        /// Returns the text representation of the nonlocal statement.
+        /// </summary>
+        /// <returns>The text representation.</returns>
+        public override string GetText() => $"nonlocal {string.Join(", ", this.Identifiers.Select(i => i.Identifier))}";
+    }
+
     /// <summary>
     /// Represents an if statement node.
     /// </summary>
@@ -295,6 +406,264 @@ namespace LINVAST.Imperative.Nodes
         /// <returns>The text representation.</returns>
         public override string GetText()
             => $"switch {this.Condition.GetText()} {this.Body.GetText()}";
+    }
+
+    // Python-specific
+    /// <summary>
+    /// Represents a with statement node.
+    /// </summary>
+    public sealed class WithStatNode : ComplexStatNode
+    {
+        /// <summary>
+        /// Gets the context manager expression.
+        /// </summary>
+        [JsonIgnore]
+        public ExprNode ContextManager => this.Children[0].As<ExprNode>();
+
+        /// <summary>
+        /// Gets the optional target expression, or <c>null</c> if none is bound.
+        /// </summary>
+        [JsonIgnore]
+        public ExprNode? Target => this.Children.ElementAtOrDefault(1) as ExprNode;
+
+        /// <summary>
+        /// Gets the body statement.
+        /// </summary>
+        [JsonIgnore]
+        public StatNode Body => this.Children[this.Target is null ? 1 : 2].As<StatNode>();
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WithStatNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="contextManager">The context manager expression.</param>
+        /// <param name="body">The body statement.</param>
+        public WithStatNode(int line, ExprNode contextManager, StatNode body)
+            : base(line, contextManager, body) { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WithStatNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="contextManager">The context manager expression.</param>
+        /// <param name="target">The target expression to bind.</param>
+        /// <param name="body">The body statement.</param>
+        public WithStatNode(int line, ExprNode contextManager, ExprNode target, StatNode body)
+            : base(line, contextManager, target, body) { }
+
+
+        /// <summary>
+        /// Returns the text representation of the with statement.
+        /// </summary>
+        /// <returns>The text representation.</returns>
+        public override string GetText()
+        {
+            var sb = new StringBuilder("with ").Append(this.ContextManager.GetText());
+            if (this.Target is not null)
+                sb.Append(" as ").Append(this.Target.GetText());
+            sb.Append(' ').Append(this.Body.GetText());
+            return sb.ToString();
+        }
+    }
+
+    // Python-specific
+    /// <summary>
+    /// Represents a catch clause node used by try statements.
+    /// </summary>
+    public sealed class CatchClauseNode : ASTNode
+    {
+        /// <summary>
+        /// Gets the optional exception type expression, or <c>null</c> when catching all exceptions.
+        /// </summary>
+        [JsonIgnore]
+        public ExprNode? ExceptionType => this.Children.Count >= 2 ? this.Children[0] as ExprNode : null;
+
+        /// <summary>
+        /// Gets the optional binding identifier, or <c>null</c> when no binding is present.
+        /// </summary>
+        [JsonIgnore]
+        public IdNode? Binding => this.Children.Count == 3 ? this.Children[1].As<IdNode>() : null;
+
+        /// <summary>
+        /// Gets the body statement of the catch clause.
+        /// </summary>
+        [JsonIgnore]
+        public StatNode Body => this.Children[this.Children.Count - 1].As<StatNode>();
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CatchClauseNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="body">The body statement of the catch clause.</param>
+        /// <param name="exceptionType">The optional exception type expression.</param>
+        /// <param name="binding">The optional binding identifier.</param>
+        public CatchClauseNode(int line, StatNode body, ExprNode? exceptionType = null, IdNode? binding = null)
+            : base(line, BuildChildren(body, exceptionType, binding)) { }
+
+
+        /// <summary>
+        /// Returns the text representation of the catch clause.
+        /// </summary>
+        /// <returns>The text representation.</returns>
+        public override string GetText()
+        {
+            var sb = new StringBuilder("except");
+            if (this.ExceptionType is not null)
+                sb.Append(' ').Append(this.ExceptionType.GetText());
+            if (this.Binding is not null)
+                sb.Append(" as ").Append(this.Binding.GetText());
+            sb.Append(' ').Append(this.Body.GetText());
+            return sb.ToString();
+        }
+
+
+        private static ASTNode[] BuildChildren(StatNode body, ExprNode? exceptionType, IdNode? binding)
+        {
+            if (exceptionType is null)
+                return new ASTNode[] { body };
+            if (binding is null)
+                return new ASTNode[] { exceptionType, body };
+            return new ASTNode[] { exceptionType, binding, body };
+        }
+    }
+
+    // Python-specific
+    /// <summary>
+    /// Represents a try statement node.
+    /// </summary>
+    public sealed class TryStatNode : ComplexStatNode
+    {
+        /// <summary>
+        /// Gets the number of catch clauses.
+        /// </summary>
+        public int CatchClauseCount { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether an else clause is present.
+        /// </summary>
+        public bool HasElse { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether a finally clause is present.
+        /// </summary>
+        public bool HasFinally { get; }
+
+        /// <summary>
+        /// Gets the try body statement.
+        /// </summary>
+        [JsonIgnore]
+        public StatNode TryBody => this.Children[0].As<StatNode>();
+
+        /// <summary>
+        /// Gets the catch clauses.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<CatchClauseNode> CatchClauses =>
+            this.Children.Skip(1).Take(this.CatchClauseCount).Cast<CatchClauseNode>();
+
+        /// <summary>
+        /// Gets the optional else statement, or <c>null</c> if not present.
+        /// </summary>
+        [JsonIgnore]
+        public StatNode? ElseStat => this.HasElse ? this.Children[1 + this.CatchClauseCount].As<StatNode>() : null;
+
+        /// <summary>
+        /// Gets the optional finally statement, or <c>null</c> if not present.
+        /// </summary>
+        [JsonIgnore]
+        public StatNode? FinallyStat => this.HasFinally ? this.Children[this.Children.Count - 1].As<StatNode>() : null;
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TryStatNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="tryBody">The try body statement.</param>
+        /// <param name="catchClauses">The catch clauses.</param>
+        /// <param name="elseStat">The optional else statement.</param>
+        /// <param name="finallyStat">The optional finally statement.</param>
+        public TryStatNode(
+            int line,
+            StatNode tryBody,
+            CatchClauseNode[] catchClauses,
+            StatNode? elseStat,
+            StatNode? finallyStat)
+            : base(line, AssembleChildren(tryBody, catchClauses, elseStat, finallyStat))
+        {
+            this.CatchClauseCount = catchClauses.Length;
+            this.HasElse = elseStat is not null;
+            this.HasFinally = finallyStat is not null;
+        }
+
+
+        /// <summary>
+        /// Returns the text representation of the try statement.
+        /// </summary>
+        /// <returns>The text representation.</returns>
+        public override string GetText()
+        {
+            var sb = new StringBuilder("try ").Append(this.TryBody.GetText());
+            foreach (CatchClauseNode catchClause in this.CatchClauses)
+                sb.Append(' ').Append(catchClause.GetText());
+            if (this.ElseStat is not null)
+                sb.Append(" else ").Append(this.ElseStat.GetText());
+            if (this.FinallyStat is not null)
+                sb.Append(" finally ").Append(this.FinallyStat.GetText());
+            return sb.ToString();
+        }
+
+
+        private static ASTNode[] AssembleChildren(
+            StatNode tryBody,
+            CatchClauseNode[] catchClauses,
+            StatNode? elseStat,
+            StatNode? finallyStat)
+        {
+            var children = new List<ASTNode> { tryBody };
+            children.AddRange(catchClauses);
+            if (elseStat is not null)
+                children.Add(elseStat);
+            if (finallyStat is not null)
+                children.Add(finallyStat);
+            return children.ToArray();
+        }
+    }
+
+    // Python-specific
+    /// <summary>
+    /// Represents an async statement node.
+    /// </summary>
+    public sealed class AsyncStatNode : ComplexStatNode
+    {
+        /// <summary>
+        /// Gets the tags preceding the statement.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<TagNode> Tags => this.Children.TakeWhile(e => e is TagNode).Cast<TagNode>();
+
+        /// <summary>
+        /// Gets the statement that is awaited or deferred.
+        /// </summary>
+        [JsonIgnore]
+        public StatNode Statement => this.Children.SkipWhile(e => e is TagNode).Single().As<StatNode>();
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AsyncStatNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="statement">The statement to wrap as async.</param>
+        public AsyncStatNode(int line, StatNode statement)
+            : base(line, new TagNode(line, "async"), statement) { }
+
+
+        /// <summary>
+        /// Returns the text representation of the async statement.
+        /// </summary>
+        /// <returns>The text representation.</returns>
+        public override string GetText() => $"async {this.Statement.GetText()}";
     }
 
     /// <summary>

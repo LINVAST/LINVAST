@@ -614,6 +614,96 @@ namespace LINVAST.Imperative.Nodes
     }
 
     /// <summary>
+    /// Represents an ellipsis literal expression node.
+    /// </summary>
+    public sealed class EllipsisLitExprNode : LitExprNode
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EllipsisLitExprNode"/> class.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        public EllipsisLitExprNode(int line)
+            : base(line, "...", TypeCode.Object) { }
+
+
+        /// <summary>
+        /// Returns the text representation of the ellipsis literal.
+        /// </summary>
+        /// <returns>The text representation.</returns>
+        public override string GetText() => "...";
+
+        /// <summary>
+        /// Determines whether the specified node is an ellipsis literal expression node.
+        /// </summary>
+        /// <param name="other">The node to compare.</param>
+        /// <returns>true if the node is an ellipsis literal; otherwise, false.</returns>
+        public override bool Equals([AllowNull] ASTNode other) => other is EllipsisLitExprNode;
+    }
+
+    /// <summary>
+    /// Represents a yield expression node.
+    /// </summary>
+    public sealed class YieldExprNode : ExprNode
+    {
+        /// <summary>
+        /// Gets a value indicating whether the yield is delegating (yield from).
+        /// </summary>
+        public bool IsDelegating { get; }
+
+        /// <summary>
+        /// Gets the yielded value expression, or <c>null</c> when yielding without a value.
+        /// </summary>
+        [JsonIgnore]
+        public ExprNode? Value => this.Children.FirstOrDefault() as ExprNode;
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="YieldExprNode"/> class with no value.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        public YieldExprNode(int line)
+            : base(line)
+        {
+            this.IsDelegating = false;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="YieldExprNode"/> class with a value.
+        /// </summary>
+        /// <param name="line">The source line number.</param>
+        /// <param name="value">The expression to yield.</param>
+        /// <param name="isDelegating">Whether this is a delegating yield (<c>yield from</c>).</param>
+        public YieldExprNode(int line, ExprNode value, bool isDelegating = false)
+            : base(line, value)
+        {
+            this.IsDelegating = isDelegating;
+        }
+
+
+        /// <summary>
+        /// Returns the text representation of the yield expression.
+        /// </summary>
+        /// <returns>The text representation.</returns>
+        public override string GetText()
+        {
+            if (this.Value is null)
+                return "yield";
+
+            return this.IsDelegating
+                ? $"yield from {this.Value.GetText()}"
+                : $"yield {this.Value.GetText()}";
+        }
+
+        /// <summary>
+        /// Determines whether the specified node is equal to this yield expression node.
+        /// </summary>
+        /// <param name="other">The node to compare.</param>
+        /// <returns>true if the node is a yield expression node with the same delegating flag; otherwise, false.</returns>
+        public override bool Equals([AllowNull] ASTNode other)
+            => base.Equals(other) && this.IsDelegating == ((YieldExprNode)other!).IsDelegating;
+    }
+
+    /// <summary>
     /// Represents a conditional (ternary) expression node.
     /// </summary>
     public sealed class CondExprNode : ExprNode

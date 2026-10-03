@@ -64,7 +64,9 @@ namespace LINVAST.Imperative.Nodes.Common
                 ">=" => GreaterThanOrEqualPrimitive,
                 "<=" => LessThanOrEqualPrimitive,
                 "==" => EqualsPrimitive,
+                "===" => ReferenceEqualPrimitive,
                 "!=" => NotEqualsPrimitive,
+                "!==" => ReferenceNotEqualPrimitive,
                 "~=" => NotEqualsPrimitive,
                 "%=" => throw new NotImplementedException(symbol),
                 "//=" => throw new NotImplementedException(symbol),
@@ -763,6 +765,12 @@ namespace LINVAST.Imperative.Nodes.Common
         /// <exception cref="EvaluationException">Thrown when either operand is not a primitive type.</exception>
         public static bool NotEqualsPrimitive(object x, object y)
             => !EqualsPrimitive(x, y);
+
+        public static bool ReferenceEqualPrimitive(object x, object y)
+            => ReferenceEquals(x, y);
+
+        public static bool ReferenceNotEqualPrimitive(object x, object y)
+            => !ReferenceEquals(x, y);
 
         /// <summary>
         /// Checks whether the left operand is an instance of the type specified by the right operand.
