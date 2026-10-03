@@ -7,7 +7,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <Authors>Ivan Ristović</Authors>
-    <Description>Language-invariant AST library for imperative programming languages. Currently supported languages: C, Lua.</Description>
+    <Description>Language-invariant AST library for imperative programming languages. Currently supported languages: C, Java, Go, Lua, Kotlin, Python.</Description>
     <Copyright>Ivan Ristović</Copyright>
     <RepositoryUrl>https://github.com/LINVAST/LINVAST</RepositoryUrl>
     <PackageProjectUrl>https://github.com/LINVAST/LINVAST</PackageProjectUrl>
