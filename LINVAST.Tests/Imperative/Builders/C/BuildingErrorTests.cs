@@ -39,7 +39,6 @@ namespace LINVAST.Tests.Imperative.Builders.C
         {
             this.AssertThrows<SyntaxErrorException>("void f { };");
             this.AssertThrows<SyntaxErrorException>("void ();");
-            this.AssertThrows<SyntaxErrorException>("int f(int, int x);");
             this.AssertThrows<SyntaxErrorException>("int f(0 x);");
             this.AssertThrows<SyntaxErrorException>("int f(3);");
             this.AssertThrows<SyntaxErrorException>("int f(int[] x);");
@@ -51,6 +50,14 @@ namespace LINVAST.Tests.Imperative.Builders.C
             this.AssertThrows<SyntaxErrorException>("int x = .3, 2..;");
             this.AssertThrows<SyntaxErrorException>("int x = ..3;;");
             this.AssertThrows<SyntaxErrorException>("int x = ();");
+        }
+
+        [Test]
+        public void MixedAbstractAndNamedParametersTest()
+        {
+            // `int f(int, int x);` is valid C (a mix of abstract and named
+            // parameters) and must parse instead of crashing.
+            this.GenerateAST("int f(int, int x);");
         }
 
         [Test]

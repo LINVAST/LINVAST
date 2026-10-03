@@ -76,10 +76,14 @@ namespace LINVAST.Imperative.Visitors
         public virtual TResult Visit(AssignExprNode node) => this.VisitChildren(node);
         /// <summary>Visits an assignment operator node by visiting its children.</summary>
         public virtual TResult Visit(AssignOpNode node) => this.VisitChildren(node);
+        /// <summary>Visits an async statement node by visiting its children.</summary>
+        public virtual TResult Visit(AsyncStatNode node) => this.VisitChildren(node);
         /// <summary>Visits a binary logic operator node by visiting its children.</summary>
         public virtual TResult Visit(BinaryLogicOpNode node) => this.VisitChildren(node);
         /// <summary>Visits a block statement node by visiting its children.</summary>
         public virtual TResult Visit(BlockStatNode node) => this.VisitChildren(node);
+        /// <summary>Visits a catch clause node by visiting its children.</summary>
+        public virtual TResult Visit(CatchClauseNode node) => this.VisitChildren(node);
         /// <summary>Visits a conditional expression node by visiting its children.</summary>
         public virtual TResult Visit(CondExprNode node) => this.VisitChildren(node);
         /// <summary>Visits declaration specifications node by visiting its children.</summary>
@@ -96,6 +100,8 @@ namespace LINVAST.Imperative.Visitors
         public virtual TResult Visit(DictEntryNode node) => this.VisitChildren(node);
         /// <summary>Visits a dictionary initialization node by visiting its children.</summary>
         public virtual TResult Visit(DictInitNode node) => this.VisitChildren(node);
+        /// <summary>Visits a delete statement node by visiting its children.</summary>
+        public virtual TResult Visit(DeleteStatNode node) => this.VisitChildren(node);
         /// <summary>Visits an empty statement node by visiting its children.</summary>
         public virtual TResult Visit(EmptyStatNode node) => this.VisitChildren(node);
         /// <summary>Visits an expression list node by visiting its children.</summary>
@@ -120,6 +126,8 @@ namespace LINVAST.Imperative.Visitors
         public virtual TResult Visit(IdNode node) => this.VisitChildren(node);
         /// <summary>Visits an identifier list node by visiting its children.</summary>
         public virtual TResult Visit(IdListNode node) => this.VisitChildren(node);
+        /// <summary>Visits a global statement node by visiting its children.</summary>
+        public virtual TResult Visit(GlobalStatNode node) => this.VisitChildren(node);
         /// <summary>Visits an if statement node by visiting its children.</summary>
         public virtual TResult Visit(IfStatNode node) => this.VisitChildren(node);
         /// <summary>Visits an increment expression node by visiting its children.</summary>
@@ -134,6 +142,8 @@ namespace LINVAST.Imperative.Visitors
         public virtual TResult Visit(LitExprNode node) => this.VisitChildren(node);
         /// <summary>Visits a logic expression node by visiting its children.</summary>
         public virtual TResult Visit(LogicExprNode node) => this.VisitChildren(node);
+        /// <summary>Visits a nonlocal statement node by visiting its children.</summary>
+        public virtual TResult Visit(NonlocalStatNode node) => this.VisitChildren(node);
         /// <summary>Visits a null literal expression node by visiting its children.</summary>
         public virtual TResult Visit(NullLitExprNode node) => this.VisitChildren(node);
         /// <summary>Visits a relational expression node by visiting its children.</summary>
@@ -142,8 +152,12 @@ namespace LINVAST.Imperative.Visitors
         public virtual TResult Visit(RelOpNode node) => this.VisitChildren(node);
         /// <summary>Visits a switch statement node by visiting its children.</summary>
         public virtual TResult Visit(SwitchStatNode node) => this.VisitChildren(node);
+        /// <summary>Visits a tag node by visiting its children.</summary>
+        public virtual TResult Visit(TagNode node) => this.VisitChildren(node);
         /// <summary>Visits a throw statement node by visiting its children.</summary>
         public virtual TResult Visit(ThrowStatNode node) => this.VisitChildren(node);
+        /// <summary>Visits a try statement node by visiting its children.</summary>
+        public virtual TResult Visit(TryStatNode node) => this.VisitChildren(node);
         /// <summary>Visits a source node by visiting its children.</summary>
         public virtual TResult Visit(SourceNode node) => this.VisitChildren(node);
         /// <summary>Visits a unary expression node by visiting its children.</summary>
@@ -154,6 +168,10 @@ namespace LINVAST.Imperative.Visitors
         public virtual TResult Visit(VarDeclNode node) => this.VisitChildren(node);
         /// <summary>Visits a while statement node by visiting its children.</summary>
         public virtual TResult Visit(WhileStatNode node) => this.VisitChildren(node);
+        /// <summary>Visits a with statement node by visiting its children.</summary>
+        public virtual TResult Visit(WithStatNode node) => this.VisitChildren(node);
+        /// <summary>Visits a yield expression node by visiting its children.</summary>
+        public virtual TResult Visit(YieldExprNode node) => this.VisitChildren(node);
 
         /// <summary>
         /// Gets the default result value used when aggregating child results.

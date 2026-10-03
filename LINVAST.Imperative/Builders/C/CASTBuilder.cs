@@ -42,7 +42,8 @@ namespace LINVAST.Imperative.Builders.C
         /// <returns>An ANTLR parser configured for the source code.</returns>
         public CParser CreateParser(string code)
         {
-            ICharStream stream = CharStreams.fromstring(code);
+            string preprocessed = CPreprocessor.StripDirectives(code);
+            ICharStream stream = CharStreams.fromstring(preprocessed);
             var lexer = new CLexer(stream);
             lexer.AddErrorListener(new ThrowExceptionErrorListener());
             ITokenStream tokens = new CommonTokenStream(lexer);

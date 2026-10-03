@@ -85,9 +85,24 @@ namespace LINVAST.Imperative.Builders.C
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitParameterDeclaration([NotNull] ParameterDeclarationContext ctx)
         {
-            DeclSpecsNode declSpecs = this.Visit(ctx.declarationSpecifiers()).As<DeclSpecsNode>();
-            DeclNode decl = this.Visit(ctx.declarator()).As<DeclNode>();
-            return new FuncParamNode(ctx.Start.Line, declSpecs, decl);
+            DeclSpecsNode declSpecs = (ctx.declarationSpecifiers() is not null
+                ? this.Visit(ctx.declarationSpecifiers())
+                : this.Visit(ctx.declarationSpecifiers2()))
+                .As<DeclSpecsNode>();
+
+            // A parameter declaration may be a named declarator
+            // (`declarationSpecifiers declarator`, e.g. `int x`) or an abstract
+            // declaration with no declarator (`declarationSpecifiers2
+            // abstractDeclarator?`, e.g. `void`, `int *`, `const char[]`).
+            // The latter has no name, so synthesize a placeholder declarator
+            // to keep the parameter node well-formed.
+            if (ctx.declarator() is not null) {
+                DeclNode decl = this.Visit(ctx.declarator()).As<DeclNode>();
+                return new FuncParamNode(ctx.Start.Line, declSpecs, decl);
+            }
+
+            DeclNode placeholder = new VarDeclNode(ctx.Start.Line, new IdNode(ctx.Start.Line, "__unnamed"));
+            return new FuncParamNode(ctx.Start.Line, declSpecs, placeholder);
         }
     }
 }

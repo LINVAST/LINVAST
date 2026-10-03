@@ -163,6 +163,22 @@ namespace LINVAST.Imperative.Builders.C
         }
 
         /// <summary>
+        /// Visits the declaration specifiers 2 parse tree context.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="C.g4"/> defines both <c>declarationSpecifiers</c> and the
+        /// identical <c>declarationSpecifiers2</c> rule to resolve the
+        /// lexer-token ambiguity between <c>static</c>/<c>extern</c> storage
+        /// classes and type qualifiers in parameter declarations. Both are
+        /// handled identically here.
+        /// </remarks>
+        public override ASTNode VisitDeclarationSpecifiers2([NotNull] DeclarationSpecifiers2Context ctx)
+        {
+            string[] specs = ctx.declarationSpecifier().Select(DeclarationSpecifierText).ToArray();
+            return CreateDeclSpecs(ctx.Start.Line, specs);
+        }
+
+        /// <summary>
         /// Visits the type specifier parse tree context.
         /// </summary>
         /// <param name="ctx">The type specifier parse tree context. Must not be null.</param>
