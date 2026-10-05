@@ -6,13 +6,17 @@
 [![NuGet](https://img.shields.io/nuget/vpre/LINVAST.Imperative.svg?label=NuGet:%20LINVAST.Imperative)](https://nuget.org/packages/LINVAST.Imperative)
 [![Stable release](https://img.shields.io/github/release/LINVAST/CLI.svg?label=linvast-cli)](https://github.com/LINVAST/CLI/releases)
 
-LINVAST is a set of libraries that provide a common language-invariant AST API for different programming languages by abstracting [ANTLR](https://www.antlr.org/) parse trees. Currently, the main focus of the project is the imperative programming paradigm, with supported languages (in order of adoption):
-- `C` 
-- `Java`
-- `Go`
-- `Lua`
-- `Python`
-- `Kotlin`
+LINVAST is a set of libraries that provide a common language-invariant AST API for different programming languages by abstracting [ANTLR](https://www.antlr.org/) parse trees. Currently, the main focus of the project is the imperative programming paradigm, with supported languages (in alphabetical order):
+
+| Language | Grammar File(s) | Version Reference | Grammar Source |
+|---|---|---|---|
+| C | [`C.g4`](https://github.com/LINVAST/LINVAST/search?q=C.g4&type=code) | C11 | C 2011 grammar based on the C11 specification |
+| Go | [`GoParser.g4`](https://github.com/LINVAST/LINVAST/search?q=GoParser.g4&type=code) / [`GoLexer.g4`](https://github.com/LINVAST/LINVAST/search?q=GoLexer.g4&type=code) | Go 1.25 | Derived from the Go language specification |
+| Java | [`Java.g4`](https://github.com/LINVAST/LINVAST/search?q=Java.g4&type=code) / [`JavaLexer.g4`](https://github.com/LINVAST/LINVAST/search?q=JavaLexer.g4&type=code) | Java 8 | BSD-licensed ANTLR Java 8 grammar by Ivan Kochurkin |
+| Kotlin | [`KotlinParser.g4`](https://github.com/LINVAST/LINVAST/search?q=KotlinParser.g4&type=code) | Kotlin 1.x | Based on Kotlin compiler test data |
+| Lua | [`Lua.g4`](https://github.com/LINVAST/LINVAST/search?q=Lua.g4&type=code) | Lua 5.1–5.3 | Multi-version grammar tested against Lua 5.2/5.3 test suites |
+| Python | [`Python3Parser.g4`](https://github.com/LINVAST/LINVAST/search?q=Python3Parser.g4&type=code) / [`Python3Lexer.g4`](https://github.com/LINVAST/LINVAST/search?q=Python3Lexer.g4&type=code) | Python 3 | ANTLR4 Python 3 grammar by Bart Kiers |
+
 
 ## Development scripts
 
