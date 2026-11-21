@@ -34,7 +34,7 @@ namespace LINVAST.Tests.Imperative.Builders.Go
         {
             this.AssertVariableDeclaration("var i int", "i", "int");
             this.AssertVariableDeclaration("var a string", "a", "string");
-            this.AssertVariableDeclaration("var l float32", "l", "float32");
+            this.AssertVariableDeclaration("var l float32", "l", "float");
             this.AssertVariableDeclaration("var p Point", "p", "Point");
             this.AssertVariableDeclaration("var b bool", "b", "bool");
             this.AssertVariableDeclaration("var c string = \"abc\"", "c", "string", value: "abc");
@@ -44,8 +44,8 @@ namespace LINVAST.Tests.Imperative.Builders.Go
         [Test]
         public void SimpleDeclarationWithoutTypeTest()
         {
-            this.AssertVariableDeclaration("var i = 33", "i", "Int64", value: 33);
-            this.AssertVariableDeclaration("var a = \"abc\" ", "a", "String", value: "abc");
+            this.AssertVariableDeclaration("var i = 33", "i", "long", value: 33);
+            this.AssertVariableDeclaration("var a = \"abc\" ", "a", "string", value: "abc");
 
             DeclStatNode decl = this.AssertDeclarationNode("var re, im = complexSqrt(-1)", "object");
             Assert.That(decl.DeclaratorList.Declarators.Select(d => d.Identifier), Is.EqualTo(new[] { "re", "im" }));
@@ -57,10 +57,10 @@ namespace LINVAST.Tests.Imperative.Builders.Go
         [Test]
         public void VariableDeclarationListWithTypeTest()
         {
-            this.AssertVariableDeclarationList("var U, V, W float64", "float64", AccessModifiers.Unspecified,
+            this.AssertVariableDeclarationList("var U, V, W float64", "double", AccessModifiers.Unspecified,
                 QualifierFlags.None, ("U", null), ("V", null), ("W", null));
             
-            this.AssertVariableDeclarationList("var x, y float32 = -1, -2", "float32", AccessModifiers.Unspecified,
+            this.AssertVariableDeclarationList("var x, y float32 = -1, -2", "float", AccessModifiers.Unspecified,
                 QualifierFlags.None, ("x", -1), ("y", -2));
         }
 
@@ -79,9 +79,9 @@ namespace LINVAST.Tests.Imperative.Builders.Go
             this.AssertVariableDeclaration("const i", "i", "object", AccessModifiers.Unspecified, QualifierFlags.Const);
             
             this.AssertVariableDeclaration("const i int = 0", "i", "int", AccessModifiers.Unspecified, QualifierFlags.Const, value:0);
-            this.AssertVariableDeclaration("const j = 0", "j", "Int64", AccessModifiers.Unspecified, QualifierFlags.Const, value:0);
-            this.AssertVariableDeclaration("const s = \"abc\"", "s", "String", AccessModifiers.Unspecified, QualifierFlags.Const, value: "abc");
-            this.AssertVariableDeclarationList("const x, y float32 = -1, -2", "float32", AccessModifiers.Unspecified,
+            this.AssertVariableDeclaration("const j = 0", "j", "long", AccessModifiers.Unspecified, QualifierFlags.Const, value:0);
+            this.AssertVariableDeclaration("const s = \"abc\"", "s", "string", AccessModifiers.Unspecified, QualifierFlags.Const, value: "abc");
+            this.AssertVariableDeclarationList("const x, y float32 = -1, -2", "float", AccessModifiers.Unspecified,
                 QualifierFlags.Const, ("x", -1), ("y", -2));
 
         }

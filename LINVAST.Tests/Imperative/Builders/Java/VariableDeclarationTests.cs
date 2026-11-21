@@ -33,7 +33,7 @@ namespace LINVAST.Tests.Imperative.Builders.Java
             string src1 = "String str1;";
             DeclStatNode ast1 = this.GenerateAST(src1).As<DeclStatNode>();
 
-            Assert.That(ast1.Specifiers.TypeName, Is.EqualTo("String"));
+            Assert.That(ast1.Specifiers.TypeName, Is.EqualTo("string"));
             Assert.That(ast1.DeclaratorList.Declarators.First().As<VarDeclNode>().Identifier,
                 Is.EqualTo("str1"));
             Assert.That(ast1.DeclaratorList.Children.Count, Is.EqualTo(1));
@@ -45,7 +45,7 @@ namespace LINVAST.Tests.Imperative.Builders.Java
             string src1 = "String str1 = null;";
             DeclStatNode ast1 = this.GenerateAST(src1).As<DeclStatNode>();
 
-            Assert.That(ast1.Specifiers.TypeName, Is.EqualTo("String"));
+            Assert.That(ast1.Specifiers.TypeName, Is.EqualTo("string"));
             Assert.That(ast1.DeclaratorList.Declarators.First().As<VarDeclNode>().Identifier,
                 Is.EqualTo("str1"));
             Assert.That(ast1.DeclaratorList.Declarators.First().As<VarDeclNode>().Initializer,
@@ -76,7 +76,7 @@ namespace LINVAST.Tests.Imperative.Builders.Java
 
             Assert.That(ast1.DeclaratorList.Children.Count, Is.EqualTo(1));
             Assert.That(ast1.Specifiers.Modifiers.ToString(), Is.EqualTo("const"));
-            Assert.That(ast1.Specifiers.TypeName, Is.EqualTo("String"));
+            Assert.That(ast1.Specifiers.TypeName, Is.EqualTo("string"));
             Assert.That(ast1.DeclaratorList.Declarators.First().As<VarDeclNode>().Identifier,
                 Is.EqualTo("str"));
             Assert.That(ast1.DeclaratorList.Children.Count, Is.EqualTo(1));
@@ -102,7 +102,7 @@ namespace LINVAST.Tests.Imperative.Builders.Java
             DeclStatNode ast1 = this.GenerateAST(src1).As<DeclStatNode>();
 
             Assert.That(ast1.Tags.Single().Identifier, Is.EqualTo("Edible"));
-            Assert.That(ast1.Specifiers.TypeName, Is.EqualTo("String"));
+            Assert.That(ast1.Specifiers.TypeName, Is.EqualTo("string"));
             Assert.That(ast1.DeclaratorList.Declarators.Single().As<VarDeclNode>().Identifier, Is.EqualTo("str"));
         }
 
@@ -112,7 +112,7 @@ namespace LINVAST.Tests.Imperative.Builders.Java
             string src1 = "String str[] = null;";
             DeclStatNode ast1 = this.GenerateAST(src1).As<DeclStatNode>();
 
-            Assert.That(ast1.Specifiers.TypeName, Is.EqualTo("String"));
+            Assert.That(ast1.Specifiers.TypeName, Is.EqualTo("string"));
             Assert.That(ast1.DeclaratorList.Declarators.Single(), Is.InstanceOf<ArrDeclNode>());
             Assert.That(ast1.DeclaratorList.Declarators.Single().Identifier, Is.EqualTo("str"));
 

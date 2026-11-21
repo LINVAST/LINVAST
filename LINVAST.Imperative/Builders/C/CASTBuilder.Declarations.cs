@@ -418,7 +418,7 @@ namespace LINVAST.Imperative.Builders.C
             if (ctx.typeSpecifier() is { } innerType && ctx.pointer() is not null)
                 return $"{TypeSpecifierText(innerType)}{ctx.pointer().GetText()}";
 
-            return ctx.GetText();
+            return ctx.GetText() == "_Bool" ? "bool" : ctx.GetText();
         }
 
         private static string StructTypeName([NotNull] StructOrUnionSpecifierContext ctx)
@@ -519,7 +519,7 @@ namespace LINVAST.Imperative.Builders.C
                     continue;
                 }
 
-                string specifierText = token.Text;
+                string specifierText = token.Text == "_Bool" ? "bool" : token.Text;
                 while (i + 1 < tokens.Count && IsPointerToken(tokens[i + 1])) {
                     specifierText += tokens[i + 1].Text;
                     i++;

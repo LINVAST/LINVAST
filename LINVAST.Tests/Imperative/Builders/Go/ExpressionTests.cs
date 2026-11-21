@@ -156,7 +156,7 @@ namespace LINVAST.Tests.Imperative.Builders.Go
         public void CompositeSliceAndAssertionExpressionTests()
         {
             ConsExprNode composite = this.GenerateAST("[]int{1, 2}").As<ConsExprNode>();
-            Assert.That(composite.Identifier, Is.EqualTo("[]int"));
+            Assert.That(composite.Identifier, Is.EqualTo("int[]"));
             Assert.That(composite.Arguments!.Expressions.Select(ConstantExpressionEvaluator.Evaluate), Is.EqualTo(new object[] { 1L, 2L }));
 
             FuncCallExprNode slice = this.GenerateAST("xs[1:3]").As<FuncCallExprNode>();
@@ -189,7 +189,7 @@ namespace LINVAST.Tests.Imperative.Builders.Go
         public void ConversionAndVariadicCallExpressionTests()
         {
             ConsExprNode conversion = this.GenerateAST("[]int(xs)").As<ConsExprNode>();
-            Assert.That(conversion.Identifier, Is.EqualTo("[]int"));
+            Assert.That(conversion.Identifier, Is.EqualTo("int[]"));
 
             FuncCallExprNode call = this.GenerateAST("f(xs...)").As<FuncCallExprNode>();
             Assert.That(call.Arguments!.Expressions.Last().As<IdNode>().Identifier, Is.EqualTo("..."));

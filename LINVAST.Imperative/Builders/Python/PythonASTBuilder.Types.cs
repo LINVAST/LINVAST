@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Antlr4.Runtime.Tree;
 using LINVAST.Builders;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
@@ -8,6 +9,28 @@ namespace LINVAST.Imperative.Builders.Python
 {
     public sealed partial class PythonASTBuilder : Python3ParserBaseVisitor<ASTNode>, IASTBuilder<Python3Parser>
     {
+        private static string NormalizeAnnotation(IParseTree tree)
+        {
+            if (tree is Python3Parser.Atom_exprContext expression) {
+                var trailers = expression.trailer();
+                var qualifiers = trailers.TakeWhile(t => t.DOT() is not null).ToArray();
+                string name = expression.atom().GetText() + string.Concat(qualifiers.Select(t => t.GetText()));
+                string normalized = name switch {
+                    "str" or "builtins.str" => "string",
+                    "Any" or "typing.Any" => "object",
+                    _ => name,
+                };
+                // Recurse into arguments, but preserve qualified names and string literals.
+                if (qualifiers.Length == 0 && normalized == name)
+                    normalized = NormalizeAnnotation(expression.atom());
+                return normalized + string.Concat(trailers.Skip(qualifiers.Length).Select(NormalizeAnnotation));
+            }
+
+            if (tree.ChildCount == 0)
+                return tree.GetText();
+            return string.Concat(Enumerable.Range(0, tree.ChildCount).Select(i => NormalizeAnnotation(tree.GetChild(i))));
+        }
+
         // classdef: 'class' name ('(' arglist? ')')? ':' block
         /// <summary>
         /// Visits the classdef parse tree context.

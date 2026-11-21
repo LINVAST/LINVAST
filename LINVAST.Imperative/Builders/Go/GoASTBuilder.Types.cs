@@ -58,8 +58,24 @@ namespace LINVAST.Imperative.Builders.Go
                 return this.Visit(context.qualifiedIdent()).As<TypeNameNode>();
             }
             string name = context.IDENTIFIER().GetText();
-            return new TypeNameNode(context.Start.Line, name);
+            return new TypeNameNode(context.Start.Line, NormalizeBuiltinType(name));
         }
+
+        private static string NormalizeBuiltinType(string name) => name switch
+        {
+            "int8" => "signed byte",
+            "int16" => "short",
+            "int32" or "rune" => "int",
+            "int64" => "long",
+            "uint8" => "byte",
+            "uint16" => "unsigned short",
+            "uint32" => "unsigned int",
+            "uint64" => "unsigned long",
+            "float32" => "float",
+            "float64" => "double",
+            "any" => "object",
+            _ => name,
+        };
 
         /// <summary>
         /// Visits the type lit parse tree context.
@@ -122,14 +138,21 @@ namespace LINVAST.Imperative.Builders.Go
         /// <param name="context">The slice type parse tree context.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitSliceType(GoParser.SliceTypeContext context)
-            => new TypeNameNode(context.Start.Line, $"[]{this.Visit(context.elementType()).As<TypeNameNode>().GetText()}");
+            => this.BuildArrayType(context.Start.Line, context.elementType().type_(), "[]");
 
         /// <summary>
         /// Visits the function type parse tree context.
         /// </summary>
         /// <param name="context">The function type parse tree context.</param>
         /// <returns>The corresponding AST node.</returns>
-        public override ASTNode VisitFunctionType(GoParser.FunctionTypeContext context) => this.Visit(context.signature());
+        public override ASTNode VisitFunctionType(GoParser.FunctionTypeContext context)
+        {
+            FuncNode signature = this.Visit(context.signature()).As<FuncNode>();
+            string[] parameters = signature.Parameters!.Select(ResultParameterText).ToArray();
+            if (signature.IsVariadic && parameters.Length > 0)
+                parameters[parameters.Length - 1] = "..." + parameters.Last();
+            return new TypeNameNode(context.Start.Line, $"({string.Join(", ", parameters)}) -> {signature.Specifiers.TypeNode.GetText()}");
+        }
 
         /// <summary>
         /// Visits the interface type parse tree context.
@@ -137,7 +160,15 @@ namespace LINVAST.Imperative.Builders.Go
         /// <param name="context">The interface type parse tree context.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitInterfaceType(GoParser.InterfaceTypeContext context)
-            => new TypeNameNode(context.Start.Line, context.GetText());
+        {
+            var members = context.children.Select(child => child switch {
+                GoParser.MethodSpecContext method => this.Visit(method).GetText(),
+                GoParser.TypeNameContext type => this.Visit(type).GetText(),
+                _ => null,
+            }).Where(text => text is not null);
+            string body = string.Join("; ", members);
+            return new TypeNameNode(context.Start.Line, body.Length == 0 ? "object" : "interface { " + body + " }");
+        }
         
         /// <summary>
         /// Visits the array type parse tree context.
@@ -145,9 +176,31 @@ namespace LINVAST.Imperative.Builders.Go
         /// <param name="context">The array type parse tree context.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitArrayType(GoParser.ArrayTypeContext context)
-            => new TypeNameNode(
-                context.Start.Line,
-                $"[{this.Visit(context.arrayLength()).As<ExprNode>().GetText()}]{this.Visit(context.elementType()).As<TypeNameNode>().GetText()}");
+            => this.BuildArrayType(context.Start.Line, context.elementType().type_(), $"[{context.arrayLength().GetText()}]");
+
+        private TypeNameNode BuildArrayType(int line, GoParser.Type_Context element, string dimensions)
+        {
+            // Keep dimensions in source order: [2][3]int becomes int[2][3].
+            while (true) {
+                if (element.type_() is { } parenthesized) {
+                    element = parenthesized;
+                } else if (element.typeLit()?.arrayType() is { } array) {
+                    dimensions += $"[{array.arrayLength().GetText()}]";
+                    element = array.elementType().type_();
+                } else if (element.typeLit()?.sliceType() is { } slice) {
+                    dimensions += "[]";
+                    element = slice.elementType().type_();
+                } else {
+                    break;
+                }
+            }
+
+            string name = this.Visit(element).As<TypeNameNode>().GetText();
+            if (element.typeLit() is { } literal && (literal.functionType() is not null
+                || literal.mapType() is not null || literal.channelType() is not null))
+                name = "(" + name + ")";
+            return new TypeNameNode(line, name + dimensions);
+        }
         
         /// <summary>
         /// Visits the struct type parse tree context.
@@ -155,7 +208,16 @@ namespace LINVAST.Imperative.Builders.Go
         /// <param name="context">The struct type parse tree context.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitStructType(GoParser.StructTypeContext context)
-            => new TypeNameNode(context.Start.Line, context.GetText());
+        {
+            var fields = context.fieldDecl().Select(field => {
+                string name = field.identifierList() is null ? "" : field.identifierList().GetText() + " ";
+                string type = field.type_() is not null
+                    ? this.Visit(field.type_()).GetText()
+                    : this.Visit(field.embeddedField()).GetText();
+                return name + type + (field.tag is null ? "" : " " + field.tag.GetText());
+            });
+            return new TypeNameNode(context.Start.Line, "struct { " + string.Join("; ", fields) + " }");
+        }
 
         /// <summary>
         /// Visits the pointer type parse tree context.
@@ -163,7 +225,16 @@ namespace LINVAST.Imperative.Builders.Go
         /// <param name="context">The pointer type parse tree context.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitPointerType(GoParser.PointerTypeContext context)
-            => new TypeNameNode(context.Start.Line, $"*{this.Visit(context.type_()).As<TypeNameNode>().GetText()}");
+        {
+            var element = context.type_();
+            while (element.type_() is { } parenthesized)
+                element = parenthesized;
+            string name = this.Visit(element).GetText();
+            if (element.typeLit() is { } literal && (literal.functionType() is not null
+                || literal.mapType() is not null || literal.channelType() is not null))
+                name = "(" + name + ")";
+            return new TypeNameNode(context.Start.Line, name + "*");
+        }
 
         /// <summary>
         /// Visits the method spec parse tree context.
@@ -197,7 +268,11 @@ namespace LINVAST.Imperative.Builders.Go
         /// <param name="context">The channel type parse tree context.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitChannelType(GoParser.ChannelTypeContext context)
-            => new TypeNameNode(context.Start.Line, context.GetText());
+        {
+            string direction = context.RECEIVE() is null ? "chan "
+                : context.Start.Type == GoParser.RECEIVE ? "<-chan " : "chan<- ";
+            return new TypeNameNode(context.Start.Line, direction + this.Visit(context.elementType()).GetText());
+        }
 
         /// <summary>
         /// Visits the conversion parse tree context.
@@ -217,7 +292,7 @@ namespace LINVAST.Imperative.Builders.Go
         /// <param name="context">The embedded field parse tree context.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitEmbeddedField(GoParser.EmbeddedFieldContext context)
-            => new TypeNameNode(context.Start.Line, context.GetText());
+            => new TypeNameNode(context.Start.Line, this.Visit(context.typeName()).GetText() + (context.STAR() is null ? "" : "*"));
 
         /// <summary>
         /// Visits the field decl parse tree context.
@@ -249,8 +324,8 @@ namespace LINVAST.Imperative.Builders.Go
         {
             string identifier = parameter.Declarator.Identifier;
             return identifier == "."
-                ? parameter.Specifiers.TypeName
-                : $"{parameter.Specifiers.TypeName} {identifier}";
+                ? parameter.Specifiers.TypeNode.GetText()
+                : $"{parameter.Specifiers.TypeNode.GetText()} {identifier}";
         }
     }
 }

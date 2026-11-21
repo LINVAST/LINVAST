@@ -192,7 +192,7 @@ namespace LINVAST.Imperative.Builders.Go
             }
 
             if (context.nonNamedType() is not null) {
-                ExprNode type = new IdNode(context.Start.Line, context.nonNamedType().GetText());
+                ExprNode type = new IdNode(context.Start.Line, this.Visit(context.nonNamedType()).GetText());
                 if (context.expressionList() is null)
                     return new ExprListNode(context.Start.Line, type);
 
@@ -220,8 +220,8 @@ namespace LINVAST.Imperative.Builders.Go
         /// </summary>
         /// <param name="context">The receiver type parse tree context.</param>
         /// <returns>The corresponding AST node.</returns>
-        public override ASTNode VisitReceiverType(GoParser.ReceiverTypeContext context) => 
-            new TypeNameNode(context.Start.Line, context.GetText());
+        public override ASTNode VisitReceiverType(GoParser.ReceiverTypeContext context)
+            => this.Visit(context.type_());
 
         /// <summary>
         /// Visits the literal parse tree context.
@@ -293,7 +293,7 @@ namespace LINVAST.Imperative.Builders.Go
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCompositeLit(GoParser.CompositeLitContext context)
         {
-            string typeName = context.literalType().GetText();
+            string typeName = this.Visit(context.literalType()).As<TypeNameNode>().GetText();
             ExprListNode values = this.Visit(context.literalValue()).As<ExprListNode>();
             return values.Expressions.Any()
                 ? new ConsExprNode(context.Start.Line, new IdNode(context.Start.Line, typeName), values)
@@ -336,8 +336,12 @@ namespace LINVAST.Imperative.Builders.Go
         /// </summary>
         /// <param name="context">The literal type parse tree context.</param>
         /// <returns>The corresponding AST node.</returns>
-        public override ASTNode VisitLiteralType(GoParser.LiteralTypeContext context) => 
-            new TypeNameNode(context.Start.Line, context.GetText());
+        public override ASTNode VisitLiteralType(GoParser.LiteralTypeContext context)
+        {
+            if (context.ELLIPSIS() is not null)
+                return this.BuildArrayType(context.Start.Line, context.elementType().type_(), "[...]");
+            return this.Visit(context.children.Single());
+        }
 
         /// <summary>
         /// Visits the literal value parse tree context.

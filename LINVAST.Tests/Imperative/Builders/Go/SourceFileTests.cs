@@ -45,7 +45,7 @@ namespace LINVAST.Tests.Imperative.Builders.Go
                 .Last()
                 .As<DeclStatNode>();
 
-            Assert.That(typeDecl.Specifiers.TypeName, Is.EqualTo("struct{xint}"));
+            Assert.That(typeDecl.Specifiers.TypeName, Is.EqualTo("struct { x int }"));
             Assert.That(typeDecl.DeclaratorList.Declarators.Single().Identifier, Is.EqualTo("Point"));
         }
 

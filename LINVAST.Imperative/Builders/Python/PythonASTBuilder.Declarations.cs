@@ -127,7 +127,7 @@ namespace LINVAST.Imperative.Builders.Python
             if (ctx.annassign() is not null) {
                 ExprNode target = this.Visit(ctx.testlist_star_expr()[0]).As<ExprNode>();
                 Python3Parser.AnnassignContext ann = ctx.annassign();
-                string typeName = ann.test()[0].GetText();
+                string typeName = NormalizeAnnotation(ann.test()[0]);
 
                 if (target is not IdNode idTarget) {
                     ExprNode? exprInitializer = ann.test().Length > 1

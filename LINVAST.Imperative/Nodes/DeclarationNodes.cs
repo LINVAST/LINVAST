@@ -439,8 +439,22 @@ namespace LINVAST.Imperative.Nodes
             if (!this.TemplateArguments.Any())
                 return this.TypeName;
 
-            var sb = new StringBuilder(this.TypeName);
+            // Template arguments precede array and nullable suffixes: List<int>[], not List[]<int>.
+            int suffixStart = this.TypeName.Length;
+            while (suffixStart > 0) {
+                if (this.TypeName[suffixStart - 1] == '?') {
+                    suffixStart--;
+                } else if (this.TypeName[suffixStart - 1] == ']') {
+                    int open = this.TypeName.LastIndexOf('[', suffixStart - 1);
+                    if (open < 0) break;
+                    suffixStart = open;
+                } else {
+                    break;
+                }
+            }
+            var sb = new StringBuilder(this.TypeName.Substring(0, suffixStart));
             sb.Append('<').AppendJoin(", ", this.TemplateArguments).Append('>');
+            sb.Append(this.TypeName.Substring(suffixStart));
             return sb.ToString();
         }
     }

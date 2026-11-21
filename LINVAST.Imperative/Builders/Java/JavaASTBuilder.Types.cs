@@ -17,7 +17,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
+using Antlr4.Runtime.Tree;
 using LINVAST.Builders;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
@@ -155,7 +157,7 @@ namespace LINVAST.Imperative.Builders.Java
         /// <param name="ctx">The primitive type parse tree context. Must not be null.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitPrimitiveType([NotNull] PrimitiveTypeContext ctx)
-            => new TypeNameNode(ctx.Start.Line, ctx.children.First().GetText());
+            => new TypeNameNode(ctx.Start.Line, NormalizeBuiltinType(ctx.children.First().GetText()));
 
         /// <summary>
         /// Visits the class type parse tree context.
@@ -188,14 +190,33 @@ namespace LINVAST.Imperative.Builders.Java
         /// <param name="ctx">The class or interface type parse tree context. Must not be null.</param>
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitClassOrInterfaceType([NotNull] ClassOrInterfaceTypeContext ctx)
+            => this.BuildQualifiedType(ctx);
+
+        private TypeNameNode BuildQualifiedType(ParserRuleContext ctx)
         {
-            var typeNames = new TypeNameListNode(ctx.Start.Line);
-            if (ctx.typeArguments()?.Any() ?? false)
-                typeNames = this.Visit(ctx.typeArguments().First()).As<TypeNameListNode>();
-            
-            string identifier = string.Join(".", ctx.IDENTIFIER().Select(id => id.GetText()));
-            return new TypeNameNode(ctx.Start.Line, identifier, typeNames.Types);
+            var parts = new List<TypeNameNode>();
+            foreach (var child in ctx.children) {
+                if (child is ITerminalNode terminal && terminal.Symbol.Type == IDENTIFIER)
+                    parts.Add(new TypeNameNode(terminal.Symbol.Line, terminal.GetText()));
+                else if (child is TypeArgumentsContext || child is TypeArgumentsOrDiamondContext) {
+                    var arguments = this.Visit(child).As<TypeNameListNode>();
+                    var last = parts.Last();
+                    parts[parts.Count - 1] = new TypeNameNode(last.Line, last.TypeName, arguments.Types);
+                }
+            }
+
+            var final = parts.Last();
+            string name = string.Join(".", parts.Take(parts.Count - 1).Select(p => p.GetText()).Append(final.TypeName));
+            return new TypeNameNode(ctx.Start.Line, NormalizeBuiltinType(name), final.TemplateArguments);
         }
+
+        private static string NormalizeBuiltinType(string name) => name switch
+        {
+            "boolean" => "bool",
+            "String" or "java.lang.String" => "string",
+            "Object" or "java.lang.Object" => "object",
+            _ => name,
+        };
         /// <summary>
         /// Visits the type type or void parse tree context.
         /// </summary>

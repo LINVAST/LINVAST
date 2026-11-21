@@ -89,7 +89,7 @@ namespace LINVAST.Tests.Imperative.Builders.Java
         {
             ForeachStatNode loop = this.GenerateAST("for (String s : names) { break; }").As<ForeachStatNode>();
 
-            Assert.That(loop.IteratorType.TypeName, Is.EqualTo("String"));
+            Assert.That(loop.IteratorType.TypeName, Is.EqualTo("string"));
             Assert.That(loop.Iterator.Identifier, Is.EqualTo("s"));
             Assert.That(loop.Iterable.As<IdNode>().Identifier, Is.EqualTo("names"));
             Assert.That(loop.Statement.As<BlockStatNode>().Children.Single(), Is.InstanceOf<JumpStatNode>());

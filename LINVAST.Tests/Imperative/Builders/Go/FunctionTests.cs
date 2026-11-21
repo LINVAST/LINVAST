@@ -51,7 +51,7 @@ namespace LINVAST.Tests.Imperative.Builders.Go
         {
             this.AssertFunctionSignature(
                 @"func f(x int, y float64, z float32, t Point) { }", 1, "f",
-                @params: new[] { ("int", "x"), ("float64", "y"), ("float32", "z"), ("Point", "t") }
+                @params: new[] { ("int", "x"), ("double", "y"), ("float", "z"), ("Point", "t") }
             );
         }
 
@@ -76,7 +76,7 @@ namespace LINVAST.Tests.Imperative.Builders.Go
                     var z int = 4
                     return 3.0;
                 }",
-                2, "f", "float32", isVariadic: true, @params: ("uint32", "x")
+                2, "f", "float", isVariadic: true, @params: ("unsigned int", "x")
             );
             Assert.That(f.IsVariadic, Is.True);
             Assert.That(f.Definition, Is.Not.Null);

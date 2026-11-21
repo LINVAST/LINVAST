@@ -32,8 +32,8 @@ namespace LINVAST.Tests.Imperative.Builders.Go
         [Test]
       public void ShortVarDeclarationTest()
       {
-          this.AssertVariableDeclaration("i:= 3", "i", "Int64", value: 3 );
-          this.AssertVariableDeclaration("s:= \"str\" ", "s", "String", value: "str" );
+          this.AssertVariableDeclaration("i:= 3", "i", "long", value: 3 );
+          this.AssertVariableDeclaration("s:= \"str\" ", "s", "string", value: "str" );
           
           this.AssertVariableDeclarationList("i, s := 3, \"str\" ", "object", AccessModifiers.Unspecified,
               QualifierFlags.None, ("i", 3), ("s", "str"));

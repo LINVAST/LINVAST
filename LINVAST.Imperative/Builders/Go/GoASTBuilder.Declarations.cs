@@ -218,7 +218,14 @@ namespace LINVAST.Imperative.Builders.Go
         {
             ExprNode[] expressions = context.expression().Select(e => this.Visit(e).As<ExprNode>()).ToArray();
             if (expressions.Length == 1 && expressions[0] is LitExprNode literal)
-                return literal.TypeCode.ToString();
+                return literal.TypeCode switch {
+                    TypeCode.Boolean => "bool",
+                    TypeCode.Int64 => "long",
+                    TypeCode.Double => "double",
+                    TypeCode.Char => "char",
+                    TypeCode.String => "string",
+                    _ => "object",
+                };
 
             return "object";
         }

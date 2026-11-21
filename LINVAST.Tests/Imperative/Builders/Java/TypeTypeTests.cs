@@ -75,7 +75,7 @@ namespace LINVAST.Tests.Imperative.Builders.Java
 
             Assert.That(ast.Identifier, Is.EqualTo("Map"));
             Assert.That(ast.TemplateArguments.Count, Is.EqualTo(2));
-            Assert.That(ast.TemplateArguments.First().Identifier, Is.EqualTo("String"));
+            Assert.That(ast.TemplateArguments.First().Identifier, Is.EqualTo("string"));
             Assert.That(ast.TemplateArguments.Last().Identifier, Is.EqualTo("Point"));
         }
 
@@ -88,7 +88,7 @@ namespace LINVAST.Tests.Imperative.Builders.Java
 
             Assert.That(ast.Identifier, Is.EqualTo("Map"));
             Assert.That(ast.TemplateArguments.Count, Is.EqualTo(2));
-            Assert.That(ast.TemplateArguments.First().Identifier, Is.EqualTo("String"));
+            Assert.That(ast.TemplateArguments.First().Identifier, Is.EqualTo("string"));
             Assert.That(ast.TemplateArguments.Last().Identifier, Is.EqualTo("Point"));
             Assert.That(ast.TemplateArguments.Last().TemplateArguments.Count, Is.EqualTo(2));
             Assert.That(ast.TemplateArguments.Last().TemplateArguments.First().Identifier, Is.EqualTo("int"));

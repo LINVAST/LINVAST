@@ -164,7 +164,8 @@ namespace LINVAST.Imperative.Builders.Python
             var name = new IdNode(ctx.name().Start.Line, ctx.name().GetText());
             FuncParamsNode @params = this.Visit(ctx.parameters()).As<FuncParamsNode>();
             BlockStatNode body = this.AsFunctionBody(this.Visit(ctx.block()));
-            var declSpecs = new DeclSpecsNode(ctx.Start.Line, ctx.test() is null ? "void" : ctx.test().GetText());
+            var declSpecs = new DeclSpecsNode(ctx.Start.Line, ctx.test() is null || ctx.test().GetText() == "None"
+                ? "void" : NormalizeAnnotation(ctx.test()));
             var decl = new FuncDeclNode(ctx.Start.Line, name, @params, body);
             var tagArray = tags?.ToArray() ?? Array.Empty<TagNode>();
             int line = Math.Min(ctx.Start.Line, tagArray.Select(t => t.Line).DefaultIfEmpty(ctx.Start.Line).Min());
@@ -230,7 +231,7 @@ namespace LINVAST.Imperative.Builders.Python
 
         private FuncParamNode CreateParam(Python3Parser.TfpdefContext ctx, ExprNode? initializer = null, string? prefix = null)
         {
-            string typeName = ctx.test() is null ? "object" : ctx.test().GetText();
+            string typeName = ctx.test() is null ? "object" : NormalizeAnnotation(ctx.test());
             return this.CreateParam(ctx.Start.Line, ctx.name().GetText(), typeName, initializer, prefix);
         }
 

@@ -77,7 +77,7 @@ namespace LINVAST.Tests.Imperative.Builders.Python
             Assert.That(parameters.Parameters.ElementAt(0).Declarator.Identifier, Is.EqualTo("x"));
             Assert.That(parameters.Parameters.ElementAt(0).Specifiers.TypeName, Is.EqualTo("int"));
             Assert.That(parameters.Parameters.ElementAt(1).Declarator.Identifier, Is.EqualTo("y"));
-            Assert.That(parameters.Parameters.ElementAt(1).Specifiers.TypeName, Is.EqualTo("str"));
+            Assert.That(parameters.Parameters.ElementAt(1).Specifiers.TypeName, Is.EqualTo("string"));
             Assert.That(parameters.IsVariadic, Is.False);
         }
 

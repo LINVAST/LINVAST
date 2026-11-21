@@ -19,6 +19,21 @@ LINVAST is a set of libraries that provide a common language-invariant AST API f
 
 The Kotlin builder normalizes built-in type names: for example, `Int` becomes `int`, `Boolean` becomes `bool`, `String` becomes `string`, and `Unit` becomes `void`. Both `Array<Int>` and `IntArray` become `int[]`; nested arrays and nullable types retain their shape. Generic arguments are preserved in `TypeNameNode.TemplateArguments`, so `List<Array<Int>>` has the name `List` and an `int[]` argument. These rules also apply to return types, parameters, properties, and type aliases.
 
+Other builders also normalize equivalent type spellings:
+
+| Language | Source type | AST type name |
+|---|---|---|
+| Go | `[]int`, `[3]int`, `[2][3]int` | `int[]`, `int[3]`, `int[2][3]` |
+| Go | `*int`, `[]*int`, `*[]int` | `int*`, `int*[]`, `int[]*` |
+| Go | `float32`, `float64`, `int32`, `int64` | `float`, `double`, `int`, `long` |
+| Go | `uint8`, `uint16`, `uint32`, `uint64` | `byte`, `unsigned short`, `unsigned int`, `unsigned long` |
+| Go | `int8`, `int16`, `rune`, `any`, `interface{}` | `signed byte`, `short`, `int`, `object`, `object` |
+| Java | `boolean`, `String`, `Object` | `bool`, `string`, `object` |
+| Python annotations | `str`, `Any`, return annotation `None` | `string`, `object`, `void` |
+| C | `_Bool` | `bool` |
+
+Go normalization also covers composite literals, allocation arguments, and types nested in maps, channels, structs, interfaces, and function signatures. Array lengths and dimension order are retained. Go inferred literal types use canonical names such as `long` and `string` instead of .NET enum names such as `Int64` and `String`. Python collection annotations retain their collection syntax, and `None` inside a union remains `None`. Java boxed types and custom qualified names retain their names; generic arguments are preserved, including in qualified nested types and arrays such as `List<string>[]`.
+
 
 ## Development scripts
 

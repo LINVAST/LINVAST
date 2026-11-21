@@ -306,12 +306,7 @@ namespace LINVAST.Imperative.Builders.Java
         public override ASTNode VisitCreatedName([NotNull] CreatedNameContext ctx)
         {
             if (ctx.IDENTIFIER().Any()) {
-                if (ctx.typeArgumentsOrDiamond().Any()) {
-                    TypeNameListNode typeName = this.Visit(ctx.typeArgumentsOrDiamond(0)).As<TypeNameListNode>();
-                    return new TypeNameNode(ctx.Start.Line, ctx.IDENTIFIER(0).GetText(), typeName.Types);
-                } else {
-                    return new TypeNameNode(ctx.Start.Line, ctx.IDENTIFIER(0).GetText());
-                }
+                return this.BuildQualifiedType(ctx);
             }
 
             if (ctx.primitiveType() is not null) {

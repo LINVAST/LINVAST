@@ -44,7 +44,7 @@ namespace LINVAST.Tests.Imperative.Builders.Java
             TypeDeclNode ast1 = this.GenerateAST(src1).As<TypeDeclNode>();
 
             Assert.That(ast1.Identifier, Is.EqualTo("Class1"));
-            Assert.That(ast1.BaseTypes.Types.First().TypeName, Is.EqualTo("String"));
+            Assert.That(ast1.BaseTypes.Types.First().TypeName, Is.EqualTo("string"));
         }
 
         [Test]
@@ -75,7 +75,7 @@ namespace LINVAST.Tests.Imperative.Builders.Java
 
             Assert.That(ast1.Identifier, Is.EqualTo("Name"));
             Assert.That(ast1.TemplateParameters.Types.First().TypeName, Is.EqualTo("Class1"));
-            Assert.That(ast1.BaseTypes.Types.First().TypeName, Is.EqualTo("String"));
+            Assert.That(ast1.BaseTypes.Types.First().TypeName, Is.EqualTo("string"));
         }
 
 
