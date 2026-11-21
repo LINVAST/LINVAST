@@ -209,6 +209,13 @@ namespace LINVAST.Imperative.Nodes
         /// </summary>
         public int PointerLevel { get; set; }
 
+        /// <summary>Compares declaration children and pointer indirection.</summary>
+        public override bool Equals([AllowNull] ASTNode other)
+            => base.Equals(other) && this.PointerLevel == ((DeclNode)other!).PointerLevel;
+
+        /// <summary>Hashes declaration children and pointer indirection.</summary>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.PointerLevel);
+
         /// <summary>
         /// Gets the identifier node.
         /// </summary>

@@ -15,8 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
@@ -29,12 +31,11 @@ namespace LINVAST.Imperative.Visitors
     /// </summary>
     public sealed class SymbolicExpressionBuilder : BaseASTVisitor<Expr>
     {
-        private static readonly Regex _wildcardRegex = new(@"v__\d+", RegexOptions.Compiled);
-        private static int _lastUsedId = 0;
-        private static readonly Dictionary<string, int> _wildcards = new();
+        private static readonly Regex _wildcardRegex = new(@"\bv__(?:[0-9a-f]{64}|[0-9]+)\b", RegexOptions.Compiled);
 
         /// <summary>
-        /// Replaces wildcard variable names (matching the pattern <c>v__\d+</c>) in an expression string with the specified replacement.
+        /// Replaces complete wildcard variable names in an expression string with the specified replacement.
+        /// Supports content-derived names and legacy numeric names.
         /// </summary>
         /// <param name="expr">The expression string containing wildcard variables.</param>
         /// <param name="replacement">The string to replace wildcards with. Defaults to "?".</param>
@@ -167,17 +168,17 @@ namespace LINVAST.Imperative.Visitors
             try {
                 expr = Expr.Parse(exprStr);
             } catch {
-                expr = this.GetWildcard(exprStr);
+                expr = GetWildcard(exprStr);
             }
             return expr;
         }
 
-        private Expr GetWildcard(string exprStr)
+        private static Expr GetWildcard(string exprStr)
         {
-            if (_wildcards.TryGetValue(exprStr, out int id))
-                return Expr.Variable($"v__{id}");
-            _wildcards.Add(exprStr, _lastUsedId);
-            return Expr.Variable($"v__{_lastUsedId++}");
+            // Stable across builders without a process-wide cache, counter, or
+            // retained expression history. The v__ namespace is reserved.
+            byte[] digest = SHA256.HashData(Encoding.UTF8.GetBytes(exprStr));
+            return Expr.Variable("v__" + Convert.ToHexString(digest).ToLowerInvariant());
         }
     }
 }

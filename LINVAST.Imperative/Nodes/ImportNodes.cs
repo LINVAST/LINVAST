@@ -17,6 +17,8 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using LINVAST.Nodes;
 using Newtonsoft.Json;
@@ -71,6 +73,14 @@ namespace LINVAST.Imperative.Nodes
         /// Gets the qualified name alias, if specified.
         /// </summary>
         public string? QualifiedAs { get; }
+
+        /// <summary>Compares import paths and aliases.</summary>
+        public override bool Equals([AllowNull] ASTNode other)
+            => base.Equals(other) && other is ImportNode import
+                && this.Directive == import.Directive && this.QualifiedAs == import.QualifiedAs;
+
+        /// <summary>Hashes import paths and aliases.</summary>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.Directive, this.QualifiedAs);
 
 
         /// <summary>

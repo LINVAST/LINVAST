@@ -15,6 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+using System;
+using System.Diagnostics.CodeAnalysis;
 using LINVAST.Nodes;
 
 namespace LINVAST.Imperative.Nodes
@@ -28,6 +30,13 @@ namespace LINVAST.Imperative.Nodes
         /// Gets the package name.
         /// </summary>
         public string Identifier { get; }
+
+        /// <summary>Compares package names.</summary>
+        public override bool Equals([AllowNull] ASTNode other)
+            => base.Equals(other) && other is PackageNode package && this.Identifier == package.Identifier;
+
+        /// <summary>Hashes the package name.</summary>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.Identifier);
 
 
         /// <summary>

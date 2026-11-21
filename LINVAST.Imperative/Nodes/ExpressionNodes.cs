@@ -245,21 +245,31 @@ namespace LINVAST.Imperative.Nodes
             : base(line, left, AssignOpNode.FromSymbol(line, "="), right) { }
 
         /// <summary>
-        /// Simplifies a complex assignment by expanding compound operators (e.g., +=, -=) into their equivalent binary operation plus simple assignment.
+        /// Returns an independent copy, expanding compound assignments to plain identifiers
+        /// into a binary operation and simple assignment. Complex targets and specialized
+        /// assignment nodes retain their original form to preserve evaluation order.
         /// </summary>
         /// <returns>The simplified assignment expression.</returns>
         public AssignExprNode SimplifyComplexAssignment()
         {
-            if (this.Operator is ComplexAssignOpNode && this.Operator.Symbol.Length > 1) {
-                string part = this.Operator.Symbol.Substring(0, this.Operator.Symbol.IndexOf('='));
+            if (this.GetType() == typeof(AssignExprNode)
+                && this.LeftOperand is IdNode id && IsPlainIdentifier(id.Identifier)
+                && this.Operator is ComplexAssignOpNode op && op.Symbol.Length > 1 && op.Symbol.EndsWith('=')) {
+                string part = op.Symbol[..^1];
                 var expanded = new ArithmExprNode(this.Line,
-                    this.LeftOperand,
-                    ArithmOpNode.FromSymbol(this.Operator.Line, part),
-                    this.RightOperand
+                    this.LeftOperand.Copy().As<ExprNode>(),
+                    new ArithmOpNode(op.Line, part, op.ApplyTo),
+                    this.RightOperand.Copy().As<ExprNode>()
                 );
-                return new AssignExprNode(this.Line, this.LeftOperand, expanded);
+                return new AssignExprNode(this.Line, this.LeftOperand.Copy().As<ExprNode>(), expanded);
             }
-            return this;
+            return this.Copy().As<AssignExprNode>();
+
+            // Builders can encode member access or other expressions in IdNode text.
+            // Only a bare variable is safe to duplicate without a temporary binding.
+            static bool IsPlainIdentifier(string name)
+                => name.Length > 0 && (char.IsLetter(name[0]) || name[0] == '_')
+                    && name.Skip(1).All(c => char.IsLetterOrDigit(c) || c == '_');
         }
     }
 
@@ -300,6 +310,9 @@ namespace LINVAST.Imperative.Nodes
         /// <returns>true if the nodes are equal; otherwise, false.</returns>
         public override bool Equals([AllowNull] ASTNode other)
             => base.Equals(other) && this.Identifier.Equals(other.As<IdNode>().Identifier);
+
+        /// <summary>Hashes the identifier name.</summary>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.Identifier);
     }
 
     /// <summary>
@@ -585,6 +598,9 @@ namespace LINVAST.Imperative.Nodes
                 return lit.Value is null;
             return this.Value.Equals(lit.Value);
         }
+
+        /// <summary>Hashes the literal's value and type, independently of its display format.</summary>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.TypeCode, this.Value);
     }
 
     /// <summary>
@@ -701,6 +717,9 @@ namespace LINVAST.Imperative.Nodes
         /// <returns>true if the node is a yield expression node with the same delegating flag; otherwise, false.</returns>
         public override bool Equals([AllowNull] ASTNode other)
             => base.Equals(other) && this.IsDelegating == ((YieldExprNode)other!).IsDelegating;
+
+        /// <summary>Hashes the expression and whether it delegates.</summary>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.IsDelegating);
     }
 
     /// <summary>

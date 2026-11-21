@@ -76,6 +76,9 @@ namespace LINVAST.Imperative.Nodes
         /// <returns><c>true</c> if the nodes are equal; otherwise, <c>false</c>.</returns>
         public override bool Equals([AllowNull] ASTNode other)
             => base.Equals(other) && this.Symbol.Equals((other as OpNode)?.Symbol);
+
+        /// <summary>Hashes the operator's structural identity and symbol.</summary>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.Symbol);
     }
 
     /// <summary>

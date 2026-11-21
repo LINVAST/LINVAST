@@ -56,13 +56,17 @@ namespace LINVAST.Nodes
         /// <param name="children">The child nodes.</param>
         protected ASTNode(int line, params ASTNode[] children)
         {
-            this.Children = children;
+            ArgumentNullException.ThrowIfNull(children);
+            this.Children = Array.AsReadOnly((ASTNode[])children.Clone());
             this.Line = line;
             foreach (ASTNode child in this.Children) {
+                if (child is null)
+                    throw new ArgumentException("Child nodes cannot be null.", nameof(children));
                 if (child.Line < this.Line)
                     throw new ArgumentException("Parent node has greater line number than the child.");
-                child.Parent = this;
             }
+            foreach (ASTNode child in this.Children)
+                child.Parent = this;
         }
 
         /// <summary>Initializes a new instance of the <see cref="ASTNode"/> class.</summary>
@@ -120,9 +124,15 @@ namespace LINVAST.Nodes
             => this.GetText();
 
         /// <summary>Returns the hash code for this node.</summary>
-        /// <returns>A hash code based on the node's text.</returns>
+        /// <returns>A structural hash code, excluding parent links and source locations.</returns>
         public override int GetHashCode()
-            => this.GetText().GetHashCode();
+        {
+            var hash = new HashCode();
+            hash.Add(this.GetType());
+            foreach (ASTNode child in this.Children)
+                hash.Add(child);
+            return hash.ToHashCode();
+        }
 
         /// <summary>Determines whether the specified object is equal to this node.</summary>
         /// <param name="obj">The object to compare.</param>

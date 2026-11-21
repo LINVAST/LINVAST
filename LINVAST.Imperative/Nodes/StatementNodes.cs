@@ -551,6 +551,16 @@ namespace LINVAST.Imperative.Nodes
         /// </summary>
         public bool HasFinally { get; }
 
+        /// <summary>Compares try components and their clause roles.</summary>
+        public override bool Equals([AllowNull] ASTNode other)
+            => base.Equals(other) && other is TryStatNode statement
+                && this.CatchClauseCount == statement.CatchClauseCount
+                && this.HasElse == statement.HasElse && this.HasFinally == statement.HasFinally;
+
+        /// <summary>Hashes try components and their clause roles.</summary>
+        public override int GetHashCode()
+            => HashCode.Combine(base.GetHashCode(), this.CatchClauseCount, this.HasElse, this.HasFinally);
+
         /// <summary>
         /// Gets the try body statement.
         /// </summary>
@@ -740,6 +750,9 @@ namespace LINVAST.Imperative.Nodes
         /// <summary>Compares the jump kind as well as its expression or label.</summary>
         public override bool Equals([AllowNull] ASTNode other)
             => base.Equals(other) && other is JumpStatNode jump && this.Type == jump.Type;
+
+        /// <summary>Hashes the jump kind and its children.</summary>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.Type);
     }
 
     /// <summary>
@@ -783,6 +796,9 @@ namespace LINVAST.Imperative.Nodes
         /// <returns>true if the nodes are equal; otherwise, false.</returns>
         public override bool Equals([AllowNull] ASTNode other)
             => base.Equals(other) && this.Label.Equals((other as LabeledStatNode)?.Label);
+
+        /// <summary>Hashes the label and its statement.</summary>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.Label);
     }
 
     /// <summary>

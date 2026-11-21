@@ -110,7 +110,8 @@ namespace LINVAST.Imperative.Nodes
         /// <summary>
         /// Gets the field value.
         /// </summary>
-        public LitExprNode Value { get; }
+        [JsonIgnore]
+        public LitExprNode Value => this.Children[0].As<LitExprNode>();
 
 
         /// <summary>
@@ -120,10 +121,9 @@ namespace LINVAST.Imperative.Nodes
         /// <param name="name">The field name.</param>
         /// <param name="value">The field value.</param>
         public TagFieldNode(int line, string name, LitExprNode value)
-            : base(line)
+            : base(line, value)
         {
             this.Name = name;
-            this.Value = value;
         }
 
 
@@ -153,14 +153,14 @@ namespace LINVAST.Imperative.Nodes
                 return false;
 
             var field = other as TagFieldNode;
-            return Equals(this.Name, field?.Name) && Equals(this.Value, field?.Value);
+            return Equals(this.Name, field?.Name);
         }
 
         /// <summary>
         /// Returns the hash code for this <see cref="TagFieldNode"/>.
         /// </summary>
-        /// <returns>A hash code based on the field name.</returns>
-        public override int GetHashCode() => this.Name.GetHashCode();
+        /// <returns>A hash code based on the field name and value.</returns>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.Name);
     }
 
     /// <summary>

@@ -41,6 +41,16 @@ Loop components are part of `Children`, so generic traversal, equality, copying,
 
 `Copy()` returns an independent tree with a detached root and parent links pointing into the copy. `Substitute()` matches structurally equal nodes, clones each replacement occurrence independently, and leaves both input trees unchanged. Replacement contents are copied without applying the substitution recursively to them. `BaseASTVisitor` supports repeated traversals without a cumulative node limit and visits the children of node types without a dedicated overload.
 
+Constructors defensively copy child collections and expose them as read-only. They attach the supplied nodes by setting their parent links; use `Copy()` when attaching a subtree that must remain in another tree. Nodes still have mutable metadata and operator delegates, so the AST is not fully immutable. Copying duplicates AST nodes, but opaque objects stored as literal values and objects captured by delegates remain shared.
+
+`TagFieldNode.Value` is now its first child. Traversal, copying, and substitution include tag values, and JSON serializes them once under `Children`, without a separate `Value` property on the tag field.
+
+Equality and hashing use node types, children, and structural metadata, including pointer levels, import paths/aliases, package names, and try-clause roles. They ignore source locations, source filenames, literal suffix spellings after conversion, and opaque evaluation delegates. Hashing does not render the tree or depend on the current numeric display culture. Avoid changing a node's equality-relevant metadata while it is stored in a hash collection.
+
+`SimplifyComplexAssignment()` returns an independent tree. It expands compound assignments to plain identifiers while retaining the original operator's evaluation delegate, including bitwise operations. Complex targets, such as array elements and dereferences, and specialized increment/decrement nodes retain their compound form so their evaluation order is preserved.
+
+Symbolic wildcard names are derived from expression content using SHA-256 rather than a shared counter or cache. Separate and concurrent conversions produce the same wildcard for the same unsupported symbolic expression without retaining expression history. The `v__` identifier prefix is reserved for generated wildcards. `WildcardReplace()` recognizes complete generated names and legacy numeric names. Concurrent parsing is supported when the input tree and the builder's `Node` property are not being mutated.
+
 Declaration accessors skip leading tags. Function declarations constructed with only an identifier now include an empty `TypeNameListNode` child, and enum declarations constructed with only an identifier include an empty `DeclListNode` for constants. These children also appear in JSON, making the corresponding accessors consistent with the other constructors.
 
 ## Development scripts
@@ -77,7 +87,7 @@ Use `--configuration Debug|Release` on any script. `release` writes NuGet packag
 // Creating AST
 LINVAST.ASTNode ast = new LINVAST.Imperative.ImperativeASTFactory().BuildFromFile("my_src_path");
 
-// Copying AST - AST is immutable
+// Copying the tree before changing mutable metadata
 LINVAST.ASTNode copy = ast.Copy();
 
 // Common operators are overridden

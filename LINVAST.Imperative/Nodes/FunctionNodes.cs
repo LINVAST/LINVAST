@@ -401,6 +401,9 @@ namespace LINVAST.Imperative.Nodes
         /// <returns>true if the nodes are equal; otherwise, false.</returns>
         public override bool Equals([AllowNull] ASTNode other)
             => base.Equals(other) && this.IsVariadic.Equals((other as FuncParamsNode)?.IsVariadic);
+
+        /// <summary>Hashes parameters and whether the list is variadic.</summary>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.IsVariadic);
     }
 
     /// <summary>
