@@ -272,6 +272,59 @@ namespace LINVAST.Tests.Imperative.Builders.C
             Assert.That(this.AssertExpression("&&done").As<IdNode>().Identifier, Is.EqualTo("&&done"));
         }
 
+        [TestCase("int", "int")]
+        [TestCase("unsigned int", "unsigned int")]
+        [TestCase("long long", "long long")]
+        [TestCase("struct S", "struct S")]
+        [TestCase("const unsigned long *", "const unsigned long*")]
+        [TestCase("unsigned /* qualifier */ long", "unsigned long")]
+        [TestCase("unsigned\nlong", "unsigned long")]
+        [TestCase("unsigned long[4]", "unsigned long[4]")]
+        [TestCase("int (*)(unsigned long)", "int(*)(unsigned long)")]
+        public void SizeofTypePreservesTokenBoundaries(string type, string expectedType)
+        {
+            FuncCallExprNode node = this.AssertExpression($"sizeof({type})").As<FuncCallExprNode>();
+
+            Assert.That(node.Identifier, Is.EqualTo("sizeof"));
+            IdNode operand = node.Arguments!.Expressions.Single().As<IdNode>();
+            Assert.That(operand.Identifier, Is.EqualTo(expectedType));
+            Assert.That(operand.Parent, Is.SameAs(node.Arguments));
+            Assert.That(node.Arguments.Parent, Is.SameAs(node));
+        }
+
+        [TestCase("sizeof x", "x")]
+        [TestCase("sizeof(x)", "x")]
+        [TestCase("sizeof *p", "*p")]
+        [TestCase("sizeof(*p)", "*p")]
+        [TestCase("sizeof a[0]", "a[0]")]
+        [TestCase("sizeof(x + 1)", "x + 1")]
+        [TestCase("sizeof(sizeof x)", "sizeof x")]
+        public void SizeofExpressionPreservesOperand(string source, string operandSource)
+        {
+            FuncCallExprNode node = this.AssertExpression(source).As<FuncCallExprNode>();
+
+            Assert.That(node.Identifier, Is.EqualTo("sizeof"));
+            Assert.That(node.Arguments!.Expressions.Single(), Is.EqualTo(this.AssertExpression(operandSource)));
+        }
+
+        [Test]
+        public void SizeofTypeInCompilationUnit()
+        {
+            SourceNode source = new CASTBuilder().BuildFromSource(
+                "unsigned long result = sizeof(unsigned long) + sizeof(int[4]);").As<SourceNode>();
+            VarDeclNode declaration = source.Children.Single().As<DeclStatNode>()
+                .DeclaratorList.Declarators.Single().As<VarDeclNode>();
+            ArithmExprNode sum = declaration.Initializer!.As<ArithmExprNode>();
+
+            Assert.That(sum.Operator.Symbol, Is.EqualTo("+"));
+            FuncCallExprNode left = sum.LeftOperand.As<FuncCallExprNode>();
+            FuncCallExprNode right = sum.RightOperand.As<FuncCallExprNode>();
+            Assert.That(left.Identifier, Is.EqualTo("sizeof"));
+            Assert.That(right.Identifier, Is.EqualTo("sizeof"));
+            Assert.That(left.Arguments!.Expressions.Single().As<IdNode>().Identifier, Is.EqualTo("unsigned long"));
+            Assert.That(right.Arguments!.Expressions.Single().As<IdNode>().Identifier, Is.EqualTo("int[4]"));
+        }
+
         [Test]
         public void CompoundLiteralExpressionTest()
         {

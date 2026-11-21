@@ -16,6 +16,7 @@
 
 ﻿using System;
 using System.Linq;
+using System.Text;
 using Antlr4.Runtime.Misc;
 using LINVAST.Builders;
 using LINVAST.Exceptions;
@@ -295,7 +296,7 @@ namespace LINVAST.Imperative.Builders.C
             if (ctx.unaryExpression() is null) {
                 if (ctx.typeName() is not null) {
                     string callee = ctx.children.First().GetText();
-                    var typeName = new IdNode(ctx.typeName().Start.Line, ctx.typeName().GetText());
+                    var typeName = new IdNode(ctx.typeName().Start.Line, TypeOperandText(ctx.typeName()));
                     return new FuncCallExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, callee), new ExprListNode(ctx.Start.Line, typeName));
                 }
 
@@ -313,6 +314,23 @@ namespace LINVAST.Imperative.Builders.C
             }
             var op = UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.children[0].GetText());
             return new UnaryExprNode(ctx.Start.Line, op, expr);
+        }
+
+        private static string TypeOperandText(TypeNameContext ctx)
+        {
+            var text = new StringBuilder();
+            foreach (var token in DefaultTokens(ctx)) {
+                // GetText() merges keywords and identifiers (e.g. "unsigned int"
+                // becomes "unsignedint"). Keep word boundaries, including in
+                // nested declarators, without retaining comments or whitespace.
+                string part = token.Text;
+                if (text.Length > 0 && IsWordCharacter(text[text.Length - 1]) && IsWordCharacter(part[0]))
+                    text.Append(' ');
+                text.Append(part);
+            }
+            return text.ToString();
+
+            static bool IsWordCharacter(char c) => char.IsLetterOrDigit(c) || c == '_';
         }
 
         /// <summary>
