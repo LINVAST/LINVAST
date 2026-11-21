@@ -17,6 +17,8 @@ LINVAST is a set of libraries that provide a common language-invariant AST API f
 | Lua | [`Lua.g4`](https://github.com/LINVAST/LINVAST/search?q=Lua.g4&type=code) | Lua 5.1–5.3 | Multi-version grammar tested against Lua 5.2/5.3 test suites |
 | Python | [`Python3Parser.g4`](https://github.com/LINVAST/LINVAST/search?q=Python3Parser.g4&type=code) / [`Python3Lexer.g4`](https://github.com/LINVAST/LINVAST/search?q=Python3Lexer.g4&type=code) | Python 3 | ANTLR4 Python 3 grammar by Bart Kiers |
 
+The Kotlin builder normalizes built-in type names: for example, `Int` becomes `int`, `Boolean` becomes `bool`, `String` becomes `string`, and `Unit` becomes `void`. Both `Array<Int>` and `IntArray` become `int[]`; nested arrays and nullable types retain their shape. Generic arguments are preserved in `TypeNameNode.TemplateArguments`, so `List<Array<Int>>` has the name `List` and an `int[]` argument. These rules also apply to return types, parameters, properties, and type aliases.
+
 
 ## Development scripts
 

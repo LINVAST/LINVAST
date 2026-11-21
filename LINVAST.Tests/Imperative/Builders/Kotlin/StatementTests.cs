@@ -178,7 +178,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
                 .BuildFromSource("for (x: Int in items) { }", p => p.forExpression())
                 .As<ForeachStatNode>();
             Assert.That(node.Iterator.Identifier, Is.EqualTo("x"));
-            Assert.That(node.IteratorType.TypeName, Is.EqualTo("Int"));
+            Assert.That(node.IteratorType.TypeName, Is.EqualTo("int"));
             Assert.That(node.Iterable.As<IdNode>().Identifier, Is.EqualTo("items"));
         }
 

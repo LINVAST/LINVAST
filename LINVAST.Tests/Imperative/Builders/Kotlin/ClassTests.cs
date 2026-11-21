@@ -46,7 +46,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
             FuncDeclNode ctor = node.Declarations.First().DeclaratorList.Declarators.Single().As<FuncDeclNode>();
             FuncParamNode param = ctor.Parameters!.Single();
             Assert.That(param.Declarator.Identifier, Is.EqualTo("x"));
-            Assert.That(param.Specifiers.TypeName, Is.EqualTo("Int"));
+            Assert.That(param.Specifiers.TypeName, Is.EqualTo("int"));
         }
 
         [Test]
@@ -67,7 +67,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
             FuncDeclNode ctor = node.Declarations.First().DeclaratorList.Declarators.Single().As<FuncDeclNode>();
             FuncParamNode param = ctor.Parameters!.Single();
             Assert.That(param.Declarator.Identifier, Is.EqualTo("count"));
-            Assert.That(param.Specifiers.TypeName, Is.EqualTo("Int"));
+            Assert.That(param.Specifiers.TypeName, Is.EqualTo("int"));
         }
 
         // --- delegationSpecifiers ---

@@ -20,7 +20,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
             FuncParamNode node = new KotlinASTBuilder()
                 .BuildFromSource("x: Int", p => p.parameter())
                 .As<FuncParamNode>();
-            Assert.That(node.Specifiers.TypeName, Is.EqualTo("Int"));
+            Assert.That(node.Specifiers.TypeName, Is.EqualTo("int"));
             Assert.That(node.Declarator.Identifier, Is.EqualTo("x"));
         }
 
@@ -30,7 +30,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
             FuncParamNode node = new KotlinASTBuilder()
                 .BuildFromSource("name: String?", p => p.parameter())
                 .As<FuncParamNode>();
-            Assert.That(node.Specifiers.TypeName, Is.EqualTo("String?"));
+            Assert.That(node.Specifiers.TypeName, Is.EqualTo("string?"));
             Assert.That(node.Declarator.Identifier, Is.EqualTo("name"));
         }
 
@@ -52,7 +52,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
                 .BuildFromSource("(x: Int)", p => p.functionValueParameters())
                 .As<FuncParamsNode>();
             FuncParamNode param = node.Parameters.Single();
-            Assert.That(param.Specifiers.TypeName, Is.EqualTo("Int"));
+            Assert.That(param.Specifiers.TypeName, Is.EqualTo("int"));
             Assert.That(param.Declarator.Identifier, Is.EqualTo("x"));
         }
 
@@ -64,9 +64,9 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
                 .As<FuncParamsNode>();
             var paramList = node.Parameters.ToList();
             Assert.That(paramList, Has.Exactly(2).Items);
-            Assert.That(paramList[0].Specifiers.TypeName, Is.EqualTo("Int"));
+            Assert.That(paramList[0].Specifiers.TypeName, Is.EqualTo("int"));
             Assert.That(paramList[0].Declarator.Identifier, Is.EqualTo("x"));
-            Assert.That(paramList[1].Specifiers.TypeName, Is.EqualTo("String"));
+            Assert.That(paramList[1].Specifiers.TypeName, Is.EqualTo("string"));
             Assert.That(paramList[1].Declarator.Identifier, Is.EqualTo("y"));
         }
 
@@ -77,7 +77,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
         {
             FuncNode node = this.GenerateAST("fun greet() { }").As<FuncNode>();
             Assert.That(node.Identifier, Is.EqualTo("greet"));
-            Assert.That(node.ReturnTypeName, Is.EqualTo("Unit"));
+            Assert.That(node.ReturnTypeName, Is.EqualTo("void"));
             Assert.That(node.Parameters, Is.Empty);
         }
 
@@ -86,7 +86,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
         {
             FuncNode node = this.GenerateAST("fun square(x: Int): Int { }").As<FuncNode>();
             Assert.That(node.Identifier, Is.EqualTo("square"));
-            Assert.That(node.ReturnTypeName, Is.EqualTo("Int"));
+            Assert.That(node.ReturnTypeName, Is.EqualTo("int"));
         }
 
         [Test]
@@ -94,7 +94,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
         {
             FuncNode node = this.GenerateAST("fun square(x: Int): Int { }").As<FuncNode>();
             FuncParamNode param = node.Parameters!.Single();
-            Assert.That(param.Specifiers.TypeName, Is.EqualTo("Int"));
+            Assert.That(param.Specifiers.TypeName, Is.EqualTo("int"));
             Assert.That(param.Declarator.Identifier, Is.EqualTo("x"));
         }
 
@@ -144,7 +144,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
         {
             FuncNode node = this.GenerateAST("fun double(x: Int): Int = x * 2").As<FuncNode>();
             Assert.That(node.Identifier, Is.EqualTo("double"));
-            Assert.That(node.ReturnTypeName, Is.EqualTo("Int"));
+            Assert.That(node.ReturnTypeName, Is.EqualTo("int"));
             Assert.That(node.Definition, Is.Not.Null);
             Assert.That(node.Definition!.Children, Has.Exactly(1).Items);
             ExprStatNode exprStat = node.Definition!.Children.First().As<ExprStatNode>();

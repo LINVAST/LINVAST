@@ -32,11 +32,13 @@ namespace LINVAST.Imperative.Builders.Kotlin
             int line = ctx.Start.Line;
             string keyword = ctx.VAL() != null ? "val" : "var";
             string name = ctx.variableDeclaration().simpleIdentifier().GetText();
-            string? typeName = ctx.variableDeclaration().type()?.GetText();
+            TypeNameNode? type = ctx.variableDeclaration().type() != null
+                ? this.Visit(ctx.variableDeclaration().type()).As<TypeNameNode>()
+                : null;
             ExprNode? init = ctx.expression() != null ? this.AsExprNode(this.Visit(ctx.expression())) : null;
 
-            DeclSpecsNode declSpecs = typeName != null
-                ? new DeclSpecsNode(line, keyword, typeName)
+            DeclSpecsNode declSpecs = type is not null
+                ? new DeclSpecsNode(line, keyword, type)
                 : new DeclSpecsNode(line, keyword);
 
             IdNode id = new IdNode(line, name);
@@ -73,8 +75,9 @@ namespace LINVAST.Imperative.Builders.Kotlin
         {
             int line = ctx.Start.Line;
             IdNode aliasId = new IdNode(line, ctx.simpleIdentifier().GetText());
-            IdNode typeId = new IdNode(line, ctx.type().GetText());
-            DeclSpecsNode declSpecs = new DeclSpecsNode(line, "__linvast_typealias", ctx.type().GetText());
+            TypeNameNode type = this.Visit(ctx.type()).As<TypeNameNode>();
+            IdNode typeId = new IdNode(line, type.GetText());
+            DeclSpecsNode declSpecs = new DeclSpecsNode(line, "__linvast_typealias", type);
             VarDeclNode varDecl = new VarDeclNode(line, aliasId, typeId);
             DeclListNode declList = new DeclListNode(line, varDecl);
             return new DeclStatNode(line, declSpecs, declList);

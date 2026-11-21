@@ -247,7 +247,9 @@ namespace LINVAST.Imperative.Builders.Kotlin
             }
 
             var varDecl = ctx.variableDeclaration();
-            TypeNameNode type = new TypeNameNode(line, varDecl.type()?.GetText() ?? "var");
+            TypeNameNode type = varDecl.type() != null
+                ? this.Visit(varDecl.type()).As<TypeNameNode>()
+                : new TypeNameNode(line, "var");
             IdNode iterator = new IdNode(line, varDecl.simpleIdentifier().GetText());
             return new ForeachStatNode(line, type, iterator, iterable, body);
         }

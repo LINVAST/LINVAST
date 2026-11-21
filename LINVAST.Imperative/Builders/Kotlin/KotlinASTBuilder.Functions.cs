@@ -22,7 +22,9 @@ namespace LINVAST.Imperative.Builders.Kotlin
         {
             int line = ctx.Start.Line;
             IdNode name = new IdNode(line, ctx.identifier().GetText());
-            string returnType = ctx.COLON() != null ? ctx.type(0).GetText() : "Unit";
+            TypeNameNode returnType = ctx.COLON() != null
+                ? this.Visit(ctx.type().Last()).As<TypeNameNode>()
+                : new TypeNameNode(line, "void");
             
             DeclSpecsNode declSpecs = new DeclSpecsNode(line, returnType);
             

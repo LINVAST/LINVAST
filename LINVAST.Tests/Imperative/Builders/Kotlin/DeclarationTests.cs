@@ -48,7 +48,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
         {
             // val x: Int
             DeclStatNode node = this.GenerateAST("val x: Int").As<DeclStatNode>();
-            Assert.That(node.Specifiers.TypeName, Is.EqualTo("Int"));
+            Assert.That(node.Specifiers.TypeName, Is.EqualTo("int"));
             Assert.That(node.DeclaratorList.Declarators.Single().Identifier, Is.EqualTo("x"));
         }
 
@@ -57,7 +57,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
         {
             // var name: String
             DeclStatNode node = this.GenerateAST("var name: String").As<DeclStatNode>();
-            Assert.That(node.Specifiers.TypeName, Is.EqualTo("String"));
+            Assert.That(node.Specifiers.TypeName, Is.EqualTo("string"));
             Assert.That(node.DeclaratorList.Declarators.Single().Identifier, Is.EqualTo("name"));
         }
 
@@ -66,7 +66,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
         {
             // val name: String?
             DeclStatNode node = this.GenerateAST("val name: String?").As<DeclStatNode>();
-            Assert.That(node.Specifiers.TypeName, Is.EqualTo("String?"));
+            Assert.That(node.Specifiers.TypeName, Is.EqualTo("string?"));
             Assert.That(node.DeclaratorList.Declarators.Single().Identifier, Is.EqualTo("name"));
         }
 
@@ -100,7 +100,7 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
             DeclStatNode node = new KotlinASTBuilder()
                 .BuildFromSource("typealias MyInt = Int", p => p.typeAlias())
                 .As<DeclStatNode>();
-            Assert.That(node.Specifiers.TypeName, Is.EqualTo("Int"));
+            Assert.That(node.Specifiers.TypeName, Is.EqualTo("int"));
             Assert.That(node.DeclaratorList.Declarators.Single().Identifier, Is.EqualTo("MyInt"));
         }
     }
