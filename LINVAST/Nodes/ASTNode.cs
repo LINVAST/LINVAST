@@ -29,9 +29,9 @@ namespace LINVAST.Nodes
     public abstract class ASTNode : IEquatable<ASTNode>
     {
         /// <summary>Checks if two AST nodes are equal.</summary>
-        public static bool operator ==(ASTNode x, ASTNode y) => x.Equals(y);
+        public static bool operator ==(ASTNode? x, ASTNode? y) => ReferenceEquals(x, y) || (x is not null && x.Equals(y));
         /// <summary>Checks if two AST nodes are not equal.</summary>
-        public static bool operator !=(ASTNode x, ASTNode y) => !(x == y);
+        public static bool operator !=(ASTNode? x, ASTNode? y) => !(x == y);
 
 
         [JsonProperty(Order = 0)]
@@ -90,22 +90,14 @@ namespace LINVAST.Nodes
         /// <summary>Creates a deep copy of this node.</summary>
         /// <returns>A deep copy of this AST node.</returns>
         public ASTNode Copy()
-        {
-            var copy = (ASTNode)this.MemberwiseClone();
-            copy.Children = this.Children
-                .Select(c => c.Copy())
-                .ToList()
-                .AsReadOnly()
-                ;
-            return copy;
-        }
+            => this.CopySubtree(null, null);
 
         /// <summary>Creates a copy of this node with the specified node replaced.</summary>
         /// <param name="node">The node to replace.</param>
         /// <param name="replacement">The replacement node.</param>
         /// <returns>A new AST node with the substitution applied.</returns>
         public ASTNode Substitute(ASTNode? node, ASTNode? replacement)
-            => node is null || replacement is null ? this.Copy() : this.Copy().SubstituteNode(node, replacement);
+            => this.CopySubtree(node, replacement);
 
         /// <summary>Creates a copy of this node with the specified node replaced, cast to the target type.</summary>
         /// <typeparam name="T">The target AST node type.</typeparam>
@@ -162,16 +154,21 @@ namespace LINVAST.Nodes
             => string.Join(' ', this.Children.Select(c => c.GetText()));
 
 
-        private ASTNode SubstituteNode(ASTNode node, ASTNode replacement)
+        private ASTNode CopySubtree(ASTNode? node, ASTNode? replacement)
         {
-            if (node.Equals(this))
-                return replacement;
-            this.Children = this.Children
-                .Select(c => c.Substitute(node, replacement))
+            // Copy each occurrence independently, without substituting inside the replacement.
+            if (node is not null && replacement is not null && node.Equals(this))
+                return replacement.Copy();
+
+            var copy = (ASTNode)this.MemberwiseClone();
+            copy.Parent = null;
+            copy.Children = this.Children
+                .Select(c => c.CopySubtree(node, replacement))
                 .ToList()
-                .AsReadOnly()
-                ;
-            return this;
+                .AsReadOnly();
+            foreach (ASTNode child in copy.Children)
+                child.Parent = copy;
+            return copy;
         }
     }
 }

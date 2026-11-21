@@ -24,6 +24,18 @@ namespace LINVAST.Tests.Nodes
     internal sealed class ASTNodeEqualityTests
     {
         [Test]
+        public void EqualityOperatorsHandleNullInEitherPosition()
+        {
+            ASTNode? absent = null;
+            ASTNode present = new IdNode(1, "x");
+            Assert.That(absent == null, Is.True);
+            Assert.That(absent == present, Is.False);
+            Assert.That(present == absent, Is.False);
+            Assert.That(absent != present, Is.True);
+            Assert.That(present != absent, Is.True);
+        }
+
+        [Test]
         public void BasicEqualityTest()
         {
             ASTNode ast1 = new SourceNode(new BlockStatNode(1));

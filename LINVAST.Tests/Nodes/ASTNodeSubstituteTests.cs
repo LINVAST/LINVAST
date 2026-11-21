@@ -15,7 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-﻿using LINVAST.Imperative.Nodes;
+﻿using System.Linq;
+using LINVAST.Imperative.Nodes;
 using LINVAST.Imperative.Nodes.Common;
 using LINVAST.Nodes;
 using NUnit.Framework;
@@ -24,6 +25,56 @@ namespace LINVAST.Tests.Nodes
 {
     internal sealed class ASTNodeSubstituteTests
     {
+        [Test]
+        public void ReplacementOccurrencesAreIndependentAndDoNotReparentTheInput()
+        {
+            var original = new ExprListNode(1, new IdNode(1, "x"), new IdNode(1, "x"));
+            var replacement = new IncExprNode(1, new IdNode(1, "x"));
+            var replacementOwner = new ExprStatNode(1, replacement);
+
+            var result = original.Substitute<ExprListNode>(new IdNode(1, "x"), replacement);
+            Assert.That(result.Children[0], Is.EqualTo(replacement));
+            Assert.That(result.Children[1], Is.EqualTo(replacement));
+            Assert.That(result.Children[0], Is.Not.SameAs(replacement));
+            Assert.That(result.Children[0], Is.Not.SameAs(result.Children[1]));
+            Assert.That(replacement.Parent, Is.SameAs(replacementOwner));
+            Assert.That(original.Children.Select(node => node.As<IdNode>().Identifier), Is.EqualTo(new[] { "x", "x" }));
+            LoopInvariantTests.AssertOwnedTree(result);
+
+            result.Children[0].As<IncExprNode>().Operator.As<AssignOpNode>().ApplyTo = (_, _) => 999;
+            Assert.That(result.Children[1].As<IncExprNode>().Operator.As<AssignOpNode>().ApplyTo,
+                Is.SameAs(replacement.Operator.As<AssignOpNode>().ApplyTo));
+        }
+
+        [Test]
+        public void RootReplacementIsADetachedCopy()
+        {
+            var original = new IdNode(1, "x");
+            var replacement = new ExprListNode(1, new IdNode(1, "y"));
+            var owner = new ExprStatNode(1, replacement);
+            var result = original.Substitute(new IdNode(2, "x"), replacement);
+            Assert.That(result, Is.EqualTo(replacement));
+            Assert.That(result, Is.Not.SameAs(replacement));
+            Assert.That(result.Parent, Is.Null);
+            Assert.That(replacement.Parent, Is.SameAs(owner));
+            LoopInvariantTests.AssertOwnedTree(result);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void NullSubstitutionStillCreatesAnIndependentTree(bool nullTarget)
+        {
+            var original = new ExprListNode(1, new IdNode(1, "x"));
+            var owner = new ExprStatNode(1, original);
+            var result = original.Substitute(nullTarget ? null : new IdNode(1, "x"), nullTarget ? new IdNode(1, "y") : null);
+            Assert.That(result, Is.EqualTo(original));
+            Assert.That(result, Is.Not.SameAs(original));
+            Assert.That(result.Children[0], Is.Not.SameAs(original.Children[0]));
+            Assert.That(result.Parent, Is.Null);
+            Assert.That(original.Parent, Is.SameAs(owner));
+            LoopInvariantTests.AssertOwnedTree(result);
+        }
+
         [Test]
         public void BasicTest()
         {

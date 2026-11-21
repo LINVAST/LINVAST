@@ -15,8 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-﻿using LINVAST.Exceptions;
-using LINVAST.Imperative.Nodes;
+﻿using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
 
 namespace LINVAST.Imperative.Visitors
@@ -27,9 +26,6 @@ namespace LINVAST.Imperative.Visitors
     /// <typeparam name="TResult">The type of the result produced by visiting nodes.</typeparam>
     public abstract class BaseASTVisitor<TResult>
     {
-        private const int MAX_ITER = 1000;
-        private int repeatCount = 0;
-
         /// <summary>
         /// Visits all children of the specified node, aggregating their results.
         /// </summary>
@@ -48,19 +44,70 @@ namespace LINVAST.Imperative.Visitors
         }
 
         /// <summary>
-        /// Dispatches the visit to the appropriate method based on the dynamic type of the node.
-        /// Throws <see cref="EvaluationException"/> if the iteration limit is exceeded.
+        /// Dispatches to a typed visitor method, or visits children for an unrecognized node type.
+        /// Traversal has no cumulative node limit, so a visitor can be reused across trees.
         /// </summary>
         /// <param name="node">The node to visit.</param>
-        /// <returns>The result produced by the specific visitor method.</returns>
-        /// <exception cref="LINVAST.Exceptions.EvaluationException">Thrown when the maximum iteration count is exceeded.</exception>
-        public virtual TResult Visit(ASTNode node)
+        /// <returns>The result produced by the specific visitor method or the child traversal.</returns>
+        public virtual TResult Visit(ASTNode node) => node switch
         {
-            repeatCount++;
-            if (repeatCount > MAX_ITER)
-                throw new EvaluationException($"Evaluator reached {MAX_ITER} iterations. Perhaps a specialization for this node type does not exist?");
-            return this.Visit((dynamic)node);
-        }
+            DecExprNode typed => this.Visit(typed),
+            ForStatNode typed => this.Visit(typed),
+            FuncNode typed => this.Visit(typed),
+            IncExprNode typed => this.Visit(typed),
+            ThrowStatNode typed => this.Visit(typed),
+            WhileStatNode typed => this.Visit(typed),
+            ArithmExprNode typed => this.Visit(typed),
+            ArithmOpNode typed => this.Visit(typed),
+            ArrDeclNode typed => this.Visit(typed),
+            ArrInitExprNode typed => this.Visit(typed),
+            AssignExprNode typed => this.Visit(typed),
+            AssignOpNode typed => this.Visit(typed),
+            AsyncStatNode typed => this.Visit(typed),
+            BinaryLogicOpNode typed => this.Visit(typed),
+            BlockStatNode typed => this.Visit(typed),
+            DeclStatNode typed => this.Visit(typed),
+            DictDeclNode typed => this.Visit(typed),
+            DictInitNode typed => this.Visit(typed),
+            DeleteStatNode typed => this.Visit(typed),
+            ExprStatNode typed => this.Visit(typed),
+            ForeachStatNode typed => this.Visit(typed),
+            FuncDeclNode typed => this.Visit(typed),
+            IdListNode typed => this.Visit(typed),
+            GlobalStatNode typed => this.Visit(typed),
+            IfStatNode typed => this.Visit(typed),
+            JumpStatNode typed => this.Visit(typed),
+            LabeledStatNode typed => this.Visit(typed),
+            LogicExprNode typed => this.Visit(typed),
+            NonlocalStatNode typed => this.Visit(typed),
+            NullLitExprNode typed => this.Visit(typed),
+            RelExprNode typed => this.Visit(typed),
+            RelOpNode typed => this.Visit(typed),
+            SwitchStatNode typed => this.Visit(typed),
+            TryStatNode typed => this.Visit(typed),
+            VarDeclNode typed => this.Visit(typed),
+            WithStatNode typed => this.Visit(typed),
+            ArrAccessExprNode typed => this.Visit(typed),
+            CondExprNode typed => this.Visit(typed),
+            DeclSpecsNode typed => this.Visit(typed),
+            DeclListNode typed => this.Visit(typed),
+            DictEntryNode typed => this.Visit(typed),
+            EmptyStatNode typed => this.Visit(typed),
+            ExprListNode typed => this.Visit(typed),
+            FuncCallExprNode typed => this.Visit(typed),
+            FuncParamNode typed => this.Visit(typed),
+            FuncParamsNode typed => this.Visit(typed),
+            IdNode typed => this.Visit(typed),
+            LambdaFuncExprNode typed => this.Visit(typed),
+            LitExprNode typed => this.Visit(typed),
+            UnaryExprNode typed => this.Visit(typed),
+            UnaryOpNode typed => this.Visit(typed),
+            YieldExprNode typed => this.Visit(typed),
+            CatchClauseNode typed => this.Visit(typed),
+            TagNode typed => this.Visit(typed),
+            SourceNode typed => this.Visit(typed),
+            _ => this.VisitChildren(node),
+        };
 
         /// <summary>Visits an arithmetic expression node by visiting its children.</summary>
         public virtual TResult Visit(ArithmExprNode node) => this.VisitChildren(node);

@@ -35,6 +35,12 @@ Other builders also normalize equivalent type spellings:
 Go normalization also covers composite literals, allocation arguments, and types nested in maps, channels, structs, interfaces, and function signatures. Array lengths and dimension order are retained. Go inferred literal types use canonical names such as `long` and `string` instead of .NET enum names such as `Int64` and `String`. Python collection annotations retain their collection syntax, and `None` inside a union remains `None`. Java boxed types and custom qualified names retain their names; generic arguments are preserved, including in qualified nested types and arrays such as `List<string>[]`.
 
 
+## AST traversal and transformations
+
+Loop components are part of `Children`, so generic traversal, equality, copying, and substitution include them. `ForStatNode` keeps its condition and body at indices 0 and 1, followed by its initializer (when present) and increment (when present). `HasInitializer` and `HasIncrement` distinguish these optional positions. In serialized JSON, the components appear once under `Children`; the two flags replace the need for separate `ForDeclaration`, `InitExpr`, and `IncrExpr` fields. Those accessors remain available in the C# API.
+
+`Copy()` returns an independent tree with a detached root and parent links pointing into the copy. `Substitute()` matches structurally equal nodes, clones each replacement occurrence independently, and leaves both input trees unchanged. Replacement contents are copied without applying the substitution recursively to them. `BaseASTVisitor` supports repeated traversals without a cumulative node limit and visits the children of node types without a dedicated overload.
+
 ## Development scripts
 
 The Linux build entrypoints require Bash and the .NET 10 SDK.

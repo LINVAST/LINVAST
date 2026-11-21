@@ -15,7 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
@@ -735,6 +736,10 @@ namespace LINVAST.Imperative.Nodes
             sb.Append(';');
             return sb.ToString();
         }
+
+        /// <summary>Compares the jump kind as well as its expression or label.</summary>
+        public override bool Equals([AllowNull] ASTNode other)
+            => base.Equals(other) && other is JumpStatNode jump && this.Type == jump.Type;
     }
 
     /// <summary>
@@ -841,20 +846,29 @@ namespace LINVAST.Imperative.Nodes
     /// </summary>
     public sealed class ForStatNode : IterStatNode
     {
+        /// <summary>Gets whether the loop has a declaration or expression initializer.</summary>
+        public bool HasInitializer { get; }
+
+        /// <summary>Gets whether the loop has an increment expression.</summary>
+        public bool HasIncrement { get; }
+
         /// <summary>
         /// Gets the for-loop declaration, if present.
         /// </summary>
-        public DeclarationNode? ForDeclaration { get; }
+        [JsonIgnore]
+        public DeclarationNode? ForDeclaration => this.HasInitializer ? this.Children[2] as DeclarationNode : null;
 
         /// <summary>
         /// Gets the initialization expression, if present.
         /// </summary>
-        public ExprNode? InitExpr { get; }
+        [JsonIgnore]
+        public ExprNode? InitExpr => this.HasInitializer ? this.Children[2] as ExprNode : null;
 
         /// <summary>
         /// Gets the increment expression, if present.
         /// </summary>
-        public ExprNode? IncrExpr { get; }
+        [JsonIgnore]
+        public ExprNode? IncrExpr => this.HasIncrement ? this.Children[this.HasInitializer ? 3 : 2].As<ExprNode>() : null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ForStatNode"/> class with a declaration initializer.
@@ -865,11 +879,10 @@ namespace LINVAST.Imperative.Nodes
         /// <param name="expr">The increment expression.</param>
         /// <param name="stat">The loop body statement.</param>
         public ForStatNode(int line, DeclarationNode decl, ExprNode? cond, ExprNode? expr, StatNode stat)
-            : base(line, new ASTNode[] { cond ?? new LitExprNode(line, true), stat })
+            : base(line, BuildChildren(line, decl, cond, expr, stat))
         {
-            this.ForDeclaration = decl;
-            this.InitExpr = null;
-            this.IncrExpr = expr;
+            this.HasInitializer = decl is not null;
+            this.HasIncrement = expr is not null;
         }
 
         /// <summary>
@@ -881,12 +894,30 @@ namespace LINVAST.Imperative.Nodes
         /// <param name="incExpr">The increment expression.</param>
         /// <param name="stat">The loop body statement.</param>
         public ForStatNode(int line, ExprNode? initExpr, ExprNode? cond, ExprNode? incExpr, StatNode stat)
-            : base(line, new ASTNode[] { cond ?? new LitExprNode(line, true), stat })
+            : base(line, BuildChildren(line, initExpr, cond, incExpr, stat))
         {
-            this.ForDeclaration = null;
-            this.InitExpr = initExpr;
-            this.IncrExpr = incExpr;
+            this.HasInitializer = initExpr is not null;
+            this.HasIncrement = incExpr is not null;
         }
+
+        private static IEnumerable<ASTNode> BuildChildren(int line, ASTNode? initializer, ExprNode? condition, ExprNode? increment, StatNode statement)
+        {
+            // Preserve IterStatNode's condition/body positions, then append optional components.
+            yield return condition ?? new LitExprNode(line, true);
+            yield return statement;
+            if (initializer is not null)
+                yield return initializer;
+            if (increment is not null)
+                yield return increment;
+        }
+
+        /// <summary>Compares all loop components and their roles.</summary>
+        public override bool Equals([AllowNull] ASTNode other)
+            => base.Equals(other) && other is ForStatNode loop
+                && this.HasInitializer == loop.HasInitializer && this.HasIncrement == loop.HasIncrement;
+
+        /// <summary>Returns a hash code for the loop and its optional component roles.</summary>
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.HasInitializer, this.HasIncrement);
 
         /// <summary>
         /// Returns the text representation of the for statement.
