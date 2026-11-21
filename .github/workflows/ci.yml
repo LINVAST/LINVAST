@@ -31,6 +31,9 @@ jobs:
           cache: true
           cache-dependency-path: '**/*.csproj'
 
+      - name: Test release directory safety
+        run: bash scripts/tests/release.sh
+
       - name: Build
         run: ./build --configuration Release --version-suffix ci --build-number "${GITHUB_RUN_NUMBER}"
 

@@ -64,13 +64,11 @@ namespace LINVAST.Imperative.Visitors
         public override object? Visit(CondExprNode node)
         {
             object? cond = this.Visit(node.Condition);
-            object? @then = this.Visit(node.ThenExpression);
-            object? @else = this.Visit(node.ElseExpression);
 
             if (cond is null || cond is not bool booleanCondition)
                 throw new EvaluationException("Failed to evaluate ternary conditional operator condition");
 
-            return booleanCondition ? @then : @else;
+            return this.Visit(booleanCondition ? node.ThenExpression : node.ElseExpression);
         }
 
         /// <summary>
@@ -110,8 +108,12 @@ namespace LINVAST.Imperative.Visitors
         /// <returns>The result of applying the operator to the operands.</returns>
         public override object? Visit(LogicExprNode node)
         {
-            (object? l, object? r) = this.VisitBinaryOperands(node);
-            return node.Operator.As<BinaryLogicOpNode>().ApplyTo(Convert.ToBoolean(l), Convert.ToBoolean(r));
+            bool left = Convert.ToBoolean(this.Visit(node.LeftOperand));
+            if (!left && node.Operator.Symbol is "&&" or "and")
+                return false;
+            if (left && node.Operator.Symbol is "||" or "or")
+                return true;
+            return node.Operator.As<BinaryLogicOpNode>().ApplyTo(left, Convert.ToBoolean(this.Visit(node.RightOperand)));
         }
 
         /// <summary>

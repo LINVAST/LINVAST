@@ -40,13 +40,13 @@ namespace LINVAST.Imperative.Nodes
         /// Gets the template type arguments.
         /// </summary>
         [JsonIgnore]
-        public TypeNameListNode TemplateArgs => this.Children[1].As<TypeNameListNode>();
+        public TypeNameListNode TemplateArgs => this.ChildrenWithoutTags.ElementAt(1).As<TypeNameListNode>();
 
         /// <summary>
         /// Gets the function parameters node, if present.
         /// </summary>
         [JsonIgnore]
-        public FuncParamsNode? ParametersNode => this.Children.ElementAtOrDefault(2) as FuncParamsNode ?? null;
+        public FuncParamsNode? ParametersNode => this.ChildrenWithoutTags.ElementAtOrDefault(2) as FuncParamsNode;
 
         /// <summary>
         /// Gets the function body block, if present.
@@ -66,7 +66,7 @@ namespace LINVAST.Imperative.Nodes
         /// <param name="line">The source line number.</param>
         /// <param name="identifier">The function identifier.</param>
         public FuncDeclNode(int line, IdNode identifier)
-            : base(line, identifier) { }
+            : base(line, identifier, new TypeNameListNode(line)) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncDeclNode"/> class.
@@ -134,7 +134,7 @@ namespace LINVAST.Imperative.Nodes
         /// <param name="tags">The leading tags.</param>
         /// <param name="identifier">The function identifier.</param>
         public FuncDeclNode(int line, IEnumerable<TagNode> tags, IdNode identifier)
-            : base(line, tags, identifier) { }
+            : base(line, tags, identifier, new TypeNameListNode(line)) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncDeclNode"/> class with tags.

@@ -16,6 +16,7 @@
 
 
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
@@ -120,7 +121,7 @@ namespace LINVAST.Imperative.Visitors
         /// <returns>A symbolic expression representing the literal value, or undefined if the value is null.</returns>
         public override Expr Visit(LitExprNode node)
             // TODO string literals need to be substituted as well...
-            => node.Value is null ? Expr.Undefined : Expr.Parse(node.Value.ToString());
+            => node.Value is null ? Expr.Undefined : Expr.Parse(System.Convert.ToString(node.Value, CultureInfo.InvariantCulture));
 
         /// <summary>
         /// Visits a null literal expression node, returning an undefined symbolic expression.
@@ -135,7 +136,7 @@ namespace LINVAST.Imperative.Visitors
         {
             Expr left = this.Visit(node.LeftOperand);
             Expr right = this.Visit(node.RightOperand);
-            return this.TryEvaluate(node, $"{left} {node.Operator.Symbol} {right}");
+            return this.TryEvaluate(node, $"({left}) {node.Operator.Symbol} ({right})");
         }
 
         private Expr EvaluateUnaryExpression(UnaryExprNode node)
@@ -156,7 +157,7 @@ namespace LINVAST.Imperative.Visitors
 
             if (constantValue is not null) {
                 try {
-                    expr = Expr.Parse(constantValue.ToString());
+                    expr = Expr.Parse(System.Convert.ToString(constantValue, CultureInfo.InvariantCulture));
                     return expr;
                 } catch {
 

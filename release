@@ -77,9 +77,9 @@ if [[ -n "$version_suffix" ]]; then
     prerelease_version="$(linvast_prerelease_version "$version_suffix" "$build_number_string")"
 fi
 
-artifact_dir="$(linvast_resolve_path "$artifact_location")"
-if [[ -z "$artifact_dir" || "$artifact_dir" == "/" ]]; then
-    linvast_die "refusing to use '${artifact_dir:-<empty>}' as an artifact directory"
+artifact_dir="$(realpath -m -- "$(linvast_resolve_path "$artifact_location")")"
+if [[ "$artifact_dir" == "/" || "$artifact_dir" == "$LINVAST_REPO_ROOT" || "$LINVAST_REPO_ROOT" == "$artifact_dir/"* ]]; then
+    linvast_die "artifact directory must not be the repository or one of its ancestors: '$artifact_dir'"
 fi
 
 cd "$LINVAST_REPO_ROOT"
@@ -95,8 +95,9 @@ else
 fi
 
 printf 'Artifacts will be placed in: %s\n' "$artifact_dir"
-rm -rf "$artifact_dir"
-mkdir -p "$artifact_dir"
+# Keep existing files, including older packages. An output option must never
+# authorize recursively deleting a directory supplied by the caller.
+mkdir -p -- "$artifact_dir"
 
 dotnet clean "$LINVAST_SOLUTION" -v minimal -c "$configuration" -m:1
 dotnet restore "$LINVAST_SOLUTION" -v minimal -m:1

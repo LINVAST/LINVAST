@@ -16,6 +16,7 @@
 
 
 ﻿using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using LINVAST.Exceptions;
 
@@ -32,7 +33,7 @@ namespace LINVAST.Imperative.Nodes.Common
         private static readonly Regex _intBRegex =
             new(@"^(?<value>(0b[01]+))(?<suffix>u?l{0,2})$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _floatRegex =
-            new(@"^(?<value>([0-9]*\.?[0-9]+([e][-+]?[0-9]+)?))(?<suffix>[flmd]?)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            new(@"^(?<value>(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:e[-+]?[0-9]+)?)(?<suffix>[flmd]?)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _charRegex =
             new("^'(?<value>(?:\\\\[btnfr\"'\\\\]|\\\\[0-3]?[0-7]?[0-7]|\\\\u[0-9a-fA-F]{4}|[^'\\\\]))'$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -96,7 +97,7 @@ namespace LINVAST.Imperative.Nodes.Common
                 else
                     throw new SyntaxErrorException("Literal does not convert to any known integral type");
             } else {
-                switch (suffix.ToUpper()) {
+                switch (suffix.ToUpperInvariant()) {
                     case "U":
                         if (!TryPerformConverter(Convert.ToUInt32, value, @base, out uint? uint_suffixed))
                             throw new SyntaxErrorException("Cannot parse literal as unsigned int");
@@ -144,7 +145,7 @@ namespace LINVAST.Imperative.Nodes.Common
                     ? res_decimal
                     : throw new SyntaxErrorException("Literal does not convert to any known floating type");
             } else {
-                switch (suffix.ToUpper()) {
+                switch (suffix.ToUpperInvariant()) {
                     case "F":
                         if (!TryPerformConverter(Convert.ToSingle, value, out float? float_suffixed))
                             throw new SyntaxErrorException("Cannot parse literal as single precision float");
@@ -227,14 +228,17 @@ namespace LINVAST.Imperative.Nodes.Common
             return false;
         }
 
-        private static bool TryPerformConverter<T>(Func<string?, T> converter, string str, out T? result)
+        private static bool TryPerformConverter<T>(Func<string?, IFormatProvider?, T> converter, string str, out T? result)
             where T : struct
         {
             result = null;
             try {
-                result = converter(str);
+                T value = converter(str, CultureInfo.InvariantCulture);
+                if (value is double d && !double.IsFinite(d) || value is float f && !float.IsFinite(f))
+                    return false;
+                result = value;
                 return true;
-            } catch (FormatException) {
+            } catch (Exception e) when (e is FormatException or OverflowException) {
                 return false;
             }
         }
@@ -246,7 +250,7 @@ namespace LINVAST.Imperative.Nodes.Common
             try {
                 result = converter(str, @base);
                 return true;
-            } catch (FormatException) {
+            } catch (Exception e) when (e is FormatException or OverflowException) {
                 return false;
             }
         }

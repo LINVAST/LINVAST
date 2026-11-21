@@ -103,7 +103,7 @@ namespace LINVAST.Imperative.Nodes
         /// Gets the body declarations of the enumeration.
         /// </summary>
         [JsonIgnore]
-        public IEnumerable<DeclStatNode> BodyDeclarations => this.Children.Skip(1).Select(c => c.As<DeclStatNode>());
+        public IEnumerable<DeclStatNode> BodyDeclarations => this.Children.Skip(2).Select(c => c.As<DeclStatNode>());
 
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace LINVAST.Imperative.Nodes
         /// <param name="line">The source line number.</param>
         /// <param name="identifier">The enumeration identifier node.</param>
         public EnumDeclNode(int line, IdNode identifier)
-            : base(line, identifier) { }
+            : this(line, identifier, new DeclListNode(line)) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnumDeclNode"/> class with an identifier and constants.

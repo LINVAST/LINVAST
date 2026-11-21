@@ -213,7 +213,7 @@ namespace LINVAST.Imperative.Nodes
         /// Gets the identifier node.
         /// </summary>
         [JsonIgnore]
-        public IdNode IdentifierNode => this.Children.First().As<IdNode>();
+        public IdNode IdentifierNode => this.ChildrenWithoutTags.First().As<IdNode>();
 
         /// <summary>
         /// Gets the identifier name.
@@ -309,7 +309,7 @@ namespace LINVAST.Imperative.Nodes
         /// Gets the initializer expression, if present.
         /// </summary>
         [JsonIgnore]
-        public ExprNode? Initializer => this.Children.ElementAtOrDefault(1)?.As<ExprNode>();
+        public ExprNode? Initializer => this.ChildrenWithoutTags.ElementAtOrDefault(1)?.As<ExprNode>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VarDeclNode"/> class.

@@ -16,6 +16,7 @@
 
 
 ﻿using LINVAST.Imperative.Nodes;
+using LINVAST.Imperative.Builders.C;
 using LINVAST.Imperative.Visitors;
 using LINVAST.Nodes;
 using NUnit.Framework;
@@ -25,6 +26,27 @@ namespace LINVAST.Tests.Visitors
 {
     internal sealed class SymbolicExpressionBuilderTests
     {
+        [TestCase("(x + 1) * 2")]
+        [TestCase("x - (y + z)")]
+        [TestCase("x / (y + z)")]
+        [TestCase("x / (y / z)")]
+        [TestCase("(x - y) * (y + z)")]
+        [TestCase("-(x + y) * z")]
+        public void PreservesNestedGrouping(string source)
+        {
+            ASTNode node = new CASTBuilder().BuildFromSource(source, p => p.expression());
+            this.AssertParse(node, Expr.Parse(source));
+        }
+
+        [Test]
+        public void PreservesPowerGrouping()
+        {
+            var node = new ArithmExprNode(1,
+                new ArithmExprNode(1, new IdNode(1, "x"), ArithmOpNode.FromSymbol(1, "^"), new IdNode(1, "y")),
+                ArithmOpNode.FromSymbol(1, "^"), new IdNode(1, "z"));
+            this.AssertParse(node, Expr.Parse("(x ^ y) ^ z"));
+        }
+
         [Test]
         public void ConstantTests()
         {

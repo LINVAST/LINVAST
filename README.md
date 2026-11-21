@@ -41,9 +41,13 @@ Loop components are part of `Children`, so generic traversal, equality, copying,
 
 `Copy()` returns an independent tree with a detached root and parent links pointing into the copy. `Substitute()` matches structurally equal nodes, clones each replacement occurrence independently, and leaves both input trees unchanged. Replacement contents are copied without applying the substitution recursively to them. `BaseASTVisitor` supports repeated traversals without a cumulative node limit and visits the children of node types without a dedicated overload.
 
+Declaration accessors skip leading tags. Function declarations constructed with only an identifier now include an empty `TypeNameListNode` child, and enum declarations constructed with only an identifier include an empty `DeclListNode` for constants. These children also appear in JSON, making the corresponding accessors consistent with the other constructors.
+
 ## Development scripts
 
 The Linux build entrypoints require Bash and the .NET 10 SDK.
+
+The release script also uses GNU `realpath` to validate its output directory. It preserves existing files and older packages in that directory; packages with the same output filename can be replaced by `dotnet pack`. The repository directory and its ancestors cannot be used as output directories, including through symlink aliases.
 
 ```bash
 ./build
