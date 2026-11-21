@@ -27,6 +27,12 @@ namespace LINVAST.Imperative.Visitors
     /// </summary>
     public sealed class ConstantExpressionEvaluator : BaseASTVisitor<object?>
     {
+        public override object? Visit(CastExprNode node)
+            => throw new EvaluationException("Cast evaluation requires source-language type semantics.");
+
+        public override object? Visit(FuncCallExprNode node)
+            => throw new EvaluationException("Function calls are not constant without a purity guarantee.");
+
         /// <summary>
         /// Evaluates the specified expression node to a constant value.
         /// </summary>

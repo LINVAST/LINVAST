@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using LINVAST.Builders;
@@ -18,7 +19,28 @@ namespace LINVAST.Imperative.Builders.Python
     public sealed partial class PythonASTBuilder : Python3ParserBaseVisitor<ASTNode>, IASTBuilder<Python3Parser>
     {
         private int comprehensionAccumulatorIndex;
+        private int assignmentTemporaryIndex;
+        private readonly HashSet<string> reservedTemporaryNames = new();
         private readonly List<PendingComprehension> pendingComprehensions = new();
+
+        private void PrepareBuild(string code)
+        {
+            this.pendingComprehensions.Clear();
+            this.comprehensionAccumulatorIndex = 0;
+            this.assignmentTemporaryIndex = 0;
+            this.reservedTemporaryNames.Clear();
+            // Scan the complete source, including later declarations and f-string expressions.
+            foreach (Match match in Regex.Matches(code, @"\b__linvast_(?:comp|assign)_\d+\b"))
+                this.reservedTemporaryNames.Add(match.Value);
+        }
+
+        private string NextTemporaryName(string prefix, ref int index)
+        {
+            string name;
+            do { name = $"__linvast_{prefix}_{index++}"; }
+            while (!this.reservedTemporaryNames.Add(name));
+            return name;
+        }
 
         /// <summary>
         /// Builds an AST from the given Python source code.
@@ -27,11 +49,12 @@ namespace LINVAST.Imperative.Builders.Python
         /// <returns>The root AST node representing the parsed source.</returns>
         public ASTNode BuildFromSource(string code)
         {
-            this.pendingComprehensions.Clear();
+            this.PrepareBuild(code);
             try {
                 return this.Visit(this.CreateParser(code).file_input());
             } finally {
                 this.pendingComprehensions.Clear();
+                this.reservedTemporaryNames.Clear();
             }
         }
 
@@ -70,11 +93,12 @@ namespace LINVAST.Imperative.Builders.Python
         /// <returns>The root AST node representing the parsed source.</returns>
         public ASTNode BuildFromSource(string code, Func<Python3Parser, ParserRuleContext> entryProvider)
         {
-            this.pendingComprehensions.Clear();
+            this.PrepareBuild(code);
             try {
                 return this.Visit(entryProvider(this.CreateParser(code)));
             } finally {
                 this.pendingComprehensions.Clear();
+                this.reservedTemporaryNames.Clear();
             }
         }
 

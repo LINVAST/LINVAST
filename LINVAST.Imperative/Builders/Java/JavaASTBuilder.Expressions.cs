@@ -113,7 +113,8 @@ namespace LINVAST.Imperative.Builders.Java
             }
 
             if (ctx.LPAREN() is not null && ctx.typeType() is not null && ctx.expression().Length == 1) {
-                return this.Visit(ctx.expression(0)).As<ExprNode>();
+                return new CastExprNode(ctx.Start.Line, this.Visit(ctx.typeType()).As<TypeNameNode>(),
+                    this.Visit(ctx.expression(0)).As<ExprNode>());
             }
 
             if (ctx.ADD() is not null) {

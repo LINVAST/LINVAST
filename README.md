@@ -53,6 +53,12 @@ Symbolic wildcard names are derived from expression content using SHA-256 rather
 
 Declaration accessors skip leading tags. Function declarations constructed with only an identifier now include an empty `TypeNameListNode` child, and enum declarations constructed with only an identifier include an empty `DeclListNode` for constants. These children also appear in JSON, making the corresponding accessors consistent with the other constructors.
 
+Symbolic function calls have fresh opaque results on every visit, including calls with identical arguments. Their names include a fingerprint of the complete call and a unique occurrence identifier. No purity guarantee is assumed, so `f(1) - f(1)` does not simplify to zero. Results containing calls are intentionally not deterministic across conversions; the `r__` prefix is reserved for them. This representation prevents invalid cancellation but does not execute calls or model their side effects.
+
+Python generated temporary names reset for each build and avoid names found throughout that source. Chained assignments capture their RHS once before assigning targets in source order. Kotlin preserves all prefix operators, parameter defaults, and expression-body returns; an inferred return type is represented as `var`.
+
+Java compilation units retain their `PackageNode`. Explicit casts use `CastExprNode` with `TargetType` and `Operand` children. Both constant and symbolic evaluators throw `EvaluationException` for casts because source-language conversion rules are not yet implemented.
+
 ## Development scripts
 
 The Linux build entrypoints require Bash and the .NET 10 SDK.
@@ -84,56 +90,40 @@ Use `--configuration Debug|Release` on any script. `release` writes NuGet packag
 ### Using LINVAST in your own codebase
 
 ```cs
-// Creating AST
-LINVAST.ASTNode ast = new LINVAST.Imperative.ImperativeASTFactory().BuildFromFile("my_src_path");
-
-// Copying the tree before changing mutable metadata
-LINVAST.ASTNode copy = ast.Copy();
-
-// Common operators are overridden
-if (ast == copy) {
-	// Prints code in C-like syntax
-	Console.WriteLine(ast.GetText());
-}
-
-// Each AST node has direct children property
-LINVAST.ASTNode child = ast.Children[1];
-LINVAST.ASTNode replacement = copy.Children[2];
-
-// Substitution, returns new AST
-LINVAST.ASTNode subCopy = copy.Substitute(child, replacement);
-
-// JSON serialization
-string json = ast.ToJson(compact: false);
-
-// Views - safe cast which throws when cast can't be performed
+using System;
+using System.Linq;
+using LINVAST.Nodes;
 using LINVAST.Imperative.Nodes;
-BinaryExprNode expr = ast.Children[4].As<BinaryExprNode>();
-
-// Specific nodes have useful and intuitive properties
-int line = expr.Line
-ExprNode left = expr.LeftOperand;
-OpNode op = expr.Operator;
-ExprNode right = expr.RightOperand;
-
-// Check specific node types
-if (expr is AssignExprNode aexpr) {
-	var simplifiedExpr = aexpr.SimplifyComplexAssignment();
-	// ...
-}
-
-// Use provided visitors to perform logic
+using LINVAST.Imperative.Builders.C;
 using LINVAST.Imperative.Visitors;
-var res = ConstantExpressionEvaluator.TryEvaluateAs<int>(expr);
 
-// Or implement your own custom visitor...
-class MyVisitor<int> : BaseASTVisitor<int>
+var builder = new CASTBuilder();
+ASTNode ast = builder.BuildFromSource("int value = 1 + 2;");
+ASTNode copy = ast.Copy();
+Console.WriteLine(ast == copy); // True
+
+var declaration = ast.Children.Single().As<DeclStatNode>();
+BinaryExprNode expr = declaration.DeclaratorList.Declarators.Single()
+    .As<VarDeclNode>().Initializer!.As<BinaryExprNode>();
+
+// Substitution returns an independent tree; ast still contains 1 + 2.
+ASTNode changed = ast.Substitute(expr.RightOperand, new LitExprNode(expr.Line, 10));
+Console.WriteLine(changed.GetText());
+Console.WriteLine(ast.ToJson(compact: false));
+
+if (ConstantExpressionEvaluator.TryEvaluateAs<int>(expr, out int result))
+    Console.WriteLine(result); // 3
+
+var assignment = builder.BuildFromSource("value += 1", p => p.expression())
+    .As<AssignExprNode>();
+ExprNode simplified = assignment.SimplifyComplexAssignment();
+Console.WriteLine(simplified.GetText());
+Console.WriteLine(new LiteralCounter().Visit(ast)); // 2
+
+class LiteralCounter : BaseASTVisitor<int>
 {
-	public override int Visit(ExprNode node) {
-		// ...
-	}
-
-	// ...
+    public override int Visit(LitExprNode node) => 1;
+    protected override int AggregateResult(int aggregate, int nextResult) => aggregate + nextResult;
 }
 ```
 
@@ -175,17 +165,31 @@ static int gl_z;
             "AccessModifiers": "Unspecified",
             "QualifierFlags": "None"
           },
-          "TypeName": "int",
           "NodeType": "DeclSpecsNode",
           "Line": 1,
-          "Children": []
+          "Children": [
+            {
+              "TypeName": "int",
+              "PointerLevel": 0,
+              "NodeType": "TypeNameNode",
+              "Line": 1,
+              "Children": [
+                {
+                  "Identifier": "int",
+                  "NodeType": "IdNode",
+                  "Line": 1,
+                  "Children": []
+                }
+              ]
+            }
+          ]
         },
         {
           "NodeType": "DeclListNode",
           "Line": 1,
           "Children": [
             {
-              "Pointer": false,
+              "PointerLevel": 0,
               "NodeType": "VarDeclNode",
               "Line": 1,
               "Children": [
@@ -211,61 +215,94 @@ static int gl_z;
     },
     {
       "NodeType": "DeclStatNode",
-      "Line": 3,
+      "Line": 2,
       "Children": [
         {
           "Modifiers": {
             "AccessModifiers": "Unspecified",
             "QualifierFlags": "None"
           },
-          "TypeName": "void",
           "NodeType": "DeclSpecsNode",
-          "Line": 3,
-          "Children": []
+          "Line": 2,
+          "Children": [
+            {
+              "TypeName": "void",
+              "PointerLevel": 0,
+              "NodeType": "TypeNameNode",
+              "Line": 2,
+              "Children": [
+                {
+                  "Identifier": "void",
+                  "NodeType": "IdNode",
+                  "Line": 2,
+                  "Children": []
+                }
+              ]
+            }
+          ]
         },
         {
           "NodeType": "DeclListNode",
-          "Line": 3,
+          "Line": 2,
           "Children": [
             {
-              "Pointer": false,
+              "PointerLevel": 0,
               "NodeType": "FuncDeclNode",
-              "Line": 3,
+              "Line": 2,
               "Children": [
                 {
                   "Identifier": "f",
                   "NodeType": "IdNode",
-                  "Line": 3,
+                  "Line": 2,
+                  "Children": []
+                },
+                {
+                  "NodeType": "TypeNameListNode",
+                  "Line": 2,
                   "Children": []
                 },
                 {
                   "IsVariadic": false,
                   "NodeType": "FuncParamsNode",
-                  "Line": 3,
+                  "Line": 2,
                   "Children": [
                     {
                       "NodeType": "FuncParamNode",
-                      "Line": 3,
+                      "Line": 2,
                       "Children": [
                         {
                           "Modifiers": {
                             "AccessModifiers": "Unspecified",
                             "QualifierFlags": "None"
                           },
-                          "TypeName": "int",
                           "NodeType": "DeclSpecsNode",
-                          "Line": 3,
-                          "Children": []
+                          "Line": 2,
+                          "Children": [
+                            {
+                              "TypeName": "int",
+                              "PointerLevel": 0,
+                              "NodeType": "TypeNameNode",
+                              "Line": 2,
+                              "Children": [
+                                {
+                                  "Identifier": "int",
+                                  "NodeType": "IdNode",
+                                  "Line": 2,
+                                  "Children": []
+                                }
+                              ]
+                            }
+                          ]
                         },
                         {
-                          "Pointer": false,
+                          "PointerLevel": 0,
                           "NodeType": "VarDeclNode",
-                          "Line": 3,
+                          "Line": 2,
                           "Children": [
                             {
                               "Identifier": "x",
                               "NodeType": "IdNode",
-                              "Line": 3,
+                              "Line": 2,
                               "Children": []
                             }
                           ]
@@ -282,31 +319,45 @@ static int gl_z;
     },
     {
       "NodeType": "DeclStatNode",
-      "Line": 5,
+      "Line": 3,
       "Children": [
         {
           "Modifiers": {
             "AccessModifiers": "Unspecified",
             "QualifierFlags": "None"
           },
-          "TypeName": "int",
           "NodeType": "DeclSpecsNode",
-          "Line": 5,
-          "Children": []
+          "Line": 3,
+          "Children": [
+            {
+              "TypeName": "int",
+              "PointerLevel": 0,
+              "NodeType": "TypeNameNode",
+              "Line": 3,
+              "Children": [
+                {
+                  "Identifier": "int",
+                  "NodeType": "IdNode",
+                  "Line": 3,
+                  "Children": []
+                }
+              ]
+            }
+          ]
         },
         {
           "NodeType": "DeclListNode",
-          "Line": 5,
+          "Line": 3,
           "Children": [
             {
-              "Pointer": false,
+              "PointerLevel": 0,
               "NodeType": "VarDeclNode",
-              "Line": 5,
+              "Line": 3,
               "Children": [
                 {
                   "Identifier": "gl_x",
                   "NodeType": "IdNode",
-                  "Line": 5,
+                  "Line": 3,
                   "Children": []
                 },
                 {
@@ -314,7 +365,7 @@ static int gl_z;
                   "Suffix": null,
                   "TypeCode": "Int32",
                   "NodeType": "LitExprNode",
-                  "Line": 5,
+                  "Line": 3,
                   "Children": []
                 }
               ]
@@ -324,91 +375,130 @@ static int gl_z;
       ]
     },
     {
-      "NodeType": "FuncDefNode",
-      "Line": 8,
+      "NodeType": "FuncNode",
+      "Line": 5,
       "Children": [
         {
           "Modifiers": {
             "AccessModifiers": "Unspecified",
             "QualifierFlags": "None"
           },
-          "TypeName": "int",
           "NodeType": "DeclSpecsNode",
-          "Line": 8,
-          "Children": []
-        },
-        {
-          "Pointer": false,
-          "NodeType": "FuncDeclNode",
-          "Line": 8,
+          "Line": 5,
           "Children": [
             {
-              "Identifier": "main",
-              "NodeType": "IdNode",
-              "Line": 8,
-              "Children": []
+              "TypeName": "int",
+              "PointerLevel": 0,
+              "NodeType": "TypeNameNode",
+              "Line": 5,
+              "Children": [
+                {
+                  "Identifier": "int",
+                  "NodeType": "IdNode",
+                  "Line": 5,
+                  "Children": []
+                }
+              ]
             }
           ]
         },
         {
-          "NodeType": "BlockStatNode",
-          "Line": 10,
+          "NodeType": "DeclListNode",
+          "Line": 5,
           "Children": [
             {
-              "NodeType": "DeclStatNode",
-              "Line": 10,
+              "PointerLevel": 0,
+              "NodeType": "FuncDeclNode",
+              "Line": 5,
               "Children": [
                 {
-                  "Modifiers": {
-                    "AccessModifiers": "Unspecified",
-                    "QualifierFlags": "None"
-                  },
-                  "TypeName": "int",
-                  "NodeType": "DeclSpecsNode",
-                  "Line": 10,
+                  "Identifier": "main",
+                  "NodeType": "IdNode",
+                  "Line": 5,
                   "Children": []
                 },
                 {
-                  "NodeType": "DeclListNode",
-                  "Line": 10,
+                  "NodeType": "TypeNameListNode",
+                  "Line": 5,
+                  "Children": []
+                },
+                {
+                  "NodeType": "BlockStatNode",
+                  "Line": 7,
                   "Children": [
                     {
-                      "Pointer": false,
-                      "NodeType": "VarDeclNode",
-                      "Line": 10,
+                      "NodeType": "DeclStatNode",
+                      "Line": 7,
                       "Children": [
                         {
-                          "Identifier": "x",
-                          "NodeType": "IdNode",
-                          "Line": 10,
-                          "Children": []
+                          "Modifiers": {
+                            "AccessModifiers": "Unspecified",
+                            "QualifierFlags": "None"
+                          },
+                          "NodeType": "DeclSpecsNode",
+                          "Line": 7,
+                          "Children": [
+                            {
+                              "TypeName": "int",
+                              "PointerLevel": 0,
+                              "NodeType": "TypeNameNode",
+                              "Line": 7,
+                              "Children": [
+                                {
+                                  "Identifier": "int",
+                                  "NodeType": "IdNode",
+                                  "Line": 7,
+                                  "Children": []
+                                }
+                              ]
+                            }
+                          ]
                         },
                         {
-                          "Value": 1,
+                          "NodeType": "DeclListNode",
+                          "Line": 7,
+                          "Children": [
+                            {
+                              "PointerLevel": 0,
+                              "NodeType": "VarDeclNode",
+                              "Line": 7,
+                              "Children": [
+                                {
+                                  "Identifier": "x",
+                                  "NodeType": "IdNode",
+                                  "Line": 7,
+                                  "Children": []
+                                },
+                                {
+                                  "Value": 1,
+                                  "Suffix": null,
+                                  "TypeCode": "Int32",
+                                  "NodeType": "LitExprNode",
+                                  "Line": 7,
+                                  "Children": []
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "Type": "Return",
+                      "NodeType": "JumpStatNode",
+                      "Line": 9,
+                      "Children": [
+                        {
+                          "Value": 0,
                           "Suffix": null,
                           "TypeCode": "Int32",
                           "NodeType": "LitExprNode",
-                          "Line": 10,
+                          "Line": 9,
                           "Children": []
                         }
                       ]
                     }
                   ]
-                }
-              ]
-            },
-            {
-              "Type": "Return",
-              "NodeType": "JumpStatNode",
-              "Line": 12,
-              "Children": [
-                {
-                  "Value": 0,
-                  "Suffix": null,
-                  "TypeCode": "Int32",
-                  "NodeType": "LitExprNode",
-                  "Line": 12,
-                  "Children": []
                 }
               ]
             }
@@ -418,31 +508,45 @@ static int gl_z;
     },
     {
       "NodeType": "DeclStatNode",
-      "Line": 15,
+      "Line": 12,
       "Children": [
         {
           "Modifiers": {
             "AccessModifiers": "Unspecified",
             "QualifierFlags": "Static"
           },
-          "TypeName": "int",
           "NodeType": "DeclSpecsNode",
-          "Line": 15,
-          "Children": []
+          "Line": 12,
+          "Children": [
+            {
+              "TypeName": "int",
+              "PointerLevel": 0,
+              "NodeType": "TypeNameNode",
+              "Line": 12,
+              "Children": [
+                {
+                  "Identifier": "int",
+                  "NodeType": "IdNode",
+                  "Line": 12,
+                  "Children": []
+                }
+              ]
+            }
+          ]
         },
         {
           "NodeType": "DeclListNode",
-          "Line": 15,
+          "Line": 12,
           "Children": [
             {
-              "Pointer": false,
+              "PointerLevel": 0,
               "NodeType": "VarDeclNode",
-              "Line": 15,
+              "Line": 12,
               "Children": [
                 {
                   "Identifier": "gl_z",
                   "NodeType": "IdNode",
-                  "Line": 15,
+                  "Line": 12,
                   "Children": []
                 }
               ]
@@ -472,7 +576,7 @@ end
 <summary>Click to expand!</summary>
 
 ```json
-{"Name":null,"NodeType":"SourceNode","Line":1,"Children":[{"NodeType":"FuncDefNode","Line":1,"Children":[{"Modifiers":{"AccessModifiers":"Unspecified","QualifierFlags":"None"},"TypeName":"object","NodeType":"DeclSpecsNode","Line":1,"Children":[]},{"Pointer":false,"NodeType":"FuncDeclNode","Line":1,"Children":[{"Identifier":"fact","NodeType":"IdNode","Line":1,"Children":[]},{"IsVariadic":false,"NodeType":"FuncParamsNode","Line":1,"Children":[{"NodeType":"FuncParamNode","Line":1,"Children":[{"Modifiers":{"AccessModifiers":"Unspecified","QualifierFlags":"None"},"TypeName":"object","NodeType":"DeclSpecsNode","Line":1,"Children":[]},{"Pointer":false,"NodeType":"VarDeclNode","Line":1,"Children":[{"Identifier":"n","NodeType":"IdNode","Line":1,"Children":[]}]}]}]}]},{"NodeType":"BlockStatNode","Line":2,"Children":[{"NodeType":"IfStatNode","Line":2,"Children":[{"NodeType":"RelExprNode","Line":2,"Children":[{"Identifier":"n","NodeType":"IdNode","Line":2,"Children":[]},{"Symbol":"==","NodeType":"RelOpNode","Line":2,"Children":[]},{"Value":0,"Suffix":null,"TypeCode":"Int32","NodeType":"LitExprNode","Line":2,"Children":[]}]},{"NodeType":"BlockStatNode","Line":3,"Children":[{"Type":"Return","NodeType":"JumpStatNode","Line":3,"Children":[{"NodeType":"ExprListNode","Line":3,"Children":[{"Value":1,"Suffix":null,"TypeCode":"Int32","NodeType":"LitExprNode","Line":3,"Children":[]}]}]}]},{"NodeType":"BlockStatNode","Line":5,"Children":[{"Type":"Return","NodeType":"JumpStatNode","Line":5,"Children":[{"NodeType":"ExprListNode","Line":5,"Children":[{"NodeType":"ArithmExprNode","Line":5,"Children":[{"Identifier":"n","NodeType":"IdNode","Line":5,"Children":[]},{"Symbol":"*","NodeType":"ArithmOpNode","Line":5,"Children":[]},{"NodeType":"FuncCallExprNode","Line":5,"Children":[{"Identifier":"fact","NodeType":"IdNode","Line":5,"Children":[]},{"NodeType":"ExprListNode","Line":5,"Children":[{"NodeType":"ArithmExprNode","Line":5,"Children":[{"Identifier":"n","NodeType":"IdNode","Line":5,"Children":[]},{"Symbol":"-","NodeType":"ArithmOpNode","Line":5,"Children":[]},{"Value":1,"Suffix":null,"TypeCode":"Int32","NodeType":"LitExprNode","Line":5,"Children":[]}]}]}]}]}]}]}]}]}]}]}]}
+{"Name":null,"NodeType":"SourceNode","Line":1,"Children":[{"NodeType":"FuncNode","Line":1,"Children":[{"Modifiers":{"AccessModifiers":"Unspecified","QualifierFlags":"None"},"NodeType":"DeclSpecsNode","Line":1,"Children":[{"TypeName":"object","PointerLevel":0,"NodeType":"TypeNameNode","Line":1,"Children":[{"Identifier":"object","NodeType":"IdNode","Line":1,"Children":[]}]}]},{"NodeType":"DeclListNode","Line":1,"Children":[{"PointerLevel":0,"NodeType":"FuncDeclNode","Line":1,"Children":[{"Identifier":"fact","NodeType":"IdNode","Line":1,"Children":[]},{"NodeType":"TypeNameListNode","Line":1,"Children":[]},{"IsVariadic":false,"NodeType":"FuncParamsNode","Line":1,"Children":[{"NodeType":"FuncParamNode","Line":1,"Children":[{"Modifiers":{"AccessModifiers":"Unspecified","QualifierFlags":"None"},"NodeType":"DeclSpecsNode","Line":1,"Children":[{"TypeName":"object","PointerLevel":0,"NodeType":"TypeNameNode","Line":1,"Children":[{"Identifier":"object","NodeType":"IdNode","Line":1,"Children":[]}]}]},{"PointerLevel":0,"NodeType":"VarDeclNode","Line":1,"Children":[{"Identifier":"n","NodeType":"IdNode","Line":1,"Children":[]}]}]}]},{"NodeType":"BlockStatNode","Line":2,"Children":[{"NodeType":"IfStatNode","Line":2,"Children":[{"NodeType":"RelExprNode","Line":2,"Children":[{"Identifier":"n","NodeType":"IdNode","Line":2,"Children":[]},{"Symbol":"==","NodeType":"RelOpNode","Line":2,"Children":[]},{"Value":0,"Suffix":null,"TypeCode":"Int32","NodeType":"LitExprNode","Line":2,"Children":[]}]},{"NodeType":"BlockStatNode","Line":3,"Children":[{"Type":"Return","NodeType":"JumpStatNode","Line":3,"Children":[{"NodeType":"ExprListNode","Line":3,"Children":[{"Value":1,"Suffix":null,"TypeCode":"Int32","NodeType":"LitExprNode","Line":3,"Children":[]}]}]}]},{"NodeType":"BlockStatNode","Line":5,"Children":[{"Type":"Return","NodeType":"JumpStatNode","Line":5,"Children":[{"NodeType":"ExprListNode","Line":5,"Children":[{"NodeType":"ArithmExprNode","Line":5,"Children":[{"Identifier":"n","NodeType":"IdNode","Line":5,"Children":[]},{"Symbol":"*","NodeType":"ArithmOpNode","Line":5,"Children":[]},{"NodeType":"FuncCallExprNode","Line":5,"Children":[{"Identifier":"fact","NodeType":"IdNode","Line":5,"Children":[]},{"NodeType":"ExprListNode","Line":5,"Children":[{"NodeType":"ArithmExprNode","Line":5,"Children":[{"Identifier":"n","NodeType":"IdNode","Line":5,"Children":[]},{"Symbol":"-","NodeType":"ArithmOpNode","Line":5,"Children":[]},{"Value":1,"Suffix":null,"TypeCode":"Int32","NodeType":"LitExprNode","Line":5,"Children":[]}]}]}]}]}]}]}]}]}]}]}]}]}]}
 ```
 </details>
 

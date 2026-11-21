@@ -93,11 +93,9 @@ namespace LINVAST.Imperative.Builders.Java
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitCompilationUnit([NotNull] CompilationUnitContext ctx)
         {
-            if (ctx.packageDeclaration() is not null) {
-                // TODO package declaration
-            }
-
             var imports = ctx.importDeclaration().Select(this.Visit).ToList();
+            if (ctx.packageDeclaration() is not null)
+                imports.Insert(0, this.Visit(ctx.packageDeclaration()));
             var types = ctx.typeDeclaration().Select(this.Visit).ToList();
             return new SourceNode(imports.Concat(types));
         }

@@ -180,7 +180,9 @@ namespace LINVAST.Tests.Imperative.Builders.Java
             this.AssertExpressionValue("1 | 2", 1 | 2);
             this.AssertExpressionValue("3 ^ 1", 3 ^ 1);
             this.AssertExpressionValue("8 >>> 1", 8 >> 1);
-            this.AssertExpressionValue("(int)(1 + 2)", 3);
+            CastExprNode cast = this.GenerateAST("(int)(1 + 2)").As<CastExprNode>();
+            Assert.That(cast.TargetType.TypeName, Is.EqualTo("int"));
+            Assert.That(LINVAST.Imperative.Visitors.ConstantExpressionEvaluator.Evaluate(cast.Operand), Is.EqualTo(3));
         }
 
         [Test]

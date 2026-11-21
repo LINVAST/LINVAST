@@ -51,6 +51,7 @@ namespace LINVAST.Imperative.Visitors
         /// <returns>The result produced by the specific visitor method or the child traversal.</returns>
         public virtual TResult Visit(ASTNode node) => node switch
         {
+            CastExprNode typed => this.Visit(typed),
             DecExprNode typed => this.Visit(typed),
             ForStatNode typed => this.Visit(typed),
             FuncNode typed => this.Visit(typed),
@@ -108,6 +109,8 @@ namespace LINVAST.Imperative.Visitors
             SourceNode typed => this.Visit(typed),
             _ => this.VisitChildren(node),
         };
+
+        public virtual TResult Visit(CastExprNode node) => this.VisitChildren(node);
 
         /// <summary>Visits an arithmetic expression node by visiting its children.</summary>
         public virtual TResult Visit(ArithmExprNode node) => this.VisitChildren(node);

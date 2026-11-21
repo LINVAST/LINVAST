@@ -66,11 +66,7 @@ if [[ -n "$build_number" ]]; then
         linvast_die "--build-number requires --version-suffix"
     fi
 
-    if build_number_string="$(linvast_format_build_number "$build_number")"; then
-        :
-    else
-        build_number_string=""
-    fi
+    build_number_string="$(linvast_format_build_number "$build_number")"
 fi
 
 if [[ -n "$version_suffix" ]]; then

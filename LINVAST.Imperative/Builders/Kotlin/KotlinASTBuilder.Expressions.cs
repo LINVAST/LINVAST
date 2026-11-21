@@ -223,12 +223,13 @@ namespace LINVAST.Imperative.Builders.Kotlin
         public override ASTNode VisitPrefixUnaryExpression(KotlinParser.PrefixUnaryExpressionContext ctx)
         {
             if (ctx.prefixUnaryOperation().Length == 0) return this.Visit(ctx.postfixUnaryExpression());
-            int line = ctx.Start.Line;
             ExprNode operand = this.AsExprNode(this.Visit(ctx.postfixUnaryExpression()));
-            string op = ctx.prefixUnaryOperation(0).GetText();
-            if (ctx.prefixUnaryOperation(0).labelDefinition() != null) return operand;
-            if (ctx.prefixUnaryOperation(0).annotations() != null) return operand;
-            return new UnaryExprNode(line, UnaryOpNode.FromSymbol(line, op), operand);
+            foreach (var prefix in ctx.prefixUnaryOperation().Reverse()) {
+                if (prefix.labelDefinition() != null || prefix.annotations() != null) continue;
+                operand = new UnaryExprNode(prefix.Start.Line,
+                    UnaryOpNode.FromSymbol(prefix.Start.Line, prefix.GetText()), operand);
+            }
+            return operand;
         }
 
         // Grammar rule: postfixUnaryExpression : (atomicExpression | callableReference) postfixUnaryOperation*

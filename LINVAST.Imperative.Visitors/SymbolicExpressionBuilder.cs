@@ -20,6 +20,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using LINVAST.Exceptions;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
 using Expr = MathNet.Symbolics.SymbolicExpression;
@@ -111,9 +112,15 @@ namespace LINVAST.Imperative.Visitors
         /// Visits a function call expression node, creating a symbolic variable representing the function result.
         /// </summary>
         /// <param name="node">The function call expression node to visit.</param>
-        /// <returns>A symbolic variable expression prefixed with <c>r_</c>.</returns>
+        /// <returns>A fresh opaque result. No function purity is assumed.</returns>
         public override Expr Visit(FuncCallExprNode node)
-            => Expr.Variable($"r_{node.Identifier}");
+        {
+            byte[] digest = SHA256.HashData(Encoding.UTF8.GetBytes(node.ToJson(compact: true)));
+            return Expr.Variable($"r__{Convert.ToHexString(digest).ToLowerInvariant()}_{Guid.NewGuid():N}");
+        }
+
+        public override Expr Visit(CastExprNode node)
+            => throw new EvaluationException("Cast evaluation requires source-language type semantics.");
 
         /// <summary>
         /// Visits a literal expression node, parsing its value into a symbolic expression.

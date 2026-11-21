@@ -147,8 +147,8 @@ namespace LINVAST.Tests.Imperative.Builders.Kotlin
             Assert.That(node.ReturnTypeName, Is.EqualTo("int"));
             Assert.That(node.Definition, Is.Not.Null);
             Assert.That(node.Definition!.Children, Has.Exactly(1).Items);
-            ExprStatNode exprStat = node.Definition!.Children.First().As<ExprStatNode>();
-            ArithmExprNode expr = exprStat.Expression.As<ArithmExprNode>();
+            JumpStatNode returnStat = node.Definition!.Children.First().As<JumpStatNode>();
+            ArithmExprNode expr = returnStat.ReturnExpr!.As<ArithmExprNode>();
             Assert.That(expr.Operator.Symbol, Is.EqualTo("*"));
         }
     }

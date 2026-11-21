@@ -1065,7 +1065,8 @@ namespace LINVAST.Imperative.Builders.Python
             return ctx.comp_iter();
         }
 
-        private string NextComprehensionAccumulatorName() => $"__linvast_comp_{this.comprehensionAccumulatorIndex++}";
+        private string NextComprehensionAccumulatorName() =>
+            this.NextTemporaryName("comp", ref this.comprehensionAccumulatorIndex);
 
         private static BlockStatNode AsBlock(StatNode stat) =>
             stat is BlockStatNode block ? block : new BlockStatNode(stat.Line, stat);

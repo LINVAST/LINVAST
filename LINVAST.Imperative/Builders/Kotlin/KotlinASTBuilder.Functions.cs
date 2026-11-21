@@ -24,7 +24,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
             IdNode name = new IdNode(line, ctx.identifier().GetText());
             TypeNameNode returnType = ctx.COLON() != null
                 ? this.Visit(ctx.type().Last()).As<TypeNameNode>()
-                : new TypeNameNode(line, "void");
+                : new TypeNameNode(line, ctx.functionBody()?.expression() != null ? "var" : "void");
             
             DeclSpecsNode declSpecs = new DeclSpecsNode(line, returnType);
             
@@ -32,7 +32,9 @@ namespace LINVAST.Imperative.Builders.Kotlin
             BlockStatNode? body = ctx.functionBody() != null
                                 ? this.Visit(ctx.functionBody()).As<BlockStatNode>()
                                 : null;
-            FuncDeclNode decl = new FuncDeclNode(line, name, funcParams, body);
+            FuncDeclNode decl = body is null
+                ? new FuncDeclNode(line, name, funcParams)
+                : new FuncDeclNode(line, name, funcParams, body);
 
             return new FuncNode(line, declSpecs, decl);
         }
@@ -48,7 +50,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
             if (ctx.block() != null) return this.Visit(ctx.block());
             int line = ctx.Start.Line;
             ExprNode expr = this.AsExprNode(this.Visit(ctx.expression()));
-            return new BlockStatNode(line, new ExprStatNode(line, expr));
+            return new BlockStatNode(line, new JumpStatNode(line, expr));
         }
 
         // Grammar rule: functionValueParameters : LPAREN (functionValueParameter (COMMA functionValueParameter)* COMMA?)? RPAREN
@@ -67,7 +69,6 @@ namespace LINVAST.Imperative.Builders.Kotlin
         }
 
         // Grammar rule: functionValueParameter : modifierList? parameter (ASSIGNMENT expression)? 
-        // TODO: add logic for default value (ASSIGNMENT expression) 
         /// <summary>
         /// Visits the function value parameter parse tree context.
         /// </summary>
@@ -75,7 +76,11 @@ namespace LINVAST.Imperative.Builders.Kotlin
         /// <returns>The corresponding AST node.</returns>
         public override ASTNode VisitFunctionValueParameter(KotlinParser.FunctionValueParameterContext ctx)
         {
-            return this.Visit(ctx.parameter()).As<FuncParamNode>();
+            FuncParamNode parameter = this.Visit(ctx.parameter()).As<FuncParamNode>();
+            if (ctx.expression() is null) return parameter;
+            return new FuncParamNode(ctx.Start.Line, parameter.Specifiers,
+                new VarDeclNode(ctx.Start.Line, new IdNode(ctx.Start.Line, parameter.Declarator.Identifier),
+                    this.AsExprNode(this.Visit(ctx.expression()))));
         }
 
         // Grammar rule: parameter : simpleIdentifier COLON type 

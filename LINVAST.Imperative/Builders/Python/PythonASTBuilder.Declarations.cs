@@ -211,9 +211,16 @@ namespace LINVAST.Imperative.Builders.Python
                 }
 
                 assignments.AddRange(HoistedStatements(comprehensions));
+                string? temporary = null;
+                if (!isSingleAssignment) {
+                    temporary = this.NextTemporaryName("assign", ref this.assignmentTemporaryIndex);
+                    assignments.Add(new ExprStatNode(ctx.Start.Line,
+                        new AssignExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, temporary), rhs)));
+                }
                 for (int i = 0; i < allExprs.Count - 1; i++) {
                     ExprNode lhs = i == 0 ? firstLhs : this.Visit(allExprs[i]).As<ExprNode>();
-                    var assignExpr = new AssignExprNode(ctx.Start.Line, lhs, rhs);
+                    var assignExpr = new AssignExprNode(ctx.Start.Line, lhs,
+                        temporary is null ? rhs : new IdNode(ctx.Start.Line, temporary));
                     assignments.Add(new ExprStatNode(ctx.Start.Line, assignExpr));
                 }
 

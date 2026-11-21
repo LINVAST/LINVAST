@@ -34,6 +34,9 @@ jobs:
       - name: Test release directory safety
         run: bash scripts/tests/release.sh
 
+      - name: Test build-number validation
+        run: bash scripts/tests/build-number.sh
+
       - name: Build
         run: ./build --configuration Release --version-suffix ci --build-number "${GITHUB_RUN_NUMBER}"
 

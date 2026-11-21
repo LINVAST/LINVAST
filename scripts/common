@@ -37,7 +37,7 @@ linvast_format_build_number() {
     local build_number="${1-}"
 
     if [[ -z "$build_number" || "$build_number" == "-1" ]]; then
-        return 1
+        return 0
     fi
 
     if [[ "$build_number" =~ ^-[0-9]+$ ]]; then
@@ -48,7 +48,13 @@ linvast_format_build_number() {
         linvast_die "build number must be a non-negative integer"
     fi
 
-    printf '%05d' "$((10#${build_number}))"
+    while [[ ${#build_number} -gt 1 && "$build_number" == 0* ]]; do
+        build_number="${build_number#0}"
+    done
+    while [[ ${#build_number} -lt 5 ]]; do
+        build_number="0${build_number}"
+    done
+    printf '%s' "$build_number"
 }
 
 linvast_resolve_path() {
