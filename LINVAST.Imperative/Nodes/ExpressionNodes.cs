@@ -30,6 +30,15 @@ namespace LINVAST.Imperative.Nodes
     /// </summary>
     public abstract class ExprNode : ASTNode
     {
+        /// <summary>Behavior of this expression. Null preserves the legacy evaluator contract.</summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public ExpressionSemantics? Semantics { get; init; }
+
+        public override bool Equals([AllowNull] ASTNode other)
+            => base.Equals(other) && this.Semantics == (other as ExprNode)?.Semantics;
+
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), this.Semantics);
+
         protected ExprNode(int line, IEnumerable<ASTNode> children)
             : base(line, children) { }
 
@@ -260,7 +269,7 @@ namespace LINVAST.Imperative.Nodes
                     this.LeftOperand.Copy().As<ExprNode>(),
                     new ArithmOpNode(op.Line, part, op.ApplyTo),
                     this.RightOperand.Copy().As<ExprNode>()
-                );
+                ) { Semantics = this.Semantics };
                 return new AssignExprNode(this.Line, this.LeftOperand.Copy().As<ExprNode>(), expanded);
             }
             return this.Copy().As<AssignExprNode>();
@@ -626,7 +635,7 @@ namespace LINVAST.Imperative.Nodes
         /// </summary>
         /// <param name="other">The node to compare.</param>
         /// <returns>true if the node is a null literal; otherwise, false.</returns>
-        public override bool Equals([AllowNull] ASTNode other) => other is NullLitExprNode;
+        public override bool Equals([AllowNull] ASTNode other) => base.Equals(other);
     }
 
     /// <summary>
@@ -653,7 +662,7 @@ namespace LINVAST.Imperative.Nodes
         /// </summary>
         /// <param name="other">The node to compare.</param>
         /// <returns>true if the node is an ellipsis literal; otherwise, false.</returns>
-        public override bool Equals([AllowNull] ASTNode other) => other is EllipsisLitExprNode;
+        public override bool Equals([AllowNull] ASTNode other) => base.Equals(other);
     }
 
     /// <summary>

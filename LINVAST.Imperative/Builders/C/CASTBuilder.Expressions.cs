@@ -20,6 +20,7 @@ using System.Text;
 using Antlr4.Runtime.Misc;
 using LINVAST.Builders;
 using LINVAST.Exceptions;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Imperative.Nodes.Common;
 using LINVAST.Nodes;
@@ -33,6 +34,7 @@ namespace LINVAST.Imperative.Builders.C
 
     public sealed partial class CASTBuilder : CBaseVisitor<ASTNode>, IASTBuilder<CParser>
     {
+        private readonly IExpressionSemantics semantics = ExpressionSemanticsFactory.ForLanguage("C");
         /// <summary>
         /// Visits the expression parse tree context.
         /// </summary>
@@ -69,7 +71,7 @@ namespace LINVAST.Imperative.Builders.C
             var op = AssignOpNode.FromSymbol(ctx.Start.Line, symbol);
             ExprNode expr = this.Visit(ctx.assignmentExpression()).As<ExprNode>();
 
-            return new AssignExprNode(ctx.Start.Line, unary, op, expr);
+            return this.semantics.Assignment(ctx.Start.Line, unary, op, expr);
         }
 
         /// <summary>
@@ -85,7 +87,7 @@ namespace LINVAST.Imperative.Builders.C
 
             ExprNode thenExpr = this.Visit(ctx.expression()).As<ExprNode>();
             ExprNode elseExpr = this.Visit(ctx.conditionalExpression()).As<ExprNode>();
-            return new CondExprNode(ctx.Start.Line, expr, thenExpr, elseExpr);
+            return this.semantics.Conditional(ctx.Start.Line, expr, thenExpr, elseExpr);
         }
 
         /// <summary>
@@ -107,7 +109,7 @@ namespace LINVAST.Imperative.Builders.C
                 ExprNode left = this.Visit(ctx.logicalOrExpression()).As<ExprNode>();
                 ExprNode right = this.Visit(ctx.logicalAndExpression()).As<ExprNode>();
                 var op = BinaryLogicOpNode.FromSymbol(ctx.Start.Line, ctx.children[1].GetText());
-                return new LogicExprNode(ctx.Start.Line, left, op, right);
+                return this.semantics.Logical(ctx.Start.Line, left, op, right);
             } else {
                 return this.Visit(ctx.logicalAndExpression());
             }
@@ -124,7 +126,7 @@ namespace LINVAST.Imperative.Builders.C
                 ExprNode left = this.Visit(ctx.logicalAndExpression()).As<ExprNode>();
                 ExprNode right = this.Visit(ctx.inclusiveOrExpression()).As<ExprNode>();
                 var op = BinaryLogicOpNode.FromSymbol(ctx.Start.Line, ctx.children[1].GetText());
-                return new LogicExprNode(ctx.Start.Line, left, op, right);
+                return this.semantics.Logical(ctx.Start.Line, left, op, right);
             } else {
                 return this.Visit(ctx.inclusiveOrExpression());
             }
@@ -142,7 +144,7 @@ namespace LINVAST.Imperative.Builders.C
                 ExprNode right = this.Visit(ctx.exclusiveOrExpression()).As<ExprNode>();
                 string symbol = ctx.children[1].GetText();
                 var op = new ArithmOpNode(ctx.Start.Line, symbol, BinaryOperations.BitwiseOrPrimitive);
-                return new ArithmExprNode(ctx.Start.Line, left, op, right);
+                return this.semantics.Arithmetic(ctx.Start.Line, left, op, right);
             } else {
                 return this.Visit(ctx.exclusiveOrExpression());
             }
@@ -160,7 +162,7 @@ namespace LINVAST.Imperative.Builders.C
                 ExprNode right = this.Visit(ctx.andExpression()).As<ExprNode>();
                 string symbol = ctx.children[1].GetText();
                 var op = new ArithmOpNode(ctx.Start.Line, symbol, BinaryOperations.BitwiseXorPrimitive);
-                return new ArithmExprNode(ctx.Start.Line, left, op, right);
+                return this.semantics.Arithmetic(ctx.Start.Line, left, op, right);
             } else {
                 return this.Visit(ctx.andExpression());
             }
@@ -178,7 +180,7 @@ namespace LINVAST.Imperative.Builders.C
                 ExprNode right = this.Visit(ctx.equalityExpression()).As<ExprNode>();
                 string symbol = ctx.children[1].GetText();
                 var op = new ArithmOpNode(ctx.Start.Line, symbol, BinaryOperations.BitwiseAndPrimitive);
-                return new ArithmExprNode(ctx.Start.Line, left, op, right);
+                return this.semantics.Arithmetic(ctx.Start.Line, left, op, right);
             } else {
                 return this.Visit(ctx.equalityExpression());
             }
@@ -227,7 +229,7 @@ namespace LINVAST.Imperative.Builders.C
                 ExprNode left = this.Visit(ctx.shiftExpression()).As<ExprNode>();
                 ExprNode right = this.Visit(ctx.additiveExpression()).As<ExprNode>();
                 var op = ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.children[1].GetText());
-                return new ArithmExprNode(ctx.Start.Line, left, op, right);
+                return this.semantics.Arithmetic(ctx.Start.Line, left, op, right);
             } else {
                 return this.Visit(ctx.additiveExpression());
             }
@@ -244,7 +246,7 @@ namespace LINVAST.Imperative.Builders.C
                 ExprNode left = this.Visit(ctx.additiveExpression()).As<ExprNode>();
                 ExprNode right = this.Visit(ctx.multiplicativeExpression()).As<ExprNode>();
                 var op = ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.children[1].GetText());
-                return new ArithmExprNode(ctx.Start.Line, left, op, right);
+                return this.semantics.Arithmetic(ctx.Start.Line, left, op, right);
             } else {
                 return this.Visit(ctx.multiplicativeExpression());
             }
@@ -261,7 +263,7 @@ namespace LINVAST.Imperative.Builders.C
                 ExprNode left = this.Visit(ctx.multiplicativeExpression()).As<ExprNode>();
                 ExprNode right = this.Visit(ctx.castExpression()).As<ExprNode>();
                 var op = ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.children[1].GetText());
-                return new ArithmExprNode(ctx.Start.Line, left, op, right);
+                return this.semantics.Arithmetic(ctx.Start.Line, left, op, right);
             } else {
                 return this.Visit(ctx.castExpression());
             }
@@ -313,7 +315,7 @@ namespace LINVAST.Imperative.Builders.C
                 expr = this.Visit(ctx.unaryExpression()).As<ExprNode>();
             }
             var op = UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.children[0].GetText());
-            return new UnaryExprNode(ctx.Start.Line, op, expr);
+            return this.semantics.Unary(ctx.Start.Line, op, expr);
         }
 
         private static string TypeOperandText(TypeNameContext ctx)

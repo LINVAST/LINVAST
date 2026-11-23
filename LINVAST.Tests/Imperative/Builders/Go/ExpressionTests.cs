@@ -56,7 +56,7 @@ namespace LINVAST.Tests.Imperative.Builders.Go
             this.AssertExpressionValue("1 | ^1", ~0L);
             this.AssertExpressionValue("1 & ^0", 1L & ~0L);
             this.AssertExpressionValue("(1 << 1) & ^0", (1L << 1) & ~0L);
-            this.AssertExpressionValue("(1 << 10 >> 2) ^ (^0 << 10)", (1L << 10 >> 2) ^ (~0L << 10));
+            this.AssertExpressionValue("(1 << 10 >> 2) ^ (1 << 10)", (1L << 10 >> 2) ^ (1L << 10));
         }
 
         [Test]
@@ -80,14 +80,14 @@ namespace LINVAST.Tests.Imperative.Builders.Go
         [Test]
         public void LogicExpressionTest()
         {
-            this.AssertExpressionValue("1 || 1", true);
-            this.AssertExpressionValue("1 || 0", true);
-            this.AssertExpressionValue("0 || 0", false);
-            this.AssertExpressionValue("0 && 0", false);
-            this.AssertExpressionValue("0 && 1", false);
-            this.AssertExpressionValue("1 && 0", false);
-            this.AssertExpressionValue("1 && 1", true);
-            this.AssertExpressionValue("0.0001 && 1.1", true);
+            this.AssertExpressionValue("1 < 2 || 3 < 4", true);
+            this.AssertExpressionValue("1 < 2 || 3 > 4", true);
+            this.AssertExpressionValue("1 > 2 || 3 > 4", false);
+            this.AssertExpressionValue("1 > 2 && 3 > 4", false);
+            this.AssertExpressionValue("1 > 2 && 1 < 2", false);
+            this.AssertExpressionValue("1 < 2 && 1 > 2", false);
+            this.AssertExpressionValue("1 < 2 && 3 < 4", true);
+            this.AssertExpressionValue("1 < 2 && 3 < 4", true);
             this.AssertExpressionValue("1 > 1 && 2 < 3", false);
             this.AssertExpressionValue("1 >= 1 && 2 < 3", true);
             this.AssertExpressionValue("1 >= 1 || 3 < 3", true);
@@ -121,12 +121,12 @@ namespace LINVAST.Tests.Imperative.Builders.Go
             this.AssertExpressionValue("-1", -1L);
             this.AssertExpressionValue("^0", ~0L);
             this.AssertExpressionValue("^(^0)", 0L);
-            this.AssertExpressionValue("!0", true);
+            this.AssertExpressionValue("!(3 > 4)", true);
             this.AssertExpressionValue("!(1 > 2)", true);
-            this.AssertExpressionValue("!1", false);
+            this.AssertExpressionValue("!(1 < 2)", false);
             this.AssertExpressionValue("!(1 != 0)", false);
-            this.AssertExpressionValue("(!1) != (!1)", false);
-            this.AssertExpressionValue("(!1) != 0", false);
+            this.AssertExpressionValue("(!(1 < 2)) != (!(1 < 2))", false);
+            this.AssertExpressionValue("(!(1 < 2)) != (1 > 2)", false);
         }
 
         [Test]

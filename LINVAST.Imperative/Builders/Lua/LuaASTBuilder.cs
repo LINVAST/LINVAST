@@ -22,6 +22,7 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using LINVAST.Builders;
 using LINVAST.Exceptions;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Logging;
 using LINVAST.Nodes;
@@ -37,6 +38,7 @@ namespace LINVAST.Imperative.Builders.Lua
 
     public sealed partial class LuaASTBuilder : LuaBaseVisitor<ASTNode>, IASTBuilder<LuaParser>
     {
+        private readonly IExpressionSemantics semantics = ExpressionSemanticsFactory.ForLanguage("Lua");
         /// <summary>
         /// Creates an ANTLR parser for the given source code.
         /// </summary>
@@ -188,7 +190,7 @@ namespace LINVAST.Imperative.Builders.Lua
                         static ExprNode CreateTmpAssignment(AssignExprNode expr)
                         {
                             IdNode tmpId = CreateTmpIdentifier(expr.LeftOperand.As<IdNode>());
-                            return new AssignExprNode(expr.Line, expr.LeftOperand, tmpId);
+                            return ExpressionSemanticsFactory.ForLanguage("Lua").Assignment(expr.Line, expr.LeftOperand, tmpId);
                         }
                     } else {
                         nodes.Add(new BlockStatNode(block.Line, this.AddDeclarations(block.Children, declaredVars)));

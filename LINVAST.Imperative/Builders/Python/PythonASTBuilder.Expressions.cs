@@ -7,6 +7,7 @@ using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using LINVAST.Builders;
 using LINVAST.Exceptions;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Imperative.Nodes.Common;
 using LINVAST.Nodes;
@@ -15,6 +16,7 @@ namespace LINVAST.Imperative.Builders.Python
 {
     public sealed partial class PythonASTBuilder : Python3ParserBaseVisitor<ASTNode>, IASTBuilder<Python3Parser>
     {
+        private readonly IExpressionSemantics semantics = ExpressionSemanticsFactory.ForLanguage("Python");
         // test: or_test ('if' or_test 'else' test)? | lambdef
         /// <summary>
         /// Visits the test parse tree context.
@@ -30,7 +32,7 @@ namespace LINVAST.Imperative.Builders.Python
                 ExprNode thenExpr = this.Visit(ctx.or_test(0)).As<ExprNode>();
                 ExprNode cond = this.Visit(ctx.or_test(1)).As<ExprNode>();
                 ExprNode elseExpr = this.Visit(ctx.test()).As<ExprNode>();
-                return new CondExprNode(ctx.Start.Line, cond, thenExpr, elseExpr);
+                return this.semantics.Conditional(ctx.Start.Line, cond, thenExpr, elseExpr);
             }
 
             return this.Visit(ctx.or_test(0));
@@ -76,7 +78,7 @@ namespace LINVAST.Imperative.Builders.Python
             if (ctx.NOT() is not null) {
                 ExprNode operand = this.Visit(ctx.not_test()).As<ExprNode>();
                 var op = UnaryOpNode.FromSymbol(ctx.Start.Line, "not");
-                return new UnaryExprNode(ctx.Start.Line, op, operand);
+                return this.semantics.Unary(ctx.Start.Line, op, operand);
             }
 
             return this.Visit(ctx.comparison());
@@ -123,7 +125,7 @@ namespace LINVAST.Imperative.Builders.Python
                     Operand(i),
                     ops[i],
                     Operand(i + 1));
-                result = new LogicExprNode(
+                result = this.semantics.Logical(
                     ctx.Start.Line,
                     result,
                     BinaryLogicOpNode.FromSymbol(ctx.Start.Line, "and"),
@@ -171,7 +173,7 @@ namespace LINVAST.Imperative.Builders.Python
                     UnaryOpNode op = symbol == "~"
                         ? new UnaryOpNode(ctx.Start.Line, symbol, UnaryOperations.BitwiseNotPrimitive)
                         : UnaryOpNode.FromSymbol(ctx.Start.Line, symbol);
-                    operand = new UnaryExprNode(ctx.Start.Line, op, operand);
+                    operand = this.semantics.Unary(ctx.Start.Line, op, operand);
                 }
                 return operand;
             }
@@ -190,7 +192,7 @@ namespace LINVAST.Imperative.Builders.Python
         public override ASTNode VisitStar_expr(Python3Parser.Star_exprContext ctx)
         {
             ExprNode inner = this.Visit(ctx.expr()).As<ExprNode>();
-            return new AssignExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, "*"), inner);
+            return this.semantics.Assignment(ctx.Start.Line, new IdNode(ctx.Start.Line, "*"), inner);
         }
 
         // atom_expr: AWAIT? atom trailer*
@@ -448,18 +450,18 @@ namespace LINVAST.Imperative.Builders.Python
 
             if (ctx.POWER() is not null) {
                 ExprNode value = this.Visit(ctx.test()[0]).As<ExprNode>();
-                return new AssignExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, "**"), value);
+                return this.semantics.Assignment(ctx.Start.Line, new IdNode(ctx.Start.Line, "**"), value);
             }
 
             if (ctx.STAR() is not null) {
                 ExprNode value = this.Visit(ctx.test()[0]).As<ExprNode>();
-                return new AssignExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, "*"), value);
+                return this.semantics.Assignment(ctx.Start.Line, new IdNode(ctx.Start.Line, "*"), value);
             }
 
             if (ctx.ASSIGN() is not null) {
                 ExprNode key = this.Visit(ctx.test(0)).As<ExprNode>();
                 ExprNode value = this.Visit(ctx.test(1)).As<ExprNode>();
-                return new AssignExprNode(ctx.Start.Line, key, value);
+                return this.semantics.Assignment(ctx.Start.Line, key, value);
             }
 
             return this.Visit(ctx.test(0));
@@ -830,10 +832,9 @@ namespace LINVAST.Imperative.Builders.Python
             if (exprs.Length == 1)
                 return exprs[0];
 
-            var op = BinaryLogicOpNode.FromSymbol(line, symbol);
             ExprNode result = exprs[0];
             for (int i = 1; i < exprs.Length; i++)
-                result = new LogicExprNode(line, result, op, exprs[i]);
+                result = this.semantics.Logical(line, result, BinaryLogicOpNode.FromSymbol(line, symbol), exprs[i]);
             return result;
         }
 
@@ -843,31 +844,29 @@ namespace LINVAST.Imperative.Builders.Python
             if (ctx.POWER() is not null)
                 return new FuncCallExprNode(line, new IdNode(line, "pow"), new ExprListNode(line, new[] { lhs, rhs }));
             if (ctx.STAR() is not null)
-                return new ArithmExprNode(line, lhs, ArithmOpNode.FromSymbol(line, "*"), rhs);
+                return this.semantics.Arithmetic(line, lhs, ArithmOpNode.FromSymbol(line, "*"), rhs);
             if (ctx.AT() is not null)
                 return new FuncCallExprNode(line, new IdNode(line, "matmul"), new ExprListNode(line, new[] { lhs, rhs }));
             if (ctx.DIV() is not null)
-                return new ArithmExprNode(line, lhs, ArithmOpNode.FromSymbol(line, "/"), rhs);
+                return this.semantics.Arithmetic(line, lhs, ArithmOpNode.FromSymbol(line, "/"), rhs);
             if (ctx.MOD() is not null)
-                return new ArithmExprNode(line, lhs, ArithmOpNode.FromSymbol(line, "%"), rhs);
-            if (ctx.IDIV() is not null) {
-                var divExpr = new ArithmExprNode(line, lhs, ArithmOpNode.FromSymbol(line, "/"), rhs);
-                return new FuncCallExprNode(line, new IdNode(line, "floor"), new ExprListNode(line, new[] { (ExprNode)divExpr }));
-            }
-            if (ctx.ADD() is not null)
-                return new ArithmExprNode(line, lhs, ArithmOpNode.FromSymbol(line, "+"), rhs);
-            if (ctx.MINUS() is not null)
-                return new ArithmExprNode(line, lhs, ArithmOpNode.FromSymbol(line, "-"), rhs);
+                return this.semantics.Arithmetic(line, lhs, ArithmOpNode.FromSymbol(line, "%"), rhs);
+            if (ctx.IDIV() is not null)
+                return this.semantics.Arithmetic(line, lhs, ArithmOpNode.FromSymbol(line, "//"), rhs);
+            if (ctx.ADD().Length > 0)
+                return this.semantics.Arithmetic(line, lhs, ArithmOpNode.FromSymbol(line, "+"), rhs);
+            if (ctx.MINUS().Length > 0)
+                return this.semantics.Arithmetic(line, lhs, ArithmOpNode.FromSymbol(line, "-"), rhs);
             if (ctx.LEFT_SHIFT() is not null)
-                return new ArithmExprNode(line, lhs, ArithmOpNode.FromBitwiseSymbol(line, "<<"), rhs);
+                return this.semantics.Arithmetic(line, lhs, ArithmOpNode.FromBitwiseSymbol(line, "<<"), rhs);
             if (ctx.RIGHT_SHIFT() is not null)
-                return new ArithmExprNode(line, lhs, ArithmOpNode.FromBitwiseSymbol(line, ">>"), rhs);
+                return this.semantics.Arithmetic(line, lhs, ArithmOpNode.FromBitwiseSymbol(line, ">>"), rhs);
             if (ctx.AND_OP() is not null)
-                return new ArithmExprNode(line, lhs, ArithmOpNode.FromBitwiseSymbol(line, "&"), rhs);
+                return this.semantics.Arithmetic(line, lhs, ArithmOpNode.FromBitwiseSymbol(line, "&"), rhs);
             if (ctx.XOR() is not null)
-                return new ArithmExprNode(line, lhs, ArithmOpNode.FromBitwiseSymbol(line, "^"), rhs);
+                return this.semantics.Arithmetic(line, lhs, ArithmOpNode.FromBitwiseSymbol(line, "^"), rhs);
             if (ctx.OR_OP() is not null)
-                return new ArithmExprNode(line, lhs, ArithmOpNode.FromBitwiseSymbol(line, "|"), rhs);
+                return this.semantics.Arithmetic(line, lhs, ArithmOpNode.FromBitwiseSymbol(line, "|"), rhs);
 
             throw new SyntaxErrorException("Unsupported binary expression", line, ctx.Start.Column);
         }
@@ -884,13 +883,13 @@ namespace LINVAST.Imperative.Builders.Python
                     return new FuncCallExprNode(line, new IdNode(line, "contains"), new ExprListNode(line, new[] { rhs, lhs }));
                 case "notin": {
                     var call = new FuncCallExprNode(line, new IdNode(line, "contains"), new ExprListNode(line, new[] { rhs, lhs }));
-                    return new UnaryExprNode(line, UnaryOpNode.FromSymbol(line, "not"), call);
+                    return this.semantics.Unary(line, UnaryOpNode.FromSymbol(line, "not"), call);
                 }
                 case "is":
                     return new RelExprNode(line, IdCall(lhs), RelOpNode.FromSymbol(line, "=="), IdCall(rhs));
                 case "isnot": {
                     var comparison = new RelExprNode(line, IdCall(lhs), RelOpNode.FromSymbol(line, "=="), IdCall(rhs));
-                    return new UnaryExprNode(line, UnaryOpNode.FromSymbol(line, "not"), comparison);
+                    return this.semantics.Unary(line, UnaryOpNode.FromSymbol(line, "not"), comparison);
                 }
                 default:
                     return new RelExprNode(line, lhs, RelOpNode.FromSymbol(line, opCtx.GetText()), rhs);
@@ -993,7 +992,7 @@ namespace LINVAST.Imperative.Builders.Python
             ExprNode initializer = kind == "dict"
                 ? new DictInitNode(line)
                 : new ArrInitExprNode(line);
-            var init = new ExprStatNode(line, new AssignExprNode(line, new IdNode(line, accumulator.Identifier), initializer));
+            var init = new ExprStatNode(line, this.semantics.Assignment(line, new IdNode(line, accumulator.Identifier), initializer));
             StatNode body = this.BuildComprehensionAction(line, kind, accumulator.Identifier, element);
             foreach (ComprehensionClause clause in this.CollectComprehensionClauses(compFor).AsEnumerable().Reverse()) {
                 if (clause.Condition is not null) {
@@ -1022,7 +1021,7 @@ namespace LINVAST.Imperative.Builders.Python
                     line,
                     new IdNode(line, accumulatorName),
                     new IdNode(entry.Key.Line, entry.Key.Identifier));
-                return new ExprStatNode(line, new AssignExprNode(line, target, entry.Value));
+                return new ExprStatNode(line, this.semantics.Assignment(line, target, entry.Value));
             }
 
             string method = kind == "set" ? "add" : "append";

@@ -19,6 +19,7 @@
 using LINVAST.Exceptions;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Imperative.Nodes.Common;
+using LINVAST.Nodes;
 
 namespace LINVAST.Imperative.Visitors
 {
@@ -27,6 +28,12 @@ namespace LINVAST.Imperative.Visitors
     /// </summary>
     public sealed class ConstantExpressionEvaluator : BaseASTVisitor<object?>
     {
+        public override object? Visit(ASTNode node)
+        {
+            if (node is ExprNode expr) SemanticEvaluation.Validate(expr);
+            return base.Visit(node);
+        }
+
         public override object? Visit(CastExprNode node)
             => throw new EvaluationException("Cast evaluation requires source-language type semantics.");
 
@@ -71,6 +78,9 @@ namespace LINVAST.Imperative.Visitors
         {
             object? cond = this.Visit(node.Condition);
 
+            if (node.Semantics?.Truthiness is { } truthiness)
+                return this.Visit(SemanticEvaluation.Truth(cond, truthiness) ? node.ThenExpression : node.ElseExpression);
+
             if (cond is null || cond is not bool booleanCondition)
                 throw new EvaluationException("Failed to evaluate ternary conditional operator condition");
 
@@ -88,7 +98,8 @@ namespace LINVAST.Imperative.Visitors
             (object? l, object? r) = this.VisitBinaryOperands(node);
             if (l is null || r is null || l is NullLitExprNode || r is NullLitExprNode)
                 throw new EvaluationException("Null reference in expression");
-            return node.Operator.As<ArithmOpNode>().ApplyTo(l, r);
+            return node.Semantics is null ? node.Operator.As<ArithmOpNode>().ApplyTo(l, r)
+                : SemanticEvaluation.Arithmetic(node, l, r);
         }
 
         /// <summary>
@@ -114,6 +125,17 @@ namespace LINVAST.Imperative.Visitors
         /// <returns>The result of applying the operator to the operands.</returns>
         public override object? Visit(LogicExprNode node)
         {
+            if (node.Semantics is { Truthiness: { } truthiness, LogicalResult: { } result }) {
+                object? leftValue = this.Visit(node.LeftOperand);
+                bool truth = SemanticEvaluation.Truth(leftValue, truthiness);
+                bool isAnd = node.Operator.Symbol is "&&" or "and";
+                bool isOr = node.Operator.Symbol is "||" or "or";
+                if (!isAnd && !isOr) throw new EvaluationException("Unsupported logical operator semantics.");
+                if (isAnd && !truth || isOr && truth)
+                    return result == LogicalResultMode.SelectedOperand ? leftValue : truth;
+                object? rightValue = this.Visit(node.RightOperand);
+                return result == LogicalResultMode.SelectedOperand ? rightValue : SemanticEvaluation.Truth(rightValue, truthiness);
+            }
             bool left = Convert.ToBoolean(this.Visit(node.LeftOperand));
             if (!left && node.Operator.Symbol is "&&" or "and")
                 return false;
@@ -130,6 +152,8 @@ namespace LINVAST.Imperative.Visitors
         /// <exception cref="LINVAST.Exceptions.EvaluationException">Thrown when the operand is null.</exception>
         public override object? Visit(UnaryExprNode node)
         {
+            if (node.Semantics?.Truthiness is { } truthiness)
+                return !SemanticEvaluation.Truth(this.Visit(node.Operand), truthiness);
             object op = this.Visit(node.Operand) ?? throw new EvaluationException("Null reference in expression");
             return node.Operator.ApplyTo(op);
         }

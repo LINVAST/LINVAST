@@ -1,0 +1,45 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+using LINVAST.Imperative.Builders.Common;
+using LINVAST.Imperative.Nodes;
+using LINVAST.Imperative.Nodes.Common;
+
+namespace LINVAST.Imperative.Builders.Lua
+{
+    /// <summary>
+    /// Lua expression-semantics policy.
+    /// </summary>
+    public sealed class LuaExpressionSemantics : ExpressionSemanticsBase
+    {
+        protected override TruthinessMode Truthiness => TruthinessMode.Lua;
+        protected override LogicalResultMode? LogicalResult => LogicalResultMode.SelectedOperand;
+        protected override bool JavaShifts => false;
+
+        public override ExpressionSemantics? ArithmeticSemantics(string symbol)
+        {
+            if (symbol is "/" or "//")
+                return new(
+                    division: symbol == "//" ? DivisionMode.Floor : DivisionMode.True,
+                    zeroDivision: ZeroDivisionMode.Ieee754);
+            if (symbol == "%")
+                return new(remainder: RemainderMode.DivisorSign, zeroDivision: ZeroDivisionMode.Ieee754);
+            if (symbol is "<<" or ">>" or ">>>")
+                return new(rightShift: RightShiftMode.Logical, shiftCount: ShiftCountMode.ReverseDirection, integerWidth: 64);
+            return null;
+        }
+    }
+}

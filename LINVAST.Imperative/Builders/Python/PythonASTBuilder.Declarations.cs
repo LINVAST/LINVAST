@@ -4,6 +4,7 @@ using System.Linq;
 using Antlr4.Runtime;
 using LINVAST.Builders;
 using LINVAST.Exceptions;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Imperative.Nodes.Common;
 using LINVAST.Nodes;
@@ -136,7 +137,7 @@ namespace LINVAST.Imperative.Builders.Python
                     if (exprInitializer is not null) {
                         if (this.TryCreateTypedTupleUnpackingDeclaration(target, exprInitializer, ctx.Start.Line, typeName, out DeclStatNode? tupleDecl))
                             return tupleDecl!;
-                        return new ExprStatNode(ctx.Start.Line, new AssignExprNode(ctx.Start.Line, target, exprInitializer));
+                        return new ExprStatNode(ctx.Start.Line, this.semantics.Assignment(ctx.Start.Line, target, exprInitializer));
                     }
                     return new ExprStatNode(ctx.Start.Line, target);
                 }
@@ -162,24 +163,22 @@ namespace LINVAST.Imperative.Builders.Python
                 IReadOnlyList<PendingComprehension> comprehensions = this.TakePendingComprehensions(mark);
 
                 string augSymbol = ctx.augassign().GetText();
-                if (augSymbol is "**=" or "//=" or "@=") {
+                if (augSymbol is "**=" or "@=") {
                     // Re-visit for an independent instance; ASTNode re-parents any shared child.
                     ExprNode targetCopy = this.Visit(ctx.testlist_star_expr()[0]).As<ExprNode>();
                     ExprNode rhsCall = augSymbol switch
                     {
                         "**=" => new FuncCallExprNode(line, new IdNode(line, "pow"), new ExprListNode(line, new[] { targetCopy, value })),
-                        "//=" => new FuncCallExprNode(line, new IdNode(line, "floor"),
-                            new ExprListNode(line, new[] { (ExprNode)new ArithmExprNode(line, targetCopy, ArithmOpNode.FromSymbol(line, "/"), value) })),
                         _ => new FuncCallExprNode(line, new IdNode(line, "matmul"), new ExprListNode(line, new[] { targetCopy, value })),
                     };
-                    var specialStatement = new ExprStatNode(line, new AssignExprNode(line, target, rhsCall));
+                    var specialStatement = new ExprStatNode(line, this.semantics.Assignment(line, target, rhsCall));
                     return comprehensions.Count == 0
                         ? specialStatement
                         : HoistComprehensionsBefore(line, comprehensions, specialStatement);
                 }
 
                 AssignOpNode op = AssignOpNode.FromSymbol(ctx.augassign().Start.Line, augSymbol);
-                var assignExpr = new AssignExprNode(line, target, op, value);
+                var assignExpr = this.semantics.Assignment(line, target, op, value);
                 var statement = new ExprStatNode(line, assignExpr);
                 return comprehensions.Count == 0
                     ? statement
@@ -215,11 +214,11 @@ namespace LINVAST.Imperative.Builders.Python
                 if (!isSingleAssignment) {
                     temporary = this.NextTemporaryName("assign", ref this.assignmentTemporaryIndex);
                     assignments.Add(new ExprStatNode(ctx.Start.Line,
-                        new AssignExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, temporary), rhs)));
+                        this.semantics.Assignment(ctx.Start.Line, new IdNode(ctx.Start.Line, temporary), rhs)));
                 }
                 for (int i = 0; i < allExprs.Count - 1; i++) {
                     ExprNode lhs = i == 0 ? firstLhs : this.Visit(allExprs[i]).As<ExprNode>();
-                    var assignExpr = new AssignExprNode(ctx.Start.Line, lhs,
+                    var assignExpr = this.semantics.Assignment(ctx.Start.Line, lhs,
                         temporary is null ? rhs : new IdNode(ctx.Start.Line, temporary));
                     assignments.Add(new ExprStatNode(ctx.Start.Line, assignExpr));
                 }
@@ -297,7 +296,7 @@ namespace LINVAST.Imperative.Builders.Python
                             call.Arguments?.Expressions.Select(arg => ReplaceAccumulator(arg, accumulator, target))
                                 ?? Enumerable.Empty<ExprNode>()));
                 case AssignExprNode assign:
-                    return new AssignExprNode(
+                    return ExpressionSemanticsFactory.ForLanguage("Python").Assignment(
                         assign.Line,
                         ReplaceAccumulator(assign.LeftOperand, accumulator, target),
                         AssignOpNode.FromSymbol(assign.Operator.Line, assign.Operator.Symbol),

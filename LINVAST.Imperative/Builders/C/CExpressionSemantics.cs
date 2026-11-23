@@ -1,0 +1,43 @@
+// LINVAST - Language-INVariant AST library
+// Copyright (C) 2026 Ivan Ristović
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+using LINVAST.Imperative.Builders.Common;
+using LINVAST.Imperative.Nodes;
+using LINVAST.Imperative.Nodes.Common;
+
+namespace LINVAST.Imperative.Builders.C
+{
+    /// <summary>
+    /// C expression-semantics policy.
+    /// </summary>
+    public sealed class CExpressionSemantics : ExpressionSemanticsBase
+    {
+        protected override TruthinessMode Truthiness => TruthinessMode.NumericNonzero;
+        protected override LogicalResultMode? LogicalResult => LogicalResultMode.Boolean;
+        protected override bool JavaShifts => false;
+
+        public override ExpressionSemantics? ArithmeticSemantics(string symbol)
+        {
+            if (symbol is "/" or "//")
+                return new(division: DivisionMode.TruncateIntegers, zeroDivision: ZeroDivisionMode.Ieee754);
+            if (symbol == "%")
+                return new(remainder: RemainderMode.DividendSign, zeroDivision: ZeroDivisionMode.Ieee754);
+            if (symbol is "<<" or ">>" or ">>>")
+                return new(rightShift: RightShiftMode.ImplementationDefined, shiftCount: ShiftCountMode.RequireInRange);
+            return null;
+        }
+    }
+}

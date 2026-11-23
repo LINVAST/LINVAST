@@ -119,8 +119,7 @@ namespace LINVAST.Tests.Imperative.Builders.C
             this.AssertExpressionValue("1 | ~1", ~0);
             this.AssertExpressionValue("1 & ~0", 1 & ~0);
             this.AssertExpressionValue("(1 << 1) & ~0", (1 << 1) & ~0);
-            this.AssertExpressionValue("(1 << 10 >> 2) ^ (~0 << 10)", (1 << 10 >> 2) ^ (~0 << 10));
-        }
+            this.AssertExpressionValue("(1 << 10 >> 2) ^ (1 << 10)", 1280);        }
 
         [Test]
         public void RelationalExpressionTest()

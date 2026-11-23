@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LINVAST.Builders;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Imperative.Nodes.Common;
 using LINVAST.Nodes;
@@ -318,7 +319,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
                 ExprNode left = this.AsExprNode(this.Visit(ctx.disjunction(0)));
                 AssignOpNode op = AssignOpNode.FromSymbol(line, ctx.assignmentOperator(0).GetText());
                 ExprNode right = this.AsExprNode(this.Visit(ctx.disjunction(1)));
-                return new ExprStatNode(line, new AssignExprNode(line, left, op, right));
+                return new ExprStatNode(line, this.semantics.Assignment(line, left, op, right));
             }
             
             return this.Visit(ctx.disjunction(0));

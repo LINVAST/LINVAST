@@ -19,6 +19,7 @@ using System.Linq;
 using Antlr4.Runtime.Misc;
 using LINVAST.Builders;
 using LINVAST.Exceptions;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
 using static LINVAST.Imperative.Builders.Java.JavaParser;
@@ -31,6 +32,7 @@ namespace LINVAST.Imperative.Builders.Java
 
     public sealed partial class JavaASTBuilder : JavaBaseVisitor<ASTNode>, IASTBuilder<JavaParser>
     {
+        private readonly IExpressionSemantics semantics = ExpressionSemanticsFactory.ForLanguage("Java");
         /// <summary>
         /// Visits the expression parse tree context.
         /// </summary>
@@ -54,7 +56,7 @@ namespace LINVAST.Imperative.Builders.Java
                 ExprNode cond = this.Visit(ctx.expression(0)).As<ExprNode>();
                 ExprNode @then = this.Visit(ctx.expression(1)).As<ExprNode>();
                 ExprNode @else = this.Visit(ctx.expression(2)).As<ExprNode>();
-                return new CondExprNode(ctx.Start.Line, cond, @then, @else);
+                return this.semantics.Conditional(ctx.Start.Line, cond, @then, @else);
             }
 
             if (ctx.NEW() is not null && ctx.creator() is not null) {
@@ -119,21 +121,21 @@ namespace LINVAST.Imperative.Builders.Java
 
             if (ctx.ADD() is not null) {
                 if (ctx.expression().Length == 2) {
-                    return new ArithmExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.ADD().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                    return this.semantics.Arithmetic(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.ADD().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
                 }
 
                 if (ctx.expression().Length == 1) {
-                    return new UnaryExprNode(ctx.Start.Line, UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.ADD().GetText()), this.Visit(ctx.expression(0)).As<ExprNode>());
+                    return this.semantics.Unary(ctx.Start.Line, UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.ADD().GetText()), this.Visit(ctx.expression(0)).As<ExprNode>());
                 }
             }
 
             if (ctx.SUB() is not null) {
                 if (ctx.expression().Length == 2) {
-                    return new ArithmExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.SUB().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                    return this.semantics.Arithmetic(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.SUB().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
                 }
 
                 if (ctx.expression().Length == 1) {
-                    return new UnaryExprNode(ctx.Start.Line, UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.SUB().GetText()), this.Visit(ctx.expression(0)).As<ExprNode>());
+                    return this.semantics.Unary(ctx.Start.Line, UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.SUB().GetText()), this.Visit(ctx.expression(0)).As<ExprNode>());
                 }
             }
 
@@ -146,23 +148,23 @@ namespace LINVAST.Imperative.Builders.Java
             }
 
             if (ctx.TILDE() is not null && ctx.expression().Length == 1) {
-                return new UnaryExprNode(ctx.Start.Line, UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.TILDE().GetText()), this.Visit(ctx.expression(0)).As<ExprNode>());
+                return this.semantics.Unary(ctx.Start.Line, UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.TILDE().GetText()), this.Visit(ctx.expression(0)).As<ExprNode>());
             }
 
             if (ctx.BANG() is not null && ctx.expression().Length == 1) {
-                return new UnaryExprNode(ctx.Start.Line, UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.BANG().GetText()), this.Visit(ctx.expression(0)).As<ExprNode>());
+                return this.semantics.Unary(ctx.Start.Line, UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.BANG().GetText()), this.Visit(ctx.expression(0)).As<ExprNode>());
             }
 
             if (ctx.MUL() is not null && ctx.expression().Length == 2) {
-                return new ArithmExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.MUL().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Arithmetic(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.MUL().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.DIV() is not null && ctx.expression().Length == 2) {
-                return new ArithmExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.DIV().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Arithmetic(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.DIV().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.MOD() is not null && ctx.expression().Length == 2) {
-                return new ArithmExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.MOD().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Arithmetic(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ctx.MOD().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.LT().Length == 1 && ctx.expression().Length == 2) {
@@ -170,7 +172,7 @@ namespace LINVAST.Imperative.Builders.Java
             }
 
             if (ctx.LT().Length == 2 && ctx.expression().Length == 2) {
-                return new ArithmExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, "<<"), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Arithmetic(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, "<<"), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.GT().Length == 1 && ctx.expression().Length == 2) {
@@ -178,11 +180,11 @@ namespace LINVAST.Imperative.Builders.Java
             }
 
             if (ctx.GT().Length == 2 && ctx.expression().Length == 2) {
-                return new ArithmExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ">>"), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Arithmetic(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ">>"), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.GT().Length == 3 && ctx.expression().Length == 2) {
-                return new ArithmExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ">>>"), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Arithmetic(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromSymbol(ctx.Start.Line, ">>>"), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.LE() is not null && ctx.expression().Length == 2) {
@@ -202,71 +204,71 @@ namespace LINVAST.Imperative.Builders.Java
             }
 
             if (ctx.BITAND() is not null && ctx.expression().Length == 2) {
-                return new ArithmExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromBitwiseSymbol(ctx.Start.Line, ctx.BITAND().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Arithmetic(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromBitwiseSymbol(ctx.Start.Line, ctx.BITAND().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.CARET() is not null && ctx.expression().Length == 2) {
-                return new ArithmExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromBitwiseSymbol(ctx.Start.Line, ctx.CARET().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Arithmetic(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromBitwiseSymbol(ctx.Start.Line, ctx.CARET().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.BITOR() is not null && ctx.expression().Length == 2) {
-                return new ArithmExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromBitwiseSymbol(ctx.Start.Line, ctx.BITOR().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Arithmetic(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), ArithmOpNode.FromBitwiseSymbol(ctx.Start.Line, ctx.BITOR().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.AND() is not null && ctx.expression().Length == 2) {
-                return new LogicExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), BinaryLogicOpNode.FromSymbol(ctx.Start.Line, ctx.AND().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Logical(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), BinaryLogicOpNode.FromSymbol(ctx.Start.Line, ctx.AND().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.OR() is not null && ctx.expression().Length == 2) {
-                return new LogicExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), BinaryLogicOpNode.FromSymbol(ctx.Start.Line, ctx.OR().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Logical(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), BinaryLogicOpNode.FromSymbol(ctx.Start.Line, ctx.OR().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.ADD_ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.ADD_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.ADD_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.SUB_ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.SUB_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.SUB_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.MUL_ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.MUL_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.MUL_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.DIV_ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.DIV_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.DIV_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.AND_ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.AND_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.AND_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.OR_ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.OR_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.OR_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.XOR_ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.XOR_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.XOR_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.RSHIFT_ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.RSHIFT_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.RSHIFT_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.URSHIFT_ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.URSHIFT_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.URSHIFT_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.LSHIFT_ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.LSHIFT_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.LSHIFT_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.MOD_ASSIGN() is not null && ctx.expression().Length == 2) {
-                return new AssignExprNode(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.MOD_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
+                return this.semantics.Assignment(ctx.Start.Line, this.Visit(ctx.expression(0)).As<ExprNode>(), AssignOpNode.FromSymbol(ctx.Start.Line, ctx.MOD_ASSIGN().GetText()), this.Visit(ctx.expression(1)).As<ExprNode>());
             }
 
             if (ctx.expression().Any() && ctx.INSTANCEOF() is not null && ctx.typeType() is not null) {

@@ -1,6 +1,7 @@
 using System.Linq;
 using LINVAST.Imperative.Builders.Python;
 using LINVAST.Imperative.Nodes;
+using LINVAST.Imperative.Nodes.Common;
 using LINVAST.Imperative.Visitors;
 using LINVAST.Nodes;
 using NUnit.Framework;
@@ -539,10 +540,9 @@ namespace LINVAST.Tests.Imperative.Builders.Python
         [Test]
         public void FloorDivisionBuildsFloorOfDivision()
         {
-            var call = this.ParseExpression("a // b").As<FuncCallExprNode>();
-            Assert.That(call.Identifier, Is.EqualTo("floor"));
-
-            var div = call.Arguments!.Expressions.Single().As<ArithmExprNode>();
+            var div = this.ParseExpression("a // b").As<ArithmExprNode>();
+            Assert.That(div.Operator.Symbol, Is.EqualTo("//"));
+            Assert.That(div.Semantics!.Division, Is.EqualTo(DivisionMode.Floor));
             Assert.That(div.LeftOperand.As<IdNode>().Identifier, Is.EqualTo("a"));
             Assert.That(div.RightOperand.As<IdNode>().Identifier, Is.EqualTo("b"));
         }
@@ -623,14 +623,10 @@ namespace LINVAST.Tests.Imperative.Builders.Python
         {
             var stat = this.ParseStatements("x = 1\nx //= 2\n").ElementAt(1).As<ExprStatNode>();
             var assign = stat.Expression.As<AssignExprNode>();
-            var call = assign.RightOperand.As<FuncCallExprNode>();
-
             Assert.That(assign.LeftOperand.As<IdNode>().Identifier, Is.EqualTo("x"));
-            Assert.That(call.Identifier, Is.EqualTo("floor"));
-
-            var div = call.Arguments!.Expressions.Single().As<ArithmExprNode>();
-            Assert.That(div.LeftOperand.As<IdNode>().Identifier, Is.EqualTo("x"));
-            Assert.That(div.RightOperand.As<LitExprNode>().Value, Is.EqualTo(2L));
+            Assert.That(assign.Operator.Symbol, Is.EqualTo("//="));
+            Assert.That(assign.Semantics!.Division, Is.EqualTo(DivisionMode.Floor));
+            Assert.That(assign.RightOperand.As<LitExprNode>().Value, Is.EqualTo(2L));
         }
 
         [Test]

@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using LINVAST.Exceptions;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
+using Newtonsoft.Json;
 using Expr = MathNet.Symbolics.SymbolicExpression;
 
 namespace LINVAST.Imperative.Visitors
@@ -66,6 +67,19 @@ namespace LINVAST.Imperative.Visitors
         /// <returns>The symbolic expression built from the AST node.</returns>
         public Expr Parse()
             => this.Visit(this.Node);
+
+        public override Expr Visit(ASTNode node)
+        {
+            if (node is ExprNode expr) SemanticEvaluation.Validate(expr);
+            return base.Visit(node);
+        }
+
+        public override Expr Visit(CondExprNode node)
+        {
+            if (TryConstant(node, out Expr result)) return result;
+            return GetWildcard($"conditional:{JsonConvert.SerializeObject(node.Semantics)}:{this.Visit(node.Condition)}"
+                + $":{this.Visit(node.ThenExpression)}:{this.Visit(node.ElseExpression)}");
+        }
 
 
         /// <summary>
@@ -128,8 +142,7 @@ namespace LINVAST.Imperative.Visitors
         /// <param name="node">The literal expression node to visit.</param>
         /// <returns>A symbolic expression representing the literal value, or undefined if the value is null.</returns>
         public override Expr Visit(LitExprNode node)
-            // TODO string literals need to be substituted as well...
-            => node.Value is null ? Expr.Undefined : Expr.Parse(System.Convert.ToString(node.Value, CultureInfo.InvariantCulture));
+            => Literal(node.Value);
 
         /// <summary>
         /// Visits a null literal expression node, returning an undefined symbolic expression.
@@ -142,15 +155,60 @@ namespace LINVAST.Imperative.Visitors
 
         private Expr EvaluateBinaryExpression(BinaryExprNode node)
         {
+            SemanticEvaluation.Validate(node);
             Expr left = this.Visit(node.LeftOperand);
             Expr right = this.Visit(node.RightOperand);
+            if (node.Semantics is not null) {
+                if (this.TryFoldInteger(node, out Expr result)) return result;
+                return this.ParsePreserved($"({left}) {node.Operator.Symbol} ({right})");
+            }
             return this.TryEvaluate(node, $"({left}) {node.Operator.Symbol} ({right})");
         }
 
         private Expr EvaluateUnaryExpression(UnaryExprNode node)
         {
+            SemanticEvaluation.Validate(node);
             Expr operand = this.Visit(node.Operand);
+            if (node.Semantics is not null) {
+                if (this.TryFoldInteger(node, out Expr result)) return result;
+                return this.ParsePreserved($"{node.Operator.Symbol}({operand})");
+            }
             return this.TryEvaluate(node, $"{node.Operator.Symbol}({operand})");
+        }
+
+        private static Expr Literal(object? value)
+            => value is null ? Expr.Undefined : value is string or char
+                ? GetWildcard("literal:" + JsonConvert.SerializeObject(value))
+                : Expr.Parse(Convert.ToString(value, CultureInfo.InvariantCulture));
+
+        private bool TryFoldInteger(ExprNode node, out Expr result)
+        {
+            object? value = null;
+            try { value = ConstantExpressionEvaluator.Evaluate(node); } catch { }
+            if (value is sbyte or byte or short or ushort or int or uint or long or ulong) {
+                try {
+                    result = Expr.Parse(Convert.ToString(value, CultureInfo.InvariantCulture));
+                    return true;
+                } catch { }
+            }
+            result = Expr.Undefined;
+            return false;
+        }
+
+        private static bool TryConstant(ExprNode node, out Expr result)
+        {
+            try {
+                result = Literal(ConstantExpressionEvaluator.Evaluate(node));
+                return true;
+            } catch {
+                result = Expr.Undefined;
+                return false;
+            }
+        }
+
+        private Expr ParsePreserved(string exprStr)
+        {
+            try { return Expr.Parse(exprStr); } catch { return GetWildcard(exprStr); }
         }
 
         private Expr TryEvaluate(ExprNode e, string exprStr)

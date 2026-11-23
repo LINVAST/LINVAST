@@ -132,10 +132,10 @@ namespace LINVAST.Tests.Imperative.Builders.C
         public void IntDeclarationListWithInitializersTest()
         {
             this.AssertVariableDeclarationList(
-                "extern static int x, y = 7 + (4 - 3), z = 3, w = 3*4 + 7*5, t = 2 >> (3 << 4);",
+                "extern static int x, y = 7 + (4 - 3), z = 3, w = 3*4 + 7*5, t = 32 >> (2 << 1);",
                 "int",
                 AccessModifiers.Public, QualifierFlags.Static,
-                ("x", null), ("y", 7 + (4 - 3)), ("z", 3), ("w", 47), ("t", 2 >> (3 << 4))
+                ("x", null), ("y", 7 + (4 - 3)), ("z", 3), ("w", 47), ("t", 2)
             );
 
             this.AssertVariableDeclarationList(

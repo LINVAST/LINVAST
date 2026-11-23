@@ -18,6 +18,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using LINVAST.Builders;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Imperative.Nodes.Common;
 using LINVAST.Nodes;
@@ -90,7 +91,7 @@ namespace LINVAST.Imperative.Builders.Go
 
             var assignments = new ASTNode[lhs.Length];
             for (int i = 0; i < assignments.Length; i++) {
-                var assignExpr = new AssignExprNode(context.Start.Line, this.Visit(lhs[i]).As<ExprNode>(), opNode,
+                var assignExpr = this.semantics.Assignment(context.Start.Line, this.Visit(lhs[i]).As<ExprNode>(), opNode,
                     this.Visit(rhs[i]).As<ExprNode>());
                 assignments[i] = new ExprStatNode(context.Start.Line, assignExpr);
             }
@@ -337,7 +338,7 @@ namespace LINVAST.Imperative.Builders.Go
 
             if (context.expressionList() is not null) {
                 ExprListNode lhs = this.Visit(context.expressionList()).As<ExprListNode>();
-                return new ExprStatNode(context.Start.Line, new AssignExprNode(context.Start.Line, lhs, receive));
+                return new ExprStatNode(context.Start.Line, this.semantics.Assignment(context.Start.Line, lhs, receive));
             }
 
             if (context.identifierList() is not null) {
@@ -347,7 +348,7 @@ namespace LINVAST.Imperative.Builders.Go
                     return new DeclStatNode(context.Start.Line, new DeclSpecsNode(context.Start.Line), decls);
                 }
 
-                return new ExprStatNode(context.Start.Line, new AssignExprNode(context.Start.Line, ids, receive));
+                return new ExprStatNode(context.Start.Line, this.semantics.Assignment(context.Start.Line, ids, receive));
             }
 
             return new ExprStatNode(context.Start.Line, receive);

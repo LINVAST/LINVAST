@@ -114,10 +114,10 @@ namespace LINVAST.Tests.Imperative.Builders.Lua
             this.AssertExpressionValue("1 ~= 0 and (1 ~= 1 or 1 == 3)", false);
             this.AssertExpressionValue("3 > 2 or 3 > 1 and 1 > 1", true);
             this.AssertExpressionValue("(3 > 2 or 3 > 1) and 1 > 1", false);
-            this.AssertExpressionValue("(1 << 1) == 2 and (3 / 2 == 1)", true);
-            this.AssertExpressionValue("(1 << 1) == 2 and (3 / 2 ~= 1)", false);
+            this.AssertExpressionValue("(1 << 1) == 2 and (3 / 2 == 1.5)", true);
+            this.AssertExpressionValue("(1 << 1) == 2 and (3 / 2 ~= 1.5)", false);
             this.AssertExpressionValue("(1 << 1) == 2 or (3 / 2 ~= 1)", true);
-            this.AssertExpressionValue("(1 << 2) == 2 or (3 / 2 ~= 1)", false);
+            this.AssertExpressionValue("(1 << 2) == 2 or (3 / 2 ~= 1.5)", false);
             this.AssertExpressionValue("(1 << 1) == (4 >> 1) or 1 ~= 1", true);
         }
 

@@ -20,6 +20,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using LINVAST.Builders;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Imperative.Nodes.Common;
 using LINVAST.Nodes;
@@ -32,6 +33,7 @@ namespace LINVAST.Imperative.Builders.Go
 
     public sealed partial class GoASTBuilder : GoParserBaseVisitor<ASTNode>, IASTBuilder<GoParser>
     {
+        private readonly IExpressionSemantics semantics = ExpressionSemanticsFactory.ForLanguage("Go");
         /// <summary>
         /// Visits the expression parse tree context.
         /// </summary>
@@ -57,7 +59,7 @@ namespace LINVAST.Imperative.Builders.Go
                 } else {
                     op = UnaryOpNode.FromSymbol(context.Start.Line, context.unary_op.Text);
                 }
-                return new UnaryExprNode(context.Start.Line, op, expr);
+                return this.semantics.Unary(context.Start.Line, op, expr);
             }
 
             if (context.expression().Length != 2) {
@@ -79,7 +81,7 @@ namespace LINVAST.Imperative.Builders.Go
                     op = ArithmOpNode.FromSymbol(context.Start.Line, context.mul_op.Text);
                 }
 
-                return new ArithmExprNode(context.Start.Line, lhs, op, rhs);
+                return this.semantics.Arithmetic(context.Start.Line, lhs, op, rhs);
             }
 
             if (context.add_op is not null) {
@@ -90,7 +92,7 @@ namespace LINVAST.Imperative.Builders.Go
                     op = ArithmOpNode.FromSymbol(context.Start.Line, context.add_op.Text);
                 }
                 
-                return new ArithmExprNode(context.Start.Line, lhs, op, rhs);
+                return this.semantics.Arithmetic(context.Start.Line, lhs, op, rhs);
             }
 
             if (context.rel_op is not null) {
@@ -100,12 +102,12 @@ namespace LINVAST.Imperative.Builders.Go
 
             if (context.LOGICAL_AND() is not null) {
                 var op = BinaryLogicOpNode.FromSymbol(context.Start.Line, "&&");
-                return new LogicExprNode(context.Start.Line, lhs, op, rhs);
+                return this.semantics.Logical(context.Start.Line, lhs, op, rhs);
             }
             
             if (context.LOGICAL_OR() is not null) {
                 var op = BinaryLogicOpNode.FromSymbol(context.Start.Line, "||");
-                return new LogicExprNode(context.Start.Line, lhs, op, rhs);
+                return this.semantics.Logical(context.Start.Line, lhs, op, rhs);
             }
 
             throw new NotSupportedException("Unsupported expression: " + context);

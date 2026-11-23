@@ -90,6 +90,7 @@ namespace LINVAST.Imperative.Nodes.Common
                 "-=" => SubtractPrimitive,
                 "*=" => MultiplyPrimitive,
                 "/=" => DividePrimitive,
+                "//=" => FloorDividePrimitive,
                 "%=" => ModulusPrimitive,
                 "<<=" => ShiftLeftPrimitive,
                 ">>=" => ShiftRightPrimitive,

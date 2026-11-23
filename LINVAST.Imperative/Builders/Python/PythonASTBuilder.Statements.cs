@@ -6,6 +6,7 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using LINVAST.Builders;
 using LINVAST.Exceptions;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Imperative.Nodes.Common;
 using LINVAST.Nodes;
@@ -421,7 +422,7 @@ namespace LINVAST.Imperative.Builders.Python
         {
             if (ctx.expr() is not null) {
                 ExprNode value = this.Visit(ctx.expr()).As<ExprNode>();
-                return new AssignExprNode(ctx.Start.Line, new IdNode(ctx.Start.Line, "*"), value);
+                return this.semantics.Assignment(ctx.Start.Line, new IdNode(ctx.Start.Line, "*"), value);
             }
 
             return this.Visit(ctx.test());

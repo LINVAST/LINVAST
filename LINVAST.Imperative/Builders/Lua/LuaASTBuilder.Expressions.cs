@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Antlr4.Runtime.Misc;
 using LINVAST.Builders;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
 using static LINVAST.Imperative.Builders.Lua.LuaParser;
@@ -84,25 +85,25 @@ namespace LINVAST.Imperative.Builders.Lua
                 ArithmOpNode op = ctx.operatorBitwise() is not null
                     ? ArithmOpNode.FromBitwiseSymbol(ctx.Start.Line, symbol)
                     : ArithmOpNode.FromSymbol(ctx.Start.Line, symbol);
-                return new ArithmExprNode(ctx.Start.Line, left, op, right);
+                return this.semantics.Arithmetic(ctx.Start.Line, left, op, right);
             }
 
             if (IsLogicExpressionContext(ctx, out string? logicOp)) {
                 if (ctx.operatorUnary() is not null) {
                     ExprNode notOperand = this.Visit(ctx.exp().First()).As<ExprNode>();
                     var notOp = UnaryOpNode.FromSymbol(ctx.Start.Line, "not");
-                    return new UnaryExprNode(ctx.Start.Line, notOp, notOperand);
+                    return this.semantics.Unary(ctx.Start.Line, notOp, notOperand);
                 }
 
                 (ExprNode left, string symbol, ExprNode right) = ParseBinaryExpression();
                 var op = BinaryLogicOpNode.FromSymbol(ctx.Start.Line, symbol);
-                return new LogicExprNode(ctx.Start.Line, left, op, right);
+                return this.semantics.Logical(ctx.Start.Line, left, op, right);
             }
 
             if (ctx.operatorUnary() is not null) {
                 ExprNode unaryOperand = this.Visit(ctx.exp().First()).As<ExprNode>();
                 var unaryOp = UnaryOpNode.FromSymbol(ctx.Start.Line, ctx.children[0].GetText());
-                return new UnaryExprNode(ctx.Start.Line, unaryOp, unaryOperand);
+                return this.semantics.Unary(ctx.Start.Line, unaryOp, unaryOperand);
             }
 
             if (ctx.tableconstructor() is not null)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using LINVAST.Builders;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Nodes;
 
@@ -10,6 +11,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
 {
     public sealed partial class KotlinASTBuilder : KotlinParserBaseVisitor<ASTNode>, IASTBuilder<KotlinParser>
     {
+        private readonly IExpressionSemantics semantics = ExpressionSemanticsFactory.ForLanguage("Kotlin");
         // Grammar rule: disjunction : conjunction (NL* DISJ NL* conjunction)*
         /// <summary>
         /// Visits the disjunction parse tree context.
@@ -22,7 +24,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
             int line = ctx.Start.Line;
             ExprNode left = this.AsExprNode(this.Visit(ctx.conjunction(0)));
             ExprNode right = this.AsExprNode(this.Visit(ctx.conjunction(1)));
-            return new LogicExprNode(line, left, BinaryLogicOpNode.FromSymbol(line, "||"), right);
+            return this.semantics.Logical(line, left, BinaryLogicOpNode.FromSymbol(line, "||"), right);
         }
 
         // Grammar rule: conjunction : equalityComparison (NL* CONJ NL* equalityComparison)*
@@ -37,7 +39,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
             int line = ctx.Start.Line;
             ExprNode left = this.AsExprNode(this.Visit(ctx.equalityComparison(0)));
             ExprNode right = this.AsExprNode(this.Visit(ctx.equalityComparison(1)));
-            return new LogicExprNode(line, left, BinaryLogicOpNode.FromSymbol(line, "&&"), right);
+            return this.semantics.Logical(line, left, BinaryLogicOpNode.FromSymbol(line, "&&"), right);
         }
 
         // Grammar rule: equalityComparison : comparison (equalityOperation NL* comparison)*
@@ -120,7 +122,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
             ExprNode left = this.AsExprNode(this.Visit(ctx.infixFunctionCall(0)));
             ExprNode right = this.AsExprNode(this.Visit(ctx.infixFunctionCall(1)));
             var op = new ArithmOpNode(line, "?:", (x, y) => x ?? y);
-            return new ArithmExprNode(line, left, op, right);
+            return this.semantics.Arithmetic(line, left, op, right);
         }
 
         // Grammar rule: infixFunctionCall : rangeExpression (simpleIdentifier NL* rangeExpression)*
@@ -137,7 +139,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
             ExprNode right = this.AsExprNode(this.Visit(ctx.rangeExpression(1)));
             string infixName = ctx.simpleIdentifier(0).GetText();
             var op = new ArithmOpNode(line, infixName, (x, y) => null);
-            return new ArithmExprNode(line, left, op, right);
+            return this.semantics.Arithmetic(line, left, op, right);
         }
 
         // Grammar rule: rangeExpression : additiveExpression (RANGE NL* additiveExpression)*
@@ -153,7 +155,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
             ExprNode left = this.AsExprNode(this.Visit(ctx.additiveExpression(0)));
             ExprNode right = this.AsExprNode(this.Visit(ctx.additiveExpression(1)));
             var op = new ArithmOpNode(line, "..", (x, y) => null);
-            return new ArithmExprNode(line, left, op, right);
+            return this.semantics.Arithmetic(line, left, op, right);
         }
 
         // Grammar rule: additiveExpression : multiplicativeExpression (additiveOperator NL* multiplicativeExpression)*
@@ -169,7 +171,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
             ExprNode left = this.AsExprNode(this.Visit(ctx.multiplicativeExpression(0)));
             ExprNode right = this.AsExprNode(this.Visit(ctx.multiplicativeExpression(1)));
             var op = ArithmOpNode.FromSymbol(line, ctx.additiveOperator(0).GetText());
-            return new ArithmExprNode(line, left, op, right);
+            return this.semantics.Arithmetic(line, left, op, right);
         }
 
         // Grammar rule: multiplicativeExpression : typeRHS (multiplicativeOperation NL* typeRHS)*
@@ -185,7 +187,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
             ExprNode left = this.AsExprNode(this.Visit(ctx.typeRHS(0)));
             ExprNode right = this.AsExprNode(this.Visit(ctx.typeRHS(1)));
             var op = ArithmOpNode.FromSymbol(line, ctx.multiplicativeOperation(0).GetText());
-            return new ArithmExprNode(line, left, op, right);
+            return this.semantics.Arithmetic(line, left, op, right);
         }
 
         // Grammar rule: typeRHS : prefixUnaryExpression (NL* typeOperation prefixUnaryExpression)*
@@ -226,7 +228,7 @@ namespace LINVAST.Imperative.Builders.Kotlin
             ExprNode operand = this.AsExprNode(this.Visit(ctx.postfixUnaryExpression()));
             foreach (var prefix in ctx.prefixUnaryOperation().Reverse()) {
                 if (prefix.labelDefinition() != null || prefix.annotations() != null) continue;
-                operand = new UnaryExprNode(prefix.Start.Line,
+                operand = this.semantics.Unary(prefix.Start.Line,
                     UnaryOpNode.FromSymbol(prefix.Start.Line, prefix.GetText()), operand);
             }
             return operand;

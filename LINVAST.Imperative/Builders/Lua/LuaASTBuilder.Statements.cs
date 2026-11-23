@@ -20,6 +20,7 @@ using System.Linq;
 using Antlr4.Runtime.Misc;
 using LINVAST.Builders;
 using LINVAST.Exceptions;
+using LINVAST.Imperative.Builders.Common;
 using LINVAST.Imperative.Nodes;
 using LINVAST.Imperative.Nodes.Common;
 using LINVAST.Nodes;
@@ -68,7 +69,7 @@ namespace LINVAST.Imperative.Builders.Lua
                     return new WhileStatNode(ctx.Start.Line, cond, body);
                 case "repeat":
                     ExprNode until = this.Visit(ctx.exp().Single()).As<ExprNode>();
-                    var negUntil = new UnaryExprNode(until.Line, UnaryOpNode.FromSymbol(until.Line, "not"), until);
+                    var negUntil = this.semantics.Unary(until.Line, UnaryOpNode.FromSymbol(until.Line, "not"), until);
                     BlockStatNode repeatBody = this.Visit(ctx.block().Single()).As<BlockStatNode>();
                     BlockStatNode loopBody = this.Visit(ctx.block().Single()).As<BlockStatNode>();
                     return new BlockStatNode(ctx.Start.Line, repeatBody, new WhileStatNode(ctx.Start.Line, negUntil, loopBody));
@@ -149,7 +150,7 @@ namespace LINVAST.Imperative.Builders.Lua
                     ? this.Visit(ctx.exp(2)).As<ExprNode>()
                     : new LitExprNode(ctx.Start.Line, 1);
 
-                var init = new AssignExprNode(ctx.Start.Line, CreateIteratorId(), start);
+                var init = this.semantics.Assignment(ctx.Start.Line, CreateIteratorId(), start);
                 string comparison = IsNegativeNumericLiteral(step) ? ">=" : "<=";
                 var cond = new RelExprNode(
                     ctx.Start.Line,
@@ -157,7 +158,7 @@ namespace LINVAST.Imperative.Builders.Lua
                     RelOpNode.FromSymbol(ctx.Start.Line, comparison),
                     limit
                 );
-                var increment = new AssignExprNode(
+                var increment = this.semantics.Assignment(
                     ctx.Start.Line,
                     CreateIteratorId(),
                     AssignOpNode.FromSymbol(ctx.Start.Line, "+="),
@@ -173,7 +174,7 @@ namespace LINVAST.Imperative.Builders.Lua
             {
                 IdListNode vars = this.Visit(ctx.namelist()).As<IdListNode>();
                 ExprListNode iterators = this.Visit(ctx.explist()).As<ExprListNode>();
-                var init = new AssignExprNode(ctx.Start.Line, vars, iterators);
+                var init = this.semantics.Assignment(ctx.Start.Line, vars, iterators);
                 BlockStatNode body = this.Visit(ctx.block().Single()).As<BlockStatNode>();
                 return new ForStatNode(ctx.Start.Line, init, new LitExprNode(ctx.Start.Line, true), null, body);
             }
@@ -229,7 +230,7 @@ namespace LINVAST.Imperative.Builders.Lua
 
                 IEnumerable<AssignExprNode> assignments = vars.Expressions
                     .Zip(initializers.Expressions, (e1, e2) => (e1, e2))
-                    .Select(tup => new AssignExprNode(line, tup.e1, tup.e2))
+                    .Select(tup => ExpressionSemanticsFactory.ForLanguage("Lua").Assignment(line, tup.e1, tup.e2))
                     ;
 
                 if (vars.Children.Count == 1)
