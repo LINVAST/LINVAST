@@ -21,25 +21,6 @@ Currently, the main focus of the project is the imperative programming paradigm,
 | Python | [`Python3Parser.g4`](https://github.com/LINVAST/LINVAST/search?q=Python3Parser.g4&type=code) / [`Python3Lexer.g4`](https://github.com/LINVAST/LINVAST/search?q=Python3Lexer.g4&type=code) | Python 3 | ANTLR4 Python 3 grammar by Bart Kiers |
 
 
-## Development scripts
-
-The Linux build entrypoints require Bash and the .NET 10 SDK.
-
-The release script also uses GNU `realpath` to validate its output directory. It preserves existing files and older packages in that directory; packages with the same output filename can be replaced by `dotnet pack`. The repository directory and its ancestors cannot be used as output directories, including through symlink aliases.
-
-```bash
-./build
-./test
-./release
-```
-
-Use `--configuration Debug|Release` on any script. `release` writes NuGet packages to `artifacts/` by default and accepts the same prerelease version inputs as the old rebuild scripts:
-
-```bash
-./release --version-suffix dev --build-number 42
-./release --artifacts ./artifacts --configuration Release
-```
-
 ## Examples
 
 ### Using LINVAST in your own codebase
@@ -535,18 +516,40 @@ end
 ```
 </details>
 
+## Demos
+
+Detailed examples of using LINVAST can be found in the [demos](https://github.com/LINVAST/demos) repository.
+
 ## Visualizing ASTs:
 
 Visualized AST using [LINVisualizerJS](https://github.com/LINVAST/LINVisualizerJS):
 
 ![tree](https://raw.githubusercontent.com/LINVAST/LINVisualizerJS/refs/heads/main/images/showcase.png)
 
-
 ## Comparing ASTs using library extensions
 
 Detailed examples comparing language-invariant ASTs can be found [here](https://github.com/LINVAST/LINVAST.Imperative.Comparers).
 
-# Extending AST library with new programming languages
+## Development
+
+The Linux build entrypoints require Bash and the .NET 10 SDK.
+
+The release script also uses GNU `realpath` to validate its output directory. It preserves existing files and older packages in that directory; packages with the same output filename can be replaced by `dotnet pack`. The repository directory and its ancestors cannot be used as output directories, including through symlink aliases.
+
+```bash
+./build
+./test
+./release
+```
+
+Use `--configuration Debug|Release` on any script. `release` writes NuGet packages to `artifacts/` by default and accepts the same prerelease version inputs as the old rebuild scripts:
+
+```bash
+./release --version-suffix dev --build-number 42
+./release --artifacts ./artifacts --configuration Release
+```
+
+### Extending AST library with new programming languages
 
 Steps (for imperative language, in other cases only the namespace is different):
 - Create (or use ![already made](https://github.com/antlr/grammars-v4/)) ANTLR4 grammar files
@@ -556,3 +559,8 @@ Steps (for imperative language, in other cases only the namespace is different):
 - Apply `[ASTBuilder(".YOUR_FILE_EXTENSION")]` attribute to the class in order for it to be automatically used when loading sources of that extension
 
 Check out the Pseudocode PoC language ![grammar](LINVAST.Imperative/Builders/Pseudo/ANTLR/Pseudo.g4) and ![builder](LINVAST.Imperative/Builders/Pseudo/) as an example.
+
+## Evaluation
+
+LINVAST evaluation repository is available [here](https://github.com/LINVAST/eval).
+
