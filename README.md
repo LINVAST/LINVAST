@@ -544,13 +544,7 @@ Visualized AST using [LINVisualizerJS](https://github.com/LINVAST/LINVisualizerJ
 
 ## Comparing ASTs using library extensions
 
-Detailed examples comparing language-invariant ASTs can be seen [here](https://github.com/LINVAST/LINVAST.Imperative.Comparers).
-
-
-### Sample comparing output for two C implementations of function swap
-
-![swap](https://raw.githubusercontent.com/LINVAST/LINVAST.Imperative.Comparers/master/Samples/swap/valid_c-wrong_c.PNG)
-
+Detailed examples comparing language-invariant ASTs can be found [here](https://github.com/LINVAST/LINVAST.Imperative.Comparers).
 
 # Extending AST library with new programming languages
 
